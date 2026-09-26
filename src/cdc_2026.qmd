@@ -236,6 +236,7 @@ final_render <- (p_mountains / p_central / p_coastal) +
     theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
   )
 
+<<<<<<< HEAD
 ggsave(
   filename = "nc_storms_regional.png",
   plot = final_render,
@@ -246,6 +247,9 @@ ggsave(
   dpi = 300
 )
 
+=======
+final_render
+>>>>>>> d0ea0ac6eac66910cf0232ecd60138823c10b09f
 ```
 
 ```{r}
