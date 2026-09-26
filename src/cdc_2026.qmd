@@ -90,7 +90,7 @@ blockquote {
 knitr::opts_chunk$set(
   echo = FALSE,
   eval = TRUE,
-  message = TRUE,
+  message = FALSE,
   warning = FALSE,
   fig.align = "center",
   dpi = 300,
@@ -128,14 +128,127 @@ suppressPackageStartupMessages({
   library(crosstalk)
   library(plotly)
   library(reticulate)
+  library(patchwork)
 })
-
-# install python packages
-reticulate::py_install(c("pandas"))
 ```
 
-```{python}
-#| label: python_libraries
-#| include: false
-import pandas as pd
+```{r}
+#! label: load_data
+details_files <- list.files(data_dir, pattern = "StormEvents_details-ftp_v1.0_d.*\\.csv\\.gz$", full.names = TRUE)
+fatalities_files <- list.files(data_dir, pattern = "StormEvents_fatalities-ftp_v1.0_d.*\\.csv\\.gz$", full.names = TRUE)
+locations_files <- list.files(data_dir, pattern = "StormEvents_locations-ftp_v1.0_d.*\\.csv\\.gz$", full.names = TRUE)
+
+storm_details <- map_df(details_files, read_csv)
+storm_fatalities <- map_df(fatalities_files, read_csv)
+storm_locations <- map_df(locations_files, read_csv)
+
+storm_combined <- storm_details |>
+  left_join(storm_fatalities, by = "EVENT_ID") |>
+  left_join(storm_locations, by = "EVENT_ID")
+
+nc_storm_combined <- storm_combined |>
+  filter(toupper(STATE) == "NORTH CAROLINA") |>
+  select(-c(STATE_FIPS, CZ_TIMEZONE, DATA_SOURCE))
+
+nc_names_by_region <- list(
+  mountains = c(
+    "Alexander", "Alleghany", "Ashe", "Avery", "Buncombe", "Burke", 
+    "Caldwell", "Cherokee", "Clay", "Graham", "Haywood", "Henderson", 
+    "Jackson", "McDowell", "Macon", "Madison", "Mitchell", "Polk", 
+    "Rutherford", "Swain", "Transylvania", "Watauga", "Wilkes", "Yancey"
+  ),
+  central = c(
+    "Alamance", "Anson", "Cabarrus", "Caswell", "Catawba", "Chatham", 
+    "Cleveland", "Davidson", "Davie", "Durham", "Forsyth", "Franklin", 
+    "Gaston", "Granville", "Guilford", "Iredell", "Lee", "Lincoln", 
+    "Mecklenburg", "Montgomery", "Moore", "Orange", "Person", "Randolph", 
+    "Richmond", "Rockingham", "Rowan", "Stanly", "Stokes", "Surry", 
+    "Union", "Vance", "Wake", "Warren", "Yadkin"
+  ),
+  coastal = c(
+    "Beaufort", "Bertie", "Bladen", "Brunswick", "Camden", "Carteret", 
+    "Chowan", "Columbus", "Craven", "Cumberland", "Currituck", "Dare", 
+    "Duplin", "Edgecombe", "Gates", "Greene", "Halifax", "Harnett", 
+    "Hertford", "Hoke", "Hyde", "Johnston", "Jones", "Lenoir", "Martin", 
+    "Nash", "New Hanover", "Northampton", "Onslow", "Pamlico", "Pasquotank", 
+    "Pender", "Perquimans", "Pitt", "Robeson", "Sampson", "Scotland", 
+    "Tyrrell", "Washington", "Wayne", "Wilson"
+  )
+)
+
+nc_names_by_region <- lapply(nc_names_by_region, toupper)
+
+name_lookup <- imap_dfr(nc_names_by_region, \(names, region_name) {
+  tibble(
+    CZ_NAME = names,
+    region = region_name
+  )
+}) |>
+  tibble::deframe()
+
+nc_storm_combined <- nc_storm_combined |> 
+  mutate(
+    CZ_NAME_CLEAN = toupper(trimws(as.character(CZ_NAME))),
+    REGION = name_lookup[CZ_NAME_CLEAN]
+  ) |> 
+  select(-CZ_NAME_CLEAN)
+
+
+p_mountains <- nc_storm_combined |> 
+  filter(REGION == "mountains") |> 
+  ggplot(aes(x = EVENT_TYPE)) +
+  geom_bar(fill = "#2E8B57") +
+  labs(
+    title = "Mountains Region",
+    x = "Event Type",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_central <- nc_storm_combined |> 
+  filter(REGION == "central") |> 
+  ggplot(aes(x = EVENT_TYPE)) +
+  geom_bar(fill = "#CD5C5C") +
+  labs(
+    title = "Central Region",
+    x = "Event Type",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p_coastal <- nc_storm_combined |> 
+  filter(REGION == "coastal") |> 
+  ggplot(aes(x = EVENT_TYPE)) +
+  geom_bar(fill = "steelblue") +
+  labs(
+    title = "Coastal Region",
+    x = "Event Type",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+final_render <- (p_mountains / p_central / p_coastal) +
+  plot_annotation(
+    title = "Storm Event Types Across North Carolina Regions",
+    theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+  )
+
+ggsave(
+  filename = "nc_storms_regional.png",
+  plot = final_render,
+  path = results_dir,
+  width = 20,
+  height = 70,
+  units = "cm",
+  dpi = 300
+)
+
 ```
+
+```{r}
+write_csv(nc_storm_combined, "nc_storm_combined.csv")
+```
+
