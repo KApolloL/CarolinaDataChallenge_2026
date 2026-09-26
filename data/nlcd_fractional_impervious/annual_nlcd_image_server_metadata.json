@@ -1,0 +1,316 @@
+{
+  "currentVersion": 11.4,
+  "serviceDescription": "null",
+  "name": "USA_NLCD_Annual_LandCover_Fractional_Impervious_Surface",
+  "description": "null",
+  "extent": {
+    "xmin": -2415585,
+    "ymin": 164805,
+    "xmax": 2384415,
+    "ymax": 3314805,
+    "spatialReference": {
+      "wkt2": "PROJCRS[\"AEA_WGS84\",BASEGEOGCRS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",ELLIPSOID[\"WGS_1984\",6378137.0,298.257223563,LENGTHUNIT[\"Meter\",1.0]]],PRIMEM[\"Greenwich\",0.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"Latitude (lat)\",north,ORDER[1]],AXIS[\"Longitude (lon)\",east,ORDER[2]],ANGLEUNIT[\"Degree\",0.0174532925199433]],CONVERSION[\"Albers\",METHOD[\"Albers\"],PARAMETER[\"False_Easting\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"False_Northing\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"Central_Meridian\",-96.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_1\",29.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_2\",45.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Latitude_Of_Origin\",23.0,ANGLEUNIT[\"Degree\",0.0174532925199433]]],CS[Cartesian,2],AXIS[\"Easting (X)\",east,ORDER[1]],AXIS[\"Northing (Y)\",north,ORDER[2]],LENGTHUNIT[\"Meter\",1.0]]",
+      "wkt": "PROJCS[\"AEA_WGS84\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Albers\"],PARAMETER[\"False_Easting\",0.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-96.0],PARAMETER[\"Standard_Parallel_1\",29.5],PARAMETER[\"Standard_Parallel_2\",45.5],PARAMETER[\"Latitude_Of_Origin\",23.0],UNIT[\"Meter\",1.0]]"
+    }
+  },
+  "initialExtent": {
+    "xmin": -2415585,
+    "ymin": 164805,
+    "xmax": 2384415,
+    "ymax": 3314805,
+    "spatialReference": {
+      "wkt2": "PROJCRS[\"AEA_WGS84\",BASEGEOGCRS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",ELLIPSOID[\"WGS_1984\",6378137.0,298.257223563,LENGTHUNIT[\"Meter\",1.0]]],PRIMEM[\"Greenwich\",0.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"Latitude (lat)\",north,ORDER[1]],AXIS[\"Longitude (lon)\",east,ORDER[2]],ANGLEUNIT[\"Degree\",0.0174532925199433]],CONVERSION[\"Albers\",METHOD[\"Albers\"],PARAMETER[\"False_Easting\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"False_Northing\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"Central_Meridian\",-96.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_1\",29.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_2\",45.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Latitude_Of_Origin\",23.0,ANGLEUNIT[\"Degree\",0.0174532925199433]]],CS[Cartesian,2],AXIS[\"Easting (X)\",east,ORDER[1]],AXIS[\"Northing (Y)\",north,ORDER[2]],LENGTHUNIT[\"Meter\",1.0]]",
+      "wkt": "PROJCS[\"AEA_WGS84\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Albers\"],PARAMETER[\"False_Easting\",0.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-96.0],PARAMETER[\"Standard_Parallel_1\",29.5],PARAMETER[\"Standard_Parallel_2\",45.5],PARAMETER[\"Latitude_Of_Origin\",23.0],UNIT[\"Meter\",1.0]]"
+    }
+  },
+  "fullExtent": {
+    "xmin": -2415585,
+    "ymin": 164805,
+    "xmax": 2384415,
+    "ymax": 3314805,
+    "spatialReference": {
+      "wkt2": "PROJCRS[\"AEA_WGS84\",BASEGEOGCRS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",ELLIPSOID[\"WGS_1984\",6378137.0,298.257223563,LENGTHUNIT[\"Meter\",1.0]]],PRIMEM[\"Greenwich\",0.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"Latitude (lat)\",north,ORDER[1]],AXIS[\"Longitude (lon)\",east,ORDER[2]],ANGLEUNIT[\"Degree\",0.0174532925199433]],CONVERSION[\"Albers\",METHOD[\"Albers\"],PARAMETER[\"False_Easting\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"False_Northing\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"Central_Meridian\",-96.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_1\",29.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_2\",45.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Latitude_Of_Origin\",23.0,ANGLEUNIT[\"Degree\",0.0174532925199433]]],CS[Cartesian,2],AXIS[\"Easting (X)\",east,ORDER[1]],AXIS[\"Northing (Y)\",north,ORDER[2]],LENGTHUNIT[\"Meter\",1.0]]",
+      "wkt": "PROJCS[\"AEA_WGS84\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Albers\"],PARAMETER[\"False_Easting\",0.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-96.0],PARAMETER[\"Standard_Parallel_1\",29.5],PARAMETER[\"Standard_Parallel_2\",45.5],PARAMETER[\"Latitude_Of_Origin\",23.0],UNIT[\"Meter\",1.0]]"
+    }
+  },
+  "sortableFields": "",
+  "bandCount": 1,
+  "pixelType": "U8",
+  "minValues": [],
+  "maxValues": [],
+  "meanValues": [],
+  "stdvValues": [],
+  "hasMultidimensions": false,
+  "timeInfo": {
+    "startTimeField": "Year",
+    "endTimeField": "Year",
+    "timeExtent": [
+      473385600000,
+      1704067200000
+    ],
+    "timeReference": {}
+  },
+  "pixelSizeX": 30,
+  "pixelSizeY": 30,
+  "meanPixelSize": 30,
+  "datasetFormat": "AMD",
+  "uncompressedSize": 16800000000,
+  "blockWidth": 2048,
+  "blockHeight": 256,
+  "compressionType": "None",
+  "bandNames": [
+    "Band_1"
+  ],
+  "allowCopy": true,
+  "allowAnalysis": true,
+  "itemAccess": false,
+  "inspectionCapabilities": "",
+  "minPixelSize": 0,
+  "maxPixelSize": 0,
+  "copyrightText": "null",
+  "serviceDataType": "esriImageServiceDataTypeThematic",
+  "serviceSourceType": "esriImageServiceSourceTypeMosaicDataset",
+  "objectIdField": "OBJECTID",
+  "fields": [
+    {
+      "name": "OBJECTID",
+      "type": "esriFieldTypeOID",
+      "alias": "OBJECTID",
+      "domain": {}
+    },
+    {
+      "name": "Shape",
+      "type": "esriFieldTypeGeometry",
+      "alias": "Shape",
+      "domain": {}
+    },
+    {
+      "name": "Name",
+      "type": "esriFieldTypeString",
+      "alias": "Name",
+      "domain": {},
+      "length": 200
+    },
+    {
+      "name": "MinPS",
+      "type": "esriFieldTypeDouble",
+      "alias": "MinPS",
+      "domain": {}
+    },
+    {
+      "name": "MaxPS",
+      "type": "esriFieldTypeDouble",
+      "alias": "MaxPS",
+      "domain": {}
+    },
+    {
+      "name": "LowPS",
+      "type": "esriFieldTypeDouble",
+      "alias": "LowPS",
+      "domain": {}
+    },
+    {
+      "name": "HighPS",
+      "type": "esriFieldTypeDouble",
+      "alias": "HighPS",
+      "domain": {}
+    },
+    {
+      "name": "Category",
+      "type": "esriFieldTypeInteger",
+      "alias": "Category",
+      "domain": {
+        "type": "codedValue",
+        "name": "MosaicCatalogItemCategoryDomain",
+        "description": "Catalog item categories.",
+        "codedValues": [
+          {
+            "name": "Unknown",
+            "code": 0
+          },
+          {
+            "name": "Primary",
+            "code": 1
+          },
+          {
+            "name": "Overview",
+            "code": 2
+          },
+          {
+            "name": "Unprocessed Overview",
+            "code": 3
+          },
+          {
+            "name": "Partial Overview",
+            "code": 4
+          },
+          {
+            "name": "Inactive",
+            "code": 5
+          },
+          {
+            "name": "Uploaded",
+            "code": 253
+          },
+          {
+            "name": "Incomplete",
+            "code": 254
+          },
+          {
+            "name": "Custom",
+            "code": 255
+          }
+        ],
+        "mergePolicy": "esriMPTDefaultValue",
+        "splitPolicy": "esriSPTDefaultValue"
+      }
+    },
+    {
+      "name": "Tag",
+      "type": "esriFieldTypeString",
+      "alias": "Tag",
+      "domain": {},
+      "length": 100
+    },
+    {
+      "name": "GroupName",
+      "type": "esriFieldTypeString",
+      "alias": "GroupName",
+      "domain": {},
+      "length": 100
+    },
+    {
+      "name": "ProductName",
+      "type": "esriFieldTypeString",
+      "alias": "ProductName",
+      "domain": {},
+      "length": 100
+    },
+    {
+      "name": "CenterX",
+      "type": "esriFieldTypeDouble",
+      "alias": "CenterX",
+      "domain": {}
+    },
+    {
+      "name": "CenterY",
+      "type": "esriFieldTypeDouble",
+      "alias": "CenterY",
+      "domain": {}
+    },
+    {
+      "name": "ZOrder",
+      "type": "esriFieldTypeInteger",
+      "alias": "ZOrder",
+      "domain": {}
+    },
+    {
+      "name": "Year",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "Year",
+      "domain": {}
+    },
+    {
+      "name": "Version",
+      "type": "esriFieldTypeString",
+      "alias": "Version",
+      "domain": {},
+      "length": 100
+    },
+    {
+      "name": "start_date",
+      "type": "esriFieldTypeDate",
+      "alias": "start_date",
+      "domain": {},
+      "length": 8
+    },
+    {
+      "name": "end_date",
+      "type": "esriFieldTypeDate",
+      "alias": "end_date",
+      "domain": {},
+      "length": 8
+    },
+    {
+      "name": "Shape_Length",
+      "type": "esriFieldTypeDouble",
+      "alias": "Shape_Length",
+      "domain": {}
+    },
+    {
+      "name": "Shape_Area",
+      "type": "esriFieldTypeDouble",
+      "alias": "Shape_Area",
+      "domain": {}
+    }
+  ],
+  "capabilities": "Image,Metadata,Catalog,Mensuration",
+  "defaultMosaicMethod": "Northwest",
+  "allowedMosaicMethods": "NorthWest,Center,LockRaster,ByAttribute,Nadir,Viewpoint,Seamline,None",
+  "sortField": "",
+  "sortValue": {},
+  "sortAscending": true,
+  "mosaicOperator": "First",
+  "maxDownloadSizeLimit": 2048,
+  "defaultCompressionQuality": 75,
+  "defaultResamplingMethod": "Nearest",
+  "maxImageHeight": 20000,
+  "maxImageWidth": 20000,
+  "maxRecordCount": 1000,
+  "maxDownloadImageCount": 0,
+  "maxMosaicImageCount": 20,
+  "allowRasterFunction": true,
+  "rasterFunctionInfos": [
+    {
+      "name": "Impervious Surface Cool Renderer",
+      "description": "Urban impervious surfaces presented using a cool color scheme in blue-gray. Percentage of developed surface over every 30m pixel in the United States.",
+      "help": ""
+    },
+    {
+      "name": "Impervious Surface Warm Renderer",
+      "description": "Urban impervious surfaces presented using a warm color scheme in orange and brown. Percentage of developed surface over every 30m pixel in the United States.",
+      "help": ""
+    },
+    {
+      "name": "Impervious Surface USGS Default Renderer",
+      "description": "Default colormap for impervious surfaces from the USGS et al (MRLC Consortium). Percentage of developed surface over every 30m pixel in the United States.",
+      "help": ""
+    },
+    {
+      "name": "None",
+      "description": "Make a Raster or Raster Dataset into a Function Raster Dataset.",
+      "help": ""
+    }
+  ],
+  "rasterTypeInfos": [
+    {
+      "name": "Raster Dataset",
+      "description": "Supports all ArcGIS Raster Datasets",
+      "help": ""
+    }
+  ],
+  "mensurationCapabilities": "Basic",
+  "hasHistograms": false,
+  "hasColormap": false,
+  "hasRasterAttributeTable": false,
+  "minScale": 0,
+  "maxScale": 0,
+  "exportTilesAllowed": false,
+  "supportsStatistics": true,
+  "supportsAdvancedQueries": true,
+  "editFieldsInfo": {},
+  "ownershipBasedAccessControlForRasters": {},
+  "allowComputeTiePoints": false,
+  "useStandardizedQueries": true,
+  "advancedQueryCapabilities": {
+    "useStandardizedQueries": true,
+    "supportsStatistics": true,
+    "supportsOrderBy": true,
+    "supportsDistinct": true,
+    "supportsPagination": true
+  },
+  "spatialReference": {
+    "wkt2": "PROJCRS[\"AEA_WGS84\",BASEGEOGCRS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",ELLIPSOID[\"WGS_1984\",6378137.0,298.257223563,LENGTHUNIT[\"Meter\",1.0]]],PRIMEM[\"Greenwich\",0.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"Latitude (lat)\",north,ORDER[1]],AXIS[\"Longitude (lon)\",east,ORDER[2]],ANGLEUNIT[\"Degree\",0.0174532925199433]],CONVERSION[\"Albers\",METHOD[\"Albers\"],PARAMETER[\"False_Easting\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"False_Northing\",0.0,LENGTHUNIT[\"Meter\",1.0]],PARAMETER[\"Central_Meridian\",-96.0,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_1\",29.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Standard_Parallel_2\",45.5,ANGLEUNIT[\"Degree\",0.0174532925199433]],PARAMETER[\"Latitude_Of_Origin\",23.0,ANGLEUNIT[\"Degree\",0.0174532925199433]]],CS[Cartesian,2],AXIS[\"Easting (X)\",east,ORDER[1]],AXIS[\"Northing (Y)\",north,ORDER[2]],LENGTHUNIT[\"Meter\",1.0]]",
+    "wkt": "PROJCS[\"AEA_WGS84\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Albers\"],PARAMETER[\"False_Easting\",0.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-96.0],PARAMETER[\"Standard_Parallel_1\",29.5],PARAMETER[\"Standard_Parallel_2\",45.5],PARAMETER[\"Latitude_Of_Origin\",23.0],UNIT[\"Meter\",1.0]]"
+  }
+}

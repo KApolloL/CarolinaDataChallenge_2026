@@ -1,0 +1,2 @@
+dataset,year,source,output_directory,output_file,raster_cells
+Annual NLCD fractional imperviousness,2023,https://di-nlcd.img.arcgis.com/arcgis/rest/services/USA_NLCD_Annual_LandCover_Fractional_Impervious_Surface/ImageServer,/Users/kentalee/Documents/KALProjects/UNCProjects/CarolinaDataChallenge_2026/data/nlcd_fractional_impervious,/Users/kentalee/Documents/KALProjects/UNCProjects/CarolinaDataChallenge_2026/data/nlcd_fractional_impervious/annual_nlcd_fractional_impervious_2023_NC.tif,176260000

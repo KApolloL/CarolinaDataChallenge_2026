@@ -1,0 +1,1794 @@
+{
+  "link": {
+    "rel": "self",
+    "url": "https://www.sciencebase.gov/catalog/item/697b907eb66b0197c3043c9f"
+  },
+  "relatedItems": {
+    "link": {
+      "url": "https://www.sciencebase.gov/catalog/itemLinks?itemId=697b907eb66b0197c3043c9f",
+      "rel": "related"
+    }
+  },
+  "id": "697b907eb66b0197c3043c9f",
+  "title": "Annual National Land Cover Database (NLCD) Conterminous United States Collection 1.2 Fractional Impervious Surface",
+  "summary": "The USGS Land Cover program has combined the tried-and-true methodologies from premier land cover projects, National Land Cover Database (NLCD) and Land Change Monitoring, Assessment, and Projection (LCMAP), together with modern innovations in geospatial deep learning technologies to create the next generation of land cover and land change information. The product suite is called “Annual NLCD” and includes six annual products that represent land cover and surface change characteristics of the U.S.:  1) Land Cover; 2) Land Cover Change; 3) Land Cover Confidence; 4) Fractional Impervious Surface; 5) Impervious Descriptor; and 6) Spectral Change Day of Year.  These land cover science product algorithms harness the remotely sensed Landsat [...]",
+  "body": "The USGS Land Cover program has combined the tried-and-true methodologies from premier land cover projects, National Land Cover Database (NLCD) and Land Change Monitoring, Assessment, and Projection (LCMAP), together with modern innovations in geospatial deep learning technologies to create the next generation of land cover and land change information. The product suite is called “Annual NLCD” and includes six annual products that represent land cover and surface change characteristics of the U.S.:<br>\n<br>\n1) Land Cover;<br>\n2) Land Cover Change;<br>\n3) Land Cover Confidence;<br>\n4) Fractional Impervious Surface;<br>\n5) Impervious Descriptor;<br>\nand 6) Spectral Change Day of Year.<br>\n<br>\nThese land cover science product algorithms harness the remotely sensed Landsat data record to provide state-of-the-art land surface change information needed by scientists, resource managers, and decision-makers. Annual NLCD uses a modernized, integrated approach to map, monitor, synthesize, and understand the complexities of land use, cover, and condition change. With this release, Annual NLCD, Collection 1.2, the six products are available for the Conterminous U.S. for 1985–2025.<br>\n<br>\nQuestions about the Annual NLCD product suite can be directed to the Annual NLCD mapping team at USGS EROS, Sioux Falls, SD (605) 594-6151 or custserv@usgs.gov. See included spatial metadata for more details.",
+  "citation": "U.S. Geological Survey, 2024, Annual NLCD Collection 1 Science Products (ver. 1.2, June 2026): U.S. Geological Survey data release, https://doi.org/10.5066/P94UXNTS.",
+  "purpose": "The goal of this project is to provide the Nation with complete, current, and consistent public domain information on its land use and land cover.",
+  "provenance": {
+    "dataSource": "Input directly",
+    "dateCreated": "2026-01-29T16:53:18Z",
+    "lastUpdated": "2026-06-30T13:49:44Z"
+  },
+  "maintenanceUpdateFrequency": "Annually",
+  "hasChildren": false,
+  "parentId": "655ceb8ad34ee4b6e05cc51a",
+  "contacts": [
+    {
+      "name": "U.S. Geological Survey",
+      "type": "Point of Contact",
+      "contactType": "organization",
+      "email": "custserv@usgs.gov",
+      "jobTitle": "Customer Service Representative",
+      "organization": {},
+      "primaryLocation": {
+        "officePhone": "605-594-6151",
+        "faxPhone": "605-594-6589",
+        "streetAddress": {},
+        "mailAddress": {
+          "line1": "47914 252nd Street",
+          "city": "Sioux Falls",
+          "state": "SD",
+          "zip": "57198-0001",
+          "country": "United States"
+        }
+      }
+    },
+    {
+      "name": "U.S. Geological Survey",
+      "type": "Originator",
+      "organization": {},
+      "primaryLocation": {
+        "streetAddress": {},
+        "mailAddress": {}
+      }
+    },
+    {
+      "name": "U.S. Geological Survey",
+      "type": "Metadata Contact",
+      "contactType": "organization",
+      "email": "custserv@usgs.gov",
+      "jobTitle": "Customer Service Representative",
+      "organization": {},
+      "primaryLocation": {
+        "officePhone": "605-594-6151",
+        "faxPhone": "605-594-6589",
+        "streetAddress": {},
+        "mailAddress": {
+          "line1": "47914 252nd Street",
+          "city": "Sioux Falls",
+          "state": "SD",
+          "zip": "57198-0001",
+          "country": "United States"
+        }
+      }
+    },
+    {
+      "name": "U.S. Geological Survey",
+      "type": "Publisher",
+      "organization": {},
+      "primaryLocation": {
+        "streetAddress": {},
+        "mailAddress": {}
+      }
+    },
+    {
+      "name": "USGS ScienceBase Team",
+      "oldPartyId": 61239,
+      "type": "Distributor",
+      "contactType": "organization",
+      "onlineResource": "http://www.sciencebase.gov/",
+      "email": "sciencebase@usgs.gov",
+      "description": "The team that manages and develops the ScienceBase architecture in the U.S. Geological Survey has this official organization record to serve as a contact for metadata generated by the ScienceBase Catalog.",
+      "active": true,
+      "organization": {},
+      "primaryLocation": {
+        "description": "USGS Core Science Analytics and Synthesis office in Denver, CO",
+        "streetAddress": {
+          "line1": "Denver Federal Center",
+          "line2": "W Alameda Ave. and S. Kipling St., Building 810",
+          "city": "Lakewood",
+          "state": "CO",
+          "zip": "80225",
+          "country": "US"
+        },
+        "mailAddress": {
+          "line1": "Box 25046",
+          "mailStopCode": "302",
+          "city": "Denver",
+          "state": "CO",
+          "zip": "80225",
+          "country": "US"
+        }
+      }
+    },
+    {
+      "name": "Earth Resources Observation and Science (EROS) Center",
+      "oldPartyId": 17122,
+      "type": "SDC Data Owner",
+      "contactType": "organization",
+      "onlineResource": "https://www.usgs.gov/centers/eros",
+      "active": true,
+      "aliases": [
+        "{\"name\":\"EARTH RESOURCE OBSERV & SCI\"}",
+        "{\"name\":\"EROS DATA CTR OFFC OF THE DIR\"}",
+        "{\"name\":\"EROS\"}"
+      ],
+      "fbmsCodes": [
+        "GGHCED0000"
+      ],
+      "logoUrl": "http://my.usgs.gov/static-cache/images/dataOwner/v1/logosMed/USGSLogo.gif",
+      "smallLogoUrl": "http://my.usgs.gov/static-cache/images/dataOwner/v1/logosSmall/USGSLogo.gif",
+      "organization": {},
+      "primaryLocation": {
+        "streetAddress": {
+          "line1": "47914 252nd Street",
+          "city": "Sioux Falls",
+          "state": "SD",
+          "zip": "57198-9801",
+          "country": "USA"
+        },
+        "mailAddress": {
+          "line1": "47914 252nd Street",
+          "city": "Sioux Falls",
+          "state": "SD",
+          "zip": "57198-9801",
+          "country": "USA"
+        }
+      }
+    },
+    {
+      "name": "Core Science Systems",
+      "oldPartyId": 64221,
+      "type": "USGS Mission Area",
+      "contactType": "organization",
+      "active": true,
+      "organization": {},
+      "primaryLocation": {
+        "streetAddress": {},
+        "mailAddress": {}
+      }
+    }
+  ],
+  "webLinks": [
+    {
+      "type": "Related_Primary_Publication",
+      "typeLabel": "Related Primary Publication",
+      "uri": "https://doi.org/10.3133/fs20253001",
+      "title": "U.S. Geological Survey, 2025, Annual NLCD (National Land Cover Database)—The next generation of land cover mapping: U.S. Geological Survey Fact Sheet 2025–3001, 4 p., https://doi.org/10.3133/fs20253001.",
+      "hidden": false
+    }
+  ],
+  "tags": [
+    {
+      "type": "Theme",
+      "scheme": "ISO 19115 Topic Category",
+      "name": "imageryBaseMapsEarthCover"
+    },
+    {
+      "type": "Theme",
+      "scheme": "ISO 19115 Topic Category",
+      "name": "environment"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Time Series"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Landsat"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Analysis Ready Data (ARD)"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Land Cover"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Change Detection"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Earth Observations"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Image Processing"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Geographic Information Science (GIS)"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "U.S. Geological Survey (USGS)"
+    },
+    {
+      "type": "Theme",
+      "scheme": "USGS Thesaurus",
+      "name": "Digital Spatial Data"
+    },
+    {
+      "type": "Place",
+      "scheme": "Common Geographic Areas",
+      "name": "United States"
+    },
+    {
+      "type": "Place",
+      "scheme": "Common Geographic Areas",
+      "name": "CONUS"
+    },
+    {
+      "type": "Place",
+      "name": "USA"
+    }
+  ],
+  "dates": [
+    {
+      "type": "Publication",
+      "dateString": "2026-06-30",
+      "label": "Publication Date"
+    },
+    {
+      "type": "Start",
+      "dateString": "1985",
+      "label": ""
+    },
+    {
+      "type": "End",
+      "dateString": "2025",
+      "label": ""
+    }
+  ],
+  "spatial": {
+    "boundingBox": {
+      "minX": -129.2773,
+      "maxX": -63.1184,
+      "minY": 21.8051,
+      "maxY": 52.9217
+    }
+  },
+  "files": [
+    {
+      "cuid": "cmobmjxmk00wg0upjeru8784f",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1985_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1985_CU_C1V2.zip",
+      "title": "1985 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 768439962,
+      "dateUploaded": "2026-04-23T15:25:53Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobmjxmk00wg0upjeru8784f",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobmjxmk00wg0upjeru8784f"
+    },
+    {
+      "cuid": "cmobnw0w600wt0upj1ued4d5s",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1986_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1986_CU_C1V2.zip",
+      "title": "1986 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 771802514,
+      "dateUploaded": "2026-04-23T15:58:22Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobnw0w600wt0upj1ued4d5s",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobnw0w600wt0upj1ued4d5s"
+    },
+    {
+      "cuid": "cmobowc2500px0vpk4nij3qb4",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1987_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1987_CU_C1V2.zip",
+      "title": "1987 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 776448676,
+      "dateUploaded": "2026-04-23T16:24:40Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobowc2500px0vpk4nij3qb4",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobowc2500px0vpk4nij3qb4"
+    },
+    {
+      "cuid": "cmobpycqg00x30upjfbqp0gtu",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1988_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1988_CU_C1V2.zip",
+      "title": "1988 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 781563483,
+      "dateUploaded": "2026-04-23T17:18:39Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobpycqg00x30upjfbqp0gtu",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobpycqg00x30upjfbqp0gtu"
+    },
+    {
+      "cuid": "cmobq0z0c00x50upj8x5khwoq",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1989_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1989_CU_C1V2.zip",
+      "title": "1989 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 787342994,
+      "dateUploaded": "2026-04-23T17:35:28Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq0z0c00x50upj8x5khwoq",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq0z0c00x50upj8x5khwoq"
+    },
+    {
+      "cuid": "cmobq0za200x60upj9i1iatpy",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1990_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1990_CU_C1V2.zip",
+      "title": "1990 FctImp data zip",
+      "contentType": "application/x-zip-compressed",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 791973847,
+      "dateUploaded": "2026-04-23T16:53:50Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq0za200x60upj9i1iatpy",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq0za200x60upj9i1iatpy"
+    },
+    {
+      "cuid": "cmobq0zi000x70upj57l5f2qz",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1991_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1991_CU_C1V2.zip",
+      "title": "1991 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 797189257,
+      "dateUploaded": "2026-04-23T17:05:30Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq0zi000x70upj57l5f2qz",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq0zi000x70upj57l5f2qz"
+    },
+    {
+      "cuid": "cmobq3kot00q20vpkfu2bhyyz",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1992_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1992_CU_C1V2.zip",
+      "title": "1992 FctImp data zip",
+      "contentType": "application/x-zip-compressed",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 802190377,
+      "dateUploaded": "2026-04-23T16:55:51Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq3kot00q20vpkfu2bhyyz",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq3kot00q20vpkfu2bhyyz"
+    },
+    {
+      "cuid": "cmobq3kwx00q30vpk96zm7pz0",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1993_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1993_CU_C1V2.zip",
+      "title": "1993 FctImp data zip",
+      "contentType": "application/x-zip-compressed",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 805933325,
+      "dateUploaded": "2026-04-23T16:55:51Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq3kwx00q30vpk96zm7pz0",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq3kwx00q30vpk96zm7pz0"
+    },
+    {
+      "cuid": "cmobq3l4x00q40vpke3lffd22",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1994_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1994_CU_C1V2.zip",
+      "title": "1994 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 810910395,
+      "dateUploaded": "2026-04-23T17:43:21Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq3l4x00q40vpke3lffd22",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq3l4x00q40vpke3lffd22"
+    },
+    {
+      "cuid": "cmobq6md400x80upj9zzs64kp",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1995_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1995_CU_C1V2.zip",
+      "title": "1995 FctImp data zip",
+      "contentType": "application/x-zip-compressed",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 816220283,
+      "dateUploaded": "2026-04-23T16:58:13Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq6md400x80upj9zzs64kp",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq6md400x80upj9zzs64kp"
+    },
+    {
+      "cuid": "cmobq6mlj00x90upje7487k98",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1996_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1996_CU_C1V2.zip",
+      "title": "1996 FctImp data zip",
+      "contentType": "application/x-zip-compressed",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 823300361,
+      "dateUploaded": "2026-04-23T16:58:13Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq6mlj00x90upje7487k98",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq6mlj00x90upje7487k98"
+    },
+    {
+      "cuid": "cmobq6mvs00xa0upjd0u817s8",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1997_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1997_CU_C1V2.zip",
+      "title": "1997 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 828585471,
+      "dateUploaded": "2026-04-23T17:28:09Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobq6mvs00xa0upjd0u817s8",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobq6mvs00xa0upjd0u817s8"
+    },
+    {
+      "cuid": "cmobqgdj400q50vpk8rroc50p",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1998_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1998_CU_C1V2.zip",
+      "title": "1998 FctImp data zip",
+      "contentType": "application/x-zip-compressed",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 834009920,
+      "dateUploaded": "2026-04-23T17:05:48Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqgdj400q50vpk8rroc50p",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqgdj400q50vpk8rroc50p"
+    },
+    {
+      "cuid": "cmobqgdtd00q60vpk8sxshfp4",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_1999_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_1999_CU_C1V2.zip",
+      "title": "1999 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 839994825,
+      "dateUploaded": "2026-04-23T17:43:39Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqgdtd00q60vpk8sxshfp4",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqgdtd00q60vpk8sxshfp4"
+    },
+    {
+      "cuid": "cmobqge7100q70vpk4h1gccxz",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2000_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2000_CU_C1V2.zip",
+      "title": "2000 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 845777555,
+      "dateUploaded": "2026-04-23T17:41:58Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqge7100q70vpk4h1gccxz",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqge7100q70vpk4h1gccxz"
+    },
+    {
+      "cuid": "cmobqs6ar00xy0upje4q79cp1",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2001_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2001_CU_C1V2.zip",
+      "title": "2001 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 851114785,
+      "dateUploaded": "2026-04-23T18:50:27Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqs6ar00xy0upje4q79cp1",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqs6ar00xy0upje4q79cp1"
+    },
+    {
+      "cuid": "cmobqs6ko00xz0upjcxse7h7j",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2002_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2002_CU_C1V2.zip",
+      "title": "2002 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 858878065,
+      "dateUploaded": "2026-04-23T18:00:52Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqs6ko00xz0upjcxse7h7j",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqs6ko00xz0upjcxse7h7j"
+    },
+    {
+      "cuid": "cmobqs6ul00y00upjepq75kcw",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2003_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2003_CU_C1V2.zip",
+      "title": "2003 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 864418008,
+      "dateUploaded": "2026-04-23T17:57:44Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqs6ul00y00upjepq75kcw",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqs6ul00y00upjepq75kcw"
+    },
+    {
+      "cuid": "cmobqv1rx00yk0upjh2sl9cb8",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2004_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2004_CU_C1V2.zip",
+      "title": "2004 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 870166837,
+      "dateUploaded": "2026-04-23T18:16:05Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqv1rx00yk0upjh2sl9cb8",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqv1rx00yk0upjh2sl9cb8"
+    },
+    {
+      "cuid": "cmobqv21m00yl0upj4aicazbo",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2005_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2005_CU_C1V2.zip",
+      "title": "2005 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 878164525,
+      "dateUploaded": "2026-04-23T18:28:45Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqv21m00yl0upj4aicazbo",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqv21m00yl0upj4aicazbo"
+    },
+    {
+      "cuid": "cmobqv2db00ym0upj1ld2d9pf",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2006_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2006_CU_C1V2.zip",
+      "title": "2006 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 886006732,
+      "dateUploaded": "2026-04-23T19:05:49Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqv2db00ym0upj1ld2d9pf",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqv2db00ym0upj1ld2d9pf"
+    },
+    {
+      "cuid": "cmobqzz0100rg0vpkcu5ffnln",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2007_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2007_CU_C1V2.zip",
+      "title": "2007 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 892952913,
+      "dateUploaded": "2026-04-23T18:34:28Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqzz0100rg0vpkcu5ffnln",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqzz0100rg0vpkcu5ffnln"
+    },
+    {
+      "cuid": "cmobqzza800rh0vpkdjfjfdqh",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2008_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2008_CU_C1V2.zip",
+      "title": "2008 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 898604105,
+      "dateUploaded": "2026-04-23T18:34:17Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqzza800rh0vpkdjfjfdqh",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqzza800rh0vpkdjfjfdqh"
+    },
+    {
+      "cuid": "cmobqzzl300ri0vpkcf470dvl",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2009_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2009_CU_C1V2.zip",
+      "title": "2009 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 903123878,
+      "dateUploaded": "2026-04-23T18:50:39Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobqzzl300ri0vpkcf470dvl",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobqzzl300ri0vpkcf470dvl"
+    },
+    {
+      "cuid": "cmobr47iu00yo0upjfzpugh9o",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2010_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2010_CU_C1V2.zip",
+      "title": "2010 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 907365640,
+      "dateUploaded": "2026-04-23T18:56:43Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobr47iu00yo0upjfzpugh9o",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobr47iu00yo0upjfzpugh9o"
+    },
+    {
+      "cuid": "cmobr47tw00yp0upj4088emez",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2011_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2011_CU_C1V2.zip",
+      "title": "2011 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 911338681,
+      "dateUploaded": "2026-04-23T19:12:40Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobr47tw00yp0upj4088emez",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobr47tw00yp0upj4088emez"
+    },
+    {
+      "cuid": "cmobr488o00yq0upjgp0wf17z",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2012_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2012_CU_C1V2.zip",
+      "title": "2012 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 915494486,
+      "dateUploaded": "2026-04-23T18:59:26Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobr488o00yq0upjgp0wf17z",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobr488o00yq0upjgp0wf17z"
+    },
+    {
+      "cuid": "cmobr6lgd00z10upj9q656zvj",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2013_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2013_CU_C1V2.zip",
+      "title": "2013 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 919621764,
+      "dateUploaded": "2026-04-23T18:37:55Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobr6lgd00z10upj9q656zvj",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobr6lgd00z10upj9q656zvj"
+    },
+    {
+      "cuid": "cmobr6ls000z20upjbi57drdq",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2014_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2014_CU_C1V2.zip",
+      "title": "2014 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 923981900,
+      "dateUploaded": "2026-04-23T18:37:28Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobr6ls000z20upjbi57drdq",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobr6ls000z20upjbi57drdq"
+    },
+    {
+      "cuid": "cmobr6m5e00z30upj6j7c6n5p",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2015_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2015_CU_C1V2.zip",
+      "title": "2015 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 928231550,
+      "dateUploaded": "2026-04-23T19:11:31Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobr6m5e00z30upj6j7c6n5p",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobr6m5e00z30upj6j7c6n5p"
+    },
+    {
+      "cuid": "cmobredet00zs0upjfqu0abx8",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2016_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2016_CU_C1V2.zip",
+      "title": "2016 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 932502485,
+      "dateUploaded": "2026-04-23T19:02:14Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobredet00zs0upjfqu0abx8",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobredet00zs0upjfqu0abx8"
+    },
+    {
+      "cuid": "cmobredrk00zt0upja5qqe4x5",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2017_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2017_CU_C1V2.zip",
+      "title": "2017 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 937105830,
+      "dateUploaded": "2026-04-23T19:23:28Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobredrk00zt0upja5qqe4x5",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobredrk00zt0upja5qqe4x5"
+    },
+    {
+      "cuid": "cmobree3900zu0upjhsv1cjpl",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2018_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2018_CU_C1V2.zip",
+      "title": "2018 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 941613662,
+      "dateUploaded": "2026-04-23T19:22:21Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobree3900zu0upjhsv1cjpl",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobree3900zu0upjhsv1cjpl"
+    },
+    {
+      "cuid": "cmobrkhnm01090upj5edyhq25",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2019_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2019_CU_C1V2.zip",
+      "title": "2019 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 946108614,
+      "dateUploaded": "2026-04-23T19:40:52Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrkhnm01090upj5edyhq25",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrkhnm01090upj5edyhq25"
+    },
+    {
+      "cuid": "cmobrki14010a0upj42ws01co",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2020_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2020_CU_C1V2.zip",
+      "title": "2020 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 950690250,
+      "dateUploaded": "2026-04-23T19:41:28Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrki14010a0upj42ws01co",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrki14010a0upj42ws01co"
+    },
+    {
+      "cuid": "cmobrkidc010b0upjfq3h09p3",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2021_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2021_CU_C1V2.zip",
+      "title": "2021 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 956308941,
+      "dateUploaded": "2026-04-23T20:30:16Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrkidc010b0upjfq3h09p3",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrkidc010b0upjfq3h09p3"
+    },
+    {
+      "cuid": "cmobrpkxx00ry0vpkfrl40c2c",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2022_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2022_CU_C1V2.zip",
+      "title": "2022 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 962491880,
+      "dateUploaded": "2026-04-23T19:48:58Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrpkxx00ry0vpkfrl40c2c",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrpkxx00ry0vpkfrl40c2c"
+    },
+    {
+      "cuid": "cmobrpla000rz0vpk8ye1dcyo",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2023_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2023_CU_C1V2.zip",
+      "title": "2023 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 969030134,
+      "dateUploaded": "2026-04-23T19:19:35Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrpla000rz0vpk8ye1dcyo",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrpla000rz0vpk8ye1dcyo"
+    },
+    {
+      "cuid": "cmobrplm100s00vpkgqj7g14e",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2024_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2024_CU_C1V2.zip",
+      "title": "2024 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 976387839,
+      "dateUploaded": "2026-04-23T19:16:32Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrplm100s00vpkgqj7g14e",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrplm100s00vpkgqj7g14e"
+    },
+    {
+      "cuid": "cmobrplyk00s10vpkedk57xai",
+      "key": "697b907eb66b0197c3043c9f/Annual_NLCD_FctImp_2025_CU_C1V2.zip",
+      "bucket": "prod-is-usgs-sb-prod-content",
+      "published": false,
+      "node": {
+        "managerUrl": "https://sciencebase.usgs.gov/manager"
+      },
+      "name": "Annual_NLCD_FctImp_2025_CU_C1V2.zip",
+      "title": "2025 FctImp data zip",
+      "contentType": "application/zip",
+      "contentEncoding": {},
+      "pathOnDisk": "__s3__",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 983683952,
+      "dateUploaded": "2026-04-23T19:43:45Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {},
+      "url": "https://sciencebase.usgs.gov/manager/item/697b907eb66b0197c3043c9f/file/cmobrplyk00s10vpkedk57xai",
+      "downloadUri": "https://sciencebase.usgs.gov/manager/download/cmobrplyk00s10vpkedk57xai"
+    },
+    {
+      "cuid": {},
+      "key": {},
+      "bucket": {},
+      "published": false,
+      "node": {},
+      "name": "Annual_NLCD_FctImp_Summary_C1V2.xml",
+      "title": "Fractional Impervious metadata",
+      "contentType": "application/fgdc+xml",
+      "contentEncoding": {},
+      "pathOnDisk": "__disk__64/a2/54/64a254ccfba13deab51131d9cf9e68828ef37007",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": {},
+      "imageHeight": {},
+      "size": 28169,
+      "dateUploaded": "2026-06-30T13:42:22Z",
+      "originalMetadata": true,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {
+        "value": "62aebf0cda44ce7d400774979c963152",
+        "type": "MD5"
+      },
+      "url": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__64%2Fa2%2F54%2F64a254ccfba13deab51131d9cf9e68828ef37007",
+      "downloadUri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__64%2Fa2%2F54%2F64a254ccfba13deab51131d9cf9e68828ef37007",
+      "viewUri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__64%2Fa2%2F54%2F64a254ccfba13deab51131d9cf9e68828ef37007&allowOpen=true",
+      "metadataHtmlViewUri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__64%2Fa2%2F54%2F64a254ccfba13deab51131d9cf9e68828ef37007&transform=1"
+    },
+    {
+      "cuid": {},
+      "key": {},
+      "bucket": {},
+      "published": false,
+      "node": {},
+      "name": "Annual_NLCD_FrcImp.png",
+      "title": "Fractional Impervious Highlight Map",
+      "contentType": "image/png",
+      "contentEncoding": {},
+      "pathOnDisk": "__disk__f6/0a/e9/f60ae98674b76a7bba646ecd8a5492593b85c0b1",
+      "processed": false,
+      "processToken": {},
+      "imageWidth": 532,
+      "imageHeight": 456,
+      "size": 128902,
+      "dateUploaded": "2026-06-10T15:29:35Z",
+      "originalMetadata": false,
+      "useForPreview": false,
+      "movedToS3": false,
+      "s3Object": {},
+      "checksum": {
+        "value": "ec95d6513f6db53a8c5c0f33cbf54fd3",
+        "type": "MD5"
+      },
+      "url": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1",
+      "downloadUri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1",
+      "viewUri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=532&height=456",
+      "previewImage": {
+        "thumbnail": {
+          "uri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=150&height=129",
+          "width": 150,
+          "height": 129
+        },
+        "small": {
+          "uri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=350&height=300",
+          "width": 350,
+          "height": 300
+        }
+      }
+    }
+  ],
+  "distributionLinks": [
+    {
+      "uri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f",
+      "title": "Download Attached Files",
+      "type": "downloadLink",
+      "typeLabel": "Download Link",
+      "rel": "alternate",
+      "name": "AnnualNationalL.zip",
+      "files": [
+        {
+          "name": "Annual_NLCD_FctImp_1985_CU_C1V2.zip",
+          "title": "1985 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 768439962,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1986_CU_C1V2.zip",
+          "title": "1986 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 771802514,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1987_CU_C1V2.zip",
+          "title": "1987 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 776448676,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1988_CU_C1V2.zip",
+          "title": "1988 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 781563483,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1989_CU_C1V2.zip",
+          "title": "1989 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 787342994,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1990_CU_C1V2.zip",
+          "title": "1990 FctImp data zip",
+          "contentType": "application/x-zip-compressed",
+          "size": 791973847,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1991_CU_C1V2.zip",
+          "title": "1991 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 797189257,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1992_CU_C1V2.zip",
+          "title": "1992 FctImp data zip",
+          "contentType": "application/x-zip-compressed",
+          "size": 802190377,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1993_CU_C1V2.zip",
+          "title": "1993 FctImp data zip",
+          "contentType": "application/x-zip-compressed",
+          "size": 805933325,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1994_CU_C1V2.zip",
+          "title": "1994 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 810910395,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1995_CU_C1V2.zip",
+          "title": "1995 FctImp data zip",
+          "contentType": "application/x-zip-compressed",
+          "size": 816220283,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1996_CU_C1V2.zip",
+          "title": "1996 FctImp data zip",
+          "contentType": "application/x-zip-compressed",
+          "size": 823300361,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1997_CU_C1V2.zip",
+          "title": "1997 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 828585471,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1998_CU_C1V2.zip",
+          "title": "1998 FctImp data zip",
+          "contentType": "application/x-zip-compressed",
+          "size": 834009920,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_1999_CU_C1V2.zip",
+          "title": "1999 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 839994825,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2000_CU_C1V2.zip",
+          "title": "2000 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 845777555,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2001_CU_C1V2.zip",
+          "title": "2001 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 851114785,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2002_CU_C1V2.zip",
+          "title": "2002 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 858878065,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2003_CU_C1V2.zip",
+          "title": "2003 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 864418008,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2004_CU_C1V2.zip",
+          "title": "2004 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 870166837,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2005_CU_C1V2.zip",
+          "title": "2005 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 878164525,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2006_CU_C1V2.zip",
+          "title": "2006 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 886006732,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2007_CU_C1V2.zip",
+          "title": "2007 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 892952913,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2008_CU_C1V2.zip",
+          "title": "2008 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 898604105,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2009_CU_C1V2.zip",
+          "title": "2009 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 903123878,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2010_CU_C1V2.zip",
+          "title": "2010 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 907365640,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2011_CU_C1V2.zip",
+          "title": "2011 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 911338681,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2012_CU_C1V2.zip",
+          "title": "2012 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 915494486,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2013_CU_C1V2.zip",
+          "title": "2013 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 919621764,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2014_CU_C1V2.zip",
+          "title": "2014 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 923981900,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2015_CU_C1V2.zip",
+          "title": "2015 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 928231550,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2016_CU_C1V2.zip",
+          "title": "2016 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 932502485,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2017_CU_C1V2.zip",
+          "title": "2017 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 937105830,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2018_CU_C1V2.zip",
+          "title": "2018 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 941613662,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2019_CU_C1V2.zip",
+          "title": "2019 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 946108614,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2020_CU_C1V2.zip",
+          "title": "2020 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 950690250,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2021_CU_C1V2.zip",
+          "title": "2021 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 956308941,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2022_CU_C1V2.zip",
+          "title": "2022 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 962491880,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2023_CU_C1V2.zip",
+          "title": "2023 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 969030134,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2024_CU_C1V2.zip",
+          "title": "2024 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 976387839,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_2025_CU_C1V2.zip",
+          "title": "2025 FctImp data zip",
+          "contentType": "application/zip",
+          "size": 983683952,
+          "checksum": {}
+        },
+        {
+          "name": "Annual_NLCD_FctImp_Summary_C1V2.xml",
+          "title": "Fractional Impervious metadata",
+          "contentType": "application/fgdc+xml",
+          "size": 28169,
+          "checksum": {
+            "value": "62aebf0cda44ce7d400774979c963152",
+            "type": "MD5"
+          }
+        },
+        {
+          "name": "Annual_NLCD_FrcImp.png",
+          "title": "Fractional Impervious Highlight Map",
+          "contentType": "image/png",
+          "size": 128902,
+          "checksum": {
+            "value": "ec95d6513f6db53a8c5c0f33cbf54fd3",
+            "type": "MD5"
+          }
+        }
+      ]
+    }
+  ],
+  "previewImage": {
+    "from": "attachedFile",
+    "original": {
+      "uri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1",
+      "viewUri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=532&height=456",
+      "viewUrl": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?deprecated=__use__viewUri__instead__&f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=532&height=456",
+      "width": 532,
+      "height": 456,
+      "size": 128902,
+      "title": "Fractional Impervious Highlight Map"
+    },
+    "thumbnail": {
+      "uri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=150&height=129",
+      "width": 150,
+      "height": 129
+    },
+    "small": {
+      "uri": "https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?f=__disk__f6%2F0a%2Fe9%2Ff60ae98674b76a7bba646ecd8a5492593b85c0b1&width=350&height=300",
+      "width": 350,
+      "height": 300
+    }
+  }
+}
