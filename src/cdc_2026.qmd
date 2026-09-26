@@ -7,7 +7,7 @@ format:
     toc: true
     toc-location: left
     toc-float: true
-    code-fold: show
+    code-fold: true
     code-tools: 
       source: true
     embed-resources: true
@@ -87,20 +87,21 @@ blockquote {
 ```{r}
 #| label: setup
 #| include: false
+
 knitr::opts_chunk$set(
-  echo = FALSE,
-  eval = TRUE,
-  message = FALSE,
-  warning = FALSE,
+  echo      = FALSE,
+  eval      = TRUE,
+  message   = FALSE,
+  warning   = FALSE,
   fig.align = "center",
-  dpi = 300,
+  dpi       = 300,
   out.width = "100%"
 )
 
 project_dir <- params$project_dir
 results_dir <- file.path(project_dir, params$results_dir)
-data_dir <- file.path(project_dir, params$data_dir)
-cache_dir <- file.path(data_dir, params$cache_dir)
+data_dir    <- file.path(project_dir, params$data_dir)
+cache_dir   <- file.path(data_dir,    params$cache_dir)
 
 knitr::opts_knit$set(root.dir = project_dir)
 dir.create(results_dir, showWarnings = FALSE, recursive = TRUE)
@@ -109,20 +110,13 @@ options(bitmapType = "cairo")
 ```
 
 ```{r}
-#| label: r_libraries
+#| label: load_libraries
 #| include: false
 
-# load R packages
 suppressPackageStartupMessages({
-  library(dplyr)
-  library(ggplot2)
-  library(readr)
-  library(tidyr)
-  library(lubridate)
-  library(stringr)
+  library(tidyverse)   # dplyr, ggplot2, readr, tidyr, purrr, stringr, forcats, lubridate
   library(janitor)
   library(ggrepel)
-  library(purrr)
   library(DT)
   library(scales)
   library(crosstalk)
@@ -132,127 +126,895 @@ suppressPackageStartupMessages({
 })
 ```
 
+# Data
+
+## Loading NOAA Storm Events
+
+Three NOAA Storm Events file types are loaded: event **details**, **fatalities**, and **locations**. Each is stored as a gzipped CSV in `data_dir` and discovered via `list.files()`. All matching files are loaded and row-bound in a single `purrr::map_df()` call.
+
 ```{r}
-#! label: load_data
-details_files <- list.files(data_dir, pattern = "StormEvents_details-ftp_v1.0_d.*\\.csv\\.gz$", full.names = TRUE)
+#| label: load_noaa_data
+
+details_files    <- list.files(data_dir, pattern = "StormEvents_details-ftp_v1.0_d.*\\.csv\\.gz$",   full.names = TRUE)
 fatalities_files <- list.files(data_dir, pattern = "StormEvents_fatalities-ftp_v1.0_d.*\\.csv\\.gz$", full.names = TRUE)
-locations_files <- list.files(data_dir, pattern = "StormEvents_locations-ftp_v1.0_d.*\\.csv\\.gz$", full.names = TRUE)
+locations_files  <- list.files(data_dir, pattern = "StormEvents_locations-ftp_v1.0_d.*\\.csv\\.gz$",  full.names = TRUE)
 
-storm_details <- map_df(details_files, read_csv)
-storm_fatalities <- map_df(fatalities_files, read_csv)
-storm_locations <- map_df(locations_files, read_csv)
+storm_details    <- map_df(details_files,    read_csv, show_col_types = FALSE)
+storm_fatalities <- map_df(fatalities_files, read_csv, show_col_types = FALSE)
+storm_locations  <- map_df(locations_files,  read_csv, show_col_types = FALSE)
+```
 
-storm_combined <- storm_details |>
-  left_join(storm_fatalities, by = "EVENT_ID") |>
-  left_join(storm_locations, by = "EVENT_ID")
+## Combining and Filtering to North Carolina
 
-nc_storm_combined <- storm_combined |>
-  filter(toupper(STATE) == "NORTH CAROLINA") |>
-  select(-c(STATE_FIPS, CZ_TIMEZONE, DATA_SOURCE))
+The three tables are joined on `EVENT_ID` using left joins, then filtered to North Carolina. A few administrative columns are dropped. Note that these joins can generate multiple rows per `EVENT_ID` — duplicates are resolved in the [Deduplication] step.
 
-nc_names_by_region <- list(
-  mountains = c(
-    "Alexander", "Alleghany", "Ashe", "Avery", "Buncombe", "Burke", 
-    "Caldwell", "Cherokee", "Clay", "Graham", "Haywood", "Henderson", 
-    "Jackson", "McDowell", "Macon", "Madison", "Mitchell", "Polk", 
-    "Rutherford", "Swain", "Transylvania", "Watauga", "Wilkes", "Yancey"
+```{r}
+#| label: combine_filter_nc
+
+storm_combined <- storm_details %>%
+  left_join(storm_fatalities, by = "EVENT_ID") %>%
+  left_join(storm_locations,  by = "EVENT_ID")
+
+nc_storm_combined <- storm_combined %>%
+  filter(toupper(STATE) == "NORTH CAROLINA") %>%
+  select(-any_of(c("STATE_FIPS", "CZ_TIMEZONE", "DATA_SOURCE")))
+
+glimpse(nc_storm_combined)
+```
+
+# Methods
+
+## Region Assignment
+
+> **Why FIPS codes?** NOAA Storm Events records come in two types: **county-based** (`CZ_TYPE = "C"`) and **forecast-zone-based** (`CZ_TYPE = "Z"`). Matching on county *name strings* only captures county events. Zone-based events — which include large-area storms like Hurricane Helene — use NWS forecast zone names (e.g., *"Avery and Mitchell"*) that never match a plain county-name lookup. This analysis uses a **two-pass strategy**: (1) exact 3-digit county FIPS matching for county events, then (2) county-name keyword matching against zone names for zone events via `coalesce()`.
+
+### Building Region Lookups
+
+Two objects are constructed here and shared with the assignment chunk below:
+
+- `nc_fips_region` — a 100-row tibble mapping every NC county's 3-digit FIPS code to its region.
+- `assign_zone_region()` — a vectorized function that scans a zone name string for county-name and geographic keywords and returns the matching region. Word boundaries (`\b`) prevent partial-string false matches.
+
+```{r}
+#| label: build_region_lookups
+#| echo: true
+
+# ------------------------------------------------------------------
+# nc_fips_region: all 100 NC counties mapped by 3-digit county FIPS
+# ------------------------------------------------------------------
+nc_fips_region <- tibble(
+  CZ_FIPS_NUM = c(
+    # Mountains (24 counties)
+    3, 5, 9, 11, 21, 23, 27, 39, 43, 75, 87, 89, 99,
+    111, 113, 115, 121, 149, 161, 173, 175, 189, 193, 199,
+    # Central (35 counties)
+    1, 7, 25, 33, 35, 37, 45, 57, 59, 63, 67, 69, 71, 77, 81,
+    97, 105, 109, 119, 123, 125, 135, 145, 151, 153, 157, 159,
+    167, 169, 171, 179, 181, 183, 185, 197,
+    # Coastal (41 counties)
+    13, 15, 17, 19, 29, 31, 41, 47, 49, 51, 53, 55, 61, 65,
+    73, 79, 83, 85, 91, 93, 95, 101, 103, 107, 117, 127, 129,
+    131, 133, 137, 139, 141, 143, 147, 155, 163, 165, 177, 187,
+    191, 195
   ),
-  central = c(
-    "Alamance", "Anson", "Cabarrus", "Caswell", "Catawba", "Chatham", 
-    "Cleveland", "Davidson", "Davie", "Durham", "Forsyth", "Franklin", 
-    "Gaston", "Granville", "Guilford", "Iredell", "Lee", "Lincoln", 
-    "Mecklenburg", "Montgomery", "Moore", "Orange", "Person", "Randolph", 
-    "Richmond", "Rockingham", "Rowan", "Stanly", "Stokes", "Surry", 
-    "Union", "Vance", "Wake", "Warren", "Yadkin"
-  ),
-  coastal = c(
-    "Beaufort", "Bertie", "Bladen", "Brunswick", "Camden", "Carteret", 
-    "Chowan", "Columbus", "Craven", "Cumberland", "Currituck", "Dare", 
-    "Duplin", "Edgecombe", "Gates", "Greene", "Halifax", "Harnett", 
-    "Hertford", "Hoke", "Hyde", "Johnston", "Jones", "Lenoir", "Martin", 
-    "Nash", "New Hanover", "Northampton", "Onslow", "Pamlico", "Pasquotank", 
-    "Pender", "Perquimans", "Pitt", "Robeson", "Sampson", "Scotland", 
-    "Tyrrell", "Washington", "Wayne", "Wilson"
+  REGION = c(
+    rep("mountains", 24),
+    rep("central",   35),
+    rep("coastal",   41)
   )
 )
 
-nc_names_by_region <- lapply(nc_names_by_region, toupper)
+# ------------------------------------------------------------------
+# assign_zone_region(): keyword-based region inference for zone events
+# Priority order: mountains → coastal → central
+# ------------------------------------------------------------------
+assign_zone_region <- function(cz_name) {
+  z <- toupper(trimws(as.character(cz_name)))
 
-name_lookup <- imap_dfr(nc_names_by_region, \(names, region_name) {
-  tibble(
-    CZ_NAME = names,
-    region = region_name
+  mountain_re <- paste(c(
+    "\\bALEXANDER\\b", "\\bALLEGHANY\\b", "\\bASHE\\b",    "\\bAVERY\\b",
+    "\\bBUNCOMBE\\b",  "\\bBURKE\\b",      "\\bCALDWELL\\b","\\bCHEROKEE\\b",
+    "\\bCLAY\\b",      "\\bGRAHAM\\b",     "\\bHAYWOOD\\b", "\\bHENDERSON\\b",
+    "\\bJACKSON\\b",   "\\bMCDOWELL\\b",   "\\bMACON\\b",   "\\bMADISON\\b",
+    "\\bMITCHELL\\b",  "\\bPOLK\\b",       "\\bRUTHERFORD\\b", "\\bSWAIN\\b",
+    "\\bTRANSYLVANIA\\b", "\\bWATAUGA\\b", "\\bWILKES\\b",  "\\bYANCEY\\b",
+    "MOUNTAIN", "BLUE RIDGE", "HIGHLAND", "FOOTHIL"
+  ), collapse = "|")
+
+  coastal_re <- paste(c(
+    "\\bBEAUFORT\\b",   "\\bBERTIE\\b",     "\\bBLADEN\\b",     "\\bBRUNSWICK\\b",
+    "\\bCAMDEN\\b",     "\\bCARTERET\\b",   "\\bCHOWAN\\b",     "\\bCOLUMBUS\\b",
+    "\\bCRAVEN\\b",     "\\bCUMBERLAND\\b", "\\bCURRITUCK\\b",  "\\bDARE\\b",
+    "\\bDUPLIN\\b",     "\\bEDGECOMBE\\b",  "\\bGATES\\b",      "\\bGREENE\\b",
+    "\\bHALIFAX\\b",    "\\bHARNETT\\b",    "\\bHERTFORD\\b",   "\\bHOKE\\b",
+    "\\bHYDE\\b",       "\\bJOHNSTON\\b",   "\\bJONES\\b",      "\\bLENOIR\\b",
+    "\\bMARTIN\\b",     "\\bNASH\\b",        "NEW HANOVER",     "\\bNORTHAMPTON\\b",
+    "\\bONSLOW\\b",     "\\bPAMLICO\\b",    "\\bPASQUOTANK\\b", "\\bPENDER\\b",
+    "\\bPERQUIMANS\\b", "\\bPITT\\b",       "\\bROBESON\\b",    "\\bSAMPSON\\b",
+    "\\bSCOTLAND\\b",   "\\bTYRRELL\\b",    "\\bWASHINGTON\\b", "\\bWAYNE\\b",
+    "\\bWILSON\\b",     "COASTAL", "TIDEWATER", "OUTER BANK", "\\bSOUND\\b"
+  ), collapse = "|")
+
+  central_re <- paste(c(
+    "\\bALAMANCE\\b",  "\\bANSON\\b",      "\\bCABARRUS\\b",   "\\bCASWELL\\b",
+    "\\bCATAWBA\\b",   "\\bCHATHAM\\b",    "\\bCLEVELAND\\b",  "\\bDAVIDSON\\b",
+    "\\bDAVIE\\b",     "\\bDURHAM\\b",     "\\bFORSYTH\\b",    "\\bFRANKLIN\\b",
+    "\\bGASTON\\b",    "\\bGRANVILLE\\b",  "\\bGUILFORD\\b",   "\\bIREDELL\\b",
+    "\\bLEE\\b",       "\\bLINCOLN\\b",    "\\bMECKLENBURG\\b","\\bMONTGOMERY\\b",
+    "\\bMOORE\\b",     "\\bORANGE\\b",     "\\bPERSON\\b",     "\\bRANDOLPH\\b",
+    "\\bRICHMOND\\b",  "\\bROCKINGHAM\\b", "\\bROWAN\\b",      "\\bSTANLY\\b",
+    "\\bSTOKES\\b",    "\\bSURRY\\b",      "\\bUNION\\b",      "\\bVANCE\\b",
+    "\\bWAKE\\b",      "\\bWARREN\\b",     "\\bYADKIN\\b",
+    "PIEDMONT", "\\bTRIAD\\b", "\\bTRIANGLE\\b", "METROLINA", "SANDHILLS"
+  ), collapse = "|")
+
+  case_when(
+    is.na(cz_name)             ~ NA_character_,
+    str_detect(z, mountain_re) ~ "mountains",
+    str_detect(z, coastal_re)  ~ "coastal",
+    str_detect(z, central_re)  ~ "central",
+    TRUE                       ~ NA_character_
   )
-}) |>
-  tibble::deframe()
+}
+```
 
-nc_storm_combined <- nc_storm_combined |> 
+### Assigning Regions
+
+County events (`CZ_TYPE = "C"`) are matched via FIPS join. Zone and marine events use `assign_zone_region()` as a fallback via `coalesce()`. The `%% 1000L` operation extracts the 3-digit county code from either a 3-digit ("003") or 5-digit ("37003") FIPS string. The count table below shows how many rows landed in each region after both passes.
+
+```{r}
+#| label: assign_nc_regions
+#| echo: true
+
+nc_storm_combined <- nc_storm_combined %>%
   mutate(
-    CZ_NAME_CLEAN = toupper(trimws(as.character(CZ_NAME))),
-    REGION = name_lookup[CZ_NAME_CLEAN]
-  ) |> 
-  select(-CZ_NAME_CLEAN)
+    # Extract 3-digit county FIPS; zone events get NA so the FIPS join skips them
+    CZ_FIPS_NUM = suppressWarnings(
+      if_else(
+        toupper(trimws(as.character(CZ_TYPE))) == "C",
+        as.integer(CZ_FIPS) %% 1000L,
+        NA_integer_
+      )
+    )
+  ) %>%
+  # Pass 1: exact FIPS match for county events
+  left_join(nc_fips_region, by = "CZ_FIPS_NUM") %>%
+  mutate(
+    # Pass 2: keyword match for zone events where FIPS gave NA
+    REGION = coalesce(
+      REGION,
+      assign_zone_region(toupper(trimws(as.character(CZ_NAME))))
+    )
+  ) %>%
+  select(-CZ_FIPS_NUM)
 
+# Region coverage (NA = event fell outside all region definitions)
+table(nc_storm_combined$REGION, useNA = "ifany")
+```
 
-p_mountains <- nc_storm_combined |> 
-  filter(REGION == "mountains") |> 
-  ggplot(aes(x = EVENT_TYPE)) +
-  geom_bar(fill = "#2E8B57") +
-  labs(
-    title = "Mountains Region",
-    x = "Event Type",
-    y = "Count"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+## Data Processing
 
-p_central <- nc_storm_combined |> 
-  filter(REGION == "central") |> 
-  ggplot(aes(x = EVENT_TYPE)) +
-  geom_bar(fill = "#CD5C5C") +
-  labs(
-    title = "Central Region",
-    x = "Event Type",
-    y = "Count"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+### Helper Functions
 
-p_coastal <- nc_storm_combined |> 
-  filter(REGION == "coastal") |> 
-  ggplot(aes(x = EVENT_TYPE)) +
-  geom_bar(fill = "steelblue") +
-  labs(
-    title = "Coastal Region",
-    x = "Event Type",
-    y = "Count"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+Four utility functions support the downstream analysis. `parse_noaa_damage()` converts NOAA compact damage strings (e.g., `"10.00K"`, `"2.50M"`) to numeric dollar amounts. The remaining three handle aggregation edge cases: returning the first non-missing value, computing a safe maximum, and applying a log-scaled 0–100 rescaling.
 
-final_render <- (p_mountains / p_central / p_coastal) +
-  plot_annotation(
-    title = "Storm Event Types Across North Carolina Regions",
-    theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
+```{r}
+#| label: helper_functions
+#| echo: true
+
+# parse_noaa_damage(): "10K" → 10000, "2.5M" → 2500000, "1B" → 1000000000
+parse_noaa_damage <- function(x, missing_value = 0) {
+  x_clean <- toupper(trimws(as.character(x)))
+  result <- case_when(
+    is.na(x_clean) | x_clean %in% c("", "NA", "NULL") ~ missing_value,
+    str_detect(x_clean, "B$") ~ parse_number(x_clean) * 1e9,
+    str_detect(x_clean, "M$") ~ parse_number(x_clean) * 1e6,
+    str_detect(x_clean, "K$") ~ parse_number(x_clean) * 1e3,
+    TRUE                       ~ parse_number(x_clean)
+  )
+  replace_na(result, missing_value)
+}
+
+# first_nonmissing(): returns the first non-NA, non-blank value in a vector
+first_nonmissing <- function(x, default = NA) {
+  valid_values <- x[!is.na(x) & !(is.character(x) & trimws(x) == "")]
+  if (length(valid_values) == 0) return(default)
+  valid_values[[1]]
+}
+
+# max_or_zero(): safe maximum, treating NA as 0
+# Used to prevent double-counting repeated event-level values after joins
+max_or_zero <- function(x, default = 0) {
+  x_num <- replace_na(suppressWarnings(as.numeric(x)), default)
+  if (length(x_num) == 0) return(default)
+  max(x_num, na.rm = TRUE)
+}
+
+# rescale_log(): log1p-transform then linearly rescale to output_range
+rescale_log <- function(x, output_range = c(0, 100)) {
+  x     <- replace_na(as.numeric(x), 0)
+  x_log <- log1p(x)
+  if (length(x_log) == 0 || diff(range(x_log, na.rm = TRUE)) == 0) {
+    return(rep(output_range[1], length(x_log)))
+  }
+  scales::rescale(x_log, to = output_range)
+}
+```
+
+### Cleaning Storm Records
+
+Text fields are standardized, numeric columns are coerced, and NOAA damage strings are converted to dollars. `across()` applies the same transformation to all four human-impact columns at once. Records missing `EVENT_ID` / `EVENT_TYPE`, or falling outside the three named regions, are dropped.
+
+```{r}
+#| label: clean_storm_data
+#| echo: true
+
+storm_clean <- nc_storm_combined %>%
+  mutate(
+    EVENT_TYPE = replace_na(str_squish(as.character(EVENT_TYPE)), "Unknown"),
+    REGION     = str_to_lower(str_squish(as.character(REGION))),
+    across(
+      c(INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT),
+      ~ replace_na(suppressWarnings(as.numeric(.x)), 0)
+    ),
+    PROPERTY_DAMAGE_DOLLARS = parse_noaa_damage(DAMAGE_PROPERTY),
+    CROP_DAMAGE_DOLLARS     = parse_noaa_damage(DAMAGE_CROPS)
+  ) %>%
+  filter(
+    !is.na(EVENT_ID),
+    !is.na(EVENT_TYPE),
+    REGION %in% c("mountains", "central", "coastal")
+  )
+```
+
+### Deduplication {#deduplication}
+
+The fatality and location joins can produce multiple rows per `EVENT_ID`. The data are collapsed to one record per `EVENT_ID` × `REGION` pair using `max_or_zero()`, which selects the true event-level value rather than summing a potentially repeated entry. `across()` applies `max_or_zero()` to all six impact columns simultaneously. A verification check confirms no duplicate pairs remain.
+
+```{r}
+#| label: deduplicate_storm_records
+#| echo: true
+
+storm_event_region <- storm_clean %>%
+  group_by(EVENT_ID, REGION) %>%
+  summarise(
+    EVENT_TYPE = first_nonmissing(EVENT_TYPE),
+    YEAR       = first_nonmissing(YEAR),
+    MONTH_NAME = first_nonmissing(MONTH_NAME),
+    CZ_NAME    = first_nonmissing(CZ_NAME),
+    across(
+      c(INJURIES_DIRECT, INJURIES_INDIRECT,
+        DEATHS_DIRECT,   DEATHS_INDIRECT,
+        PROPERTY_DAMAGE_DOLLARS, CROP_DAMAGE_DOLLARS),
+      max_or_zero
+    ),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    TOTAL_INJURIES = INJURIES_DIRECT + INJURIES_INDIRECT,
+    TOTAL_DEATHS   = DEATHS_DIRECT   + DEATHS_INDIRECT,
+    TOTAL_DAMAGE   = PROPERTY_DAMAGE_DOLLARS + CROP_DAMAGE_DOLLARS
   )
 
-<<<<<<< HEAD
-ggsave(
-  filename = "nc_storms_regional.png",
-  plot = final_render,
-  path = results_dir,
-  width = 20,
-  height = 70,
-  units = "cm",
-  dpi = 300
-)
+# Verification: each EVENT_ID × REGION pair should appear exactly once
+storm_event_region %>%
+  count(EVENT_ID, REGION) %>%
+  summarise(
+    max_rows_per_pair = max(n),
+    duplicate_pairs   = sum(n > 1)
+  )
+```
 
-=======
-final_render
->>>>>>> d0ea0ac6eac66910cf0232ecd60138823c10b09f
+## Analysis
+
+### Regional Impact Summary
+
+The deduplicated records are aggregated by `REGION` and `EVENT_TYPE` to produce totals and per-event rates for all impact metrics.
+
+```{r}
+#| label: summarize_regional_impacts
+#| echo: true
+
+regional_impacts <- storm_event_region %>%
+  group_by(REGION, EVENT_TYPE) %>%
+  summarise(
+    EVENTS          = n(),
+    INJURIES        = sum(TOTAL_INJURIES,         na.rm = TRUE),
+    DEATHS          = sum(TOTAL_DEATHS,           na.rm = TRUE),
+    PROPERTY_DAMAGE = sum(PROPERTY_DAMAGE_DOLLARS, na.rm = TRUE),
+    CROP_DAMAGE     = sum(CROP_DAMAGE_DOLLARS,     na.rm = TRUE),
+    TOTAL_DAMAGE    = sum(TOTAL_DAMAGE,            na.rm = TRUE),
+    .groups         = "drop"
+  ) %>%
+  mutate(
+    DAMAGE_PER_EVENT   = TOTAL_DAMAGE / EVENTS,
+    INJURIES_PER_EVENT = INJURIES     / EVENTS,
+    DEATHS_PER_EVENT   = DEATHS       / EVENTS
+  )
+```
+
+### Composite Impact Score
+
+A single 0–100 composite score summarizes each impact dimension. Each dimension is log-transformed and rescaled to [0, 100] before being combined using the weights below. Weights must sum to 1 and are adjustable via the function arguments.
+
+| Dimension        | Default Weight |
+|------------------|---------------|
+| Economic damage  | 50%           |
+| Injuries         | 30%           |
+| Deaths           | 20%           |
+
+```{r}
+#| label: impact_score_function
+#| echo: true
+
+calculate_impact_scores <- function(
+    data,
+    damage_weight = 0.50,
+    injury_weight = 0.30,
+    death_weight  = 0.20,
+    score_min     = 0,
+    score_max     = 100
+) {
+  if (abs(damage_weight + injury_weight + death_weight - 1) > 0.001) {
+    stop("damage_weight, injury_weight, and death_weight must sum to 1.")
+  }
+  data %>%
+    mutate(
+      DAMAGE_SCORE = rescale_log(TOTAL_DAMAGE, output_range = c(score_min, score_max)),
+      INJURY_SCORE = rescale_log(INJURIES,     output_range = c(score_min, score_max)),
+      DEATH_SCORE  = rescale_log(DEATHS,       output_range = c(score_min, score_max)),
+      IMPACT_SCORE = damage_weight * DAMAGE_SCORE +
+                     injury_weight * INJURY_SCORE +
+                     death_weight  * DEATH_SCORE
+    )
+}
 ```
 
 ```{r}
-write_csv(nc_storm_combined, "nc_storm_combined.csv")
+#| label: apply_impact_scores
+#| echo: true
+
+regional_impacts_scored <- calculate_impact_scores(
+  regional_impacts,
+  damage_weight = 0.50,
+  injury_weight = 0.30,
+  death_weight  = 0.20
+)
+
+# top_event_types: shared across Figures 2, 3, and 5
+top_n_event_types <- 15
+
+top_event_types <- regional_impacts_scored %>%
+  group_by(EVENT_TYPE) %>%
+  summarise(OVERALL_IMPACT = sum(IMPACT_SCORE, na.rm = TRUE), .groups = "drop") %>%
+  slice_max(order_by = OVERALL_IMPACT, n = top_n_event_types, with_ties = FALSE) %>%
+  pull(EVENT_TYPE)
+
+# overall_event_impact: shared across Figure 4 and the Key Results table
+overall_event_impact <- regional_impacts_scored %>%
+  group_by(EVENT_TYPE) %>%
+  summarise(
+    OVERALL_IMPACT_SCORE = sum(IMPACT_SCORE, na.rm = TRUE),
+    TOTAL_EVENTS         = sum(EVENTS,       na.rm = TRUE),
+    TOTAL_INJURIES       = sum(INJURIES,     na.rm = TRUE),
+    TOTAL_DEATHS         = sum(DEATHS,       na.rm = TRUE),
+    TOTAL_DAMAGE         = sum(TOTAL_DAMAGE, na.rm = TRUE),
+    .groups              = "drop"
+  ) %>%
+  arrange(desc(OVERALL_IMPACT_SCORE))
 ```
 
+# Results
+
+The figures below summarize storm frequency, composite impact, and individual impact components across North Carolina's three geographic regions: **Mountains**, **Central**, and **Coastal**.
+
+## Figure 1 — Event Frequency by Region
+
+The 15 most frequently recorded storm event types are shown for each region. Counts reflect the deduplicated event–region dataset.
+
+```{r}
+#| label: figure_event_counts
+#| echo: true
+#| fig-height: 14
+
+event_counts <- storm_event_region %>%
+  count(REGION, EVENT_TYPE, name = "EVENTS") %>%
+  mutate(
+    REGION = factor(
+      REGION,
+      levels = c("mountains", "central", "coastal"),
+      labels = c("Mountains", "Central", "Coastal")
+    )
+  )
+
+plot_event_counts_by_region <- function(data, region_name, fill_color, top_n = 15) {
+  data %>%
+    filter(REGION == region_name) %>%
+    slice_max(order_by = EVENTS, n = top_n, with_ties = FALSE) %>%
+    mutate(EVENT_TYPE = fct_reorder(EVENT_TYPE, EVENTS)) %>%
+    ggplot(aes(x = EVENT_TYPE, y = EVENTS)) +
+    geom_col(fill = fill_color) +
+    coord_flip() +
+    scale_y_continuous(labels = label_number(big.mark = ",")) +
+    labs(title = region_name, x = NULL, y = "Number of Events") +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title         = element_text(face = "bold"),
+      panel.grid.major.y = element_blank()
+    )
+}
+
+p_events_mountains <- plot_event_counts_by_region(event_counts, "Mountains", "#2E8B57")
+p_events_central   <- plot_event_counts_by_region(event_counts, "Central",   "#CD5C5C")
+p_events_coastal   <- plot_event_counts_by_region(event_counts, "Coastal",   "#4682B4")
+
+event_count_figure <- (p_events_mountains / p_events_central / p_events_coastal) +
+  plot_annotation(
+    title    = "Storm Event Frequency Across North Carolina Regions",
+    subtitle = "Top storm event types by number of recorded events",
+    theme    = theme(
+      plot.title    = element_text(size = 17, face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5, color = "gray30")
+    )
+  )
+
+event_count_figure
+
+ggsave(
+  filename = "nc_storm_event_counts_by_region.png",
+  plot     = event_count_figure,
+  path     = results_dir,
+  width    = 24, height = 28, units = "cm", dpi = 300
+)
+```
+
+## Figure 2 — Composite Storm Impact
+
+The heatmap displays composite impact scores for the top `r top_n_event_types` event types across all three regions. Scores range from 0 to 100 and combine log-rescaled damage, injury, and death metrics.
+
+```{r}
+#| label: figure_composite_heatmap
+#| echo: true
+
+heatmap_data <- regional_impacts_scored %>%
+  filter(EVENT_TYPE %in% top_event_types) %>%
+  mutate(
+    REGION = factor(
+      REGION,
+      levels = c("mountains", "central", "coastal"),
+      labels = c("Mountains", "Central", "Coastal")
+    ),
+    EVENT_TYPE = factor(EVENT_TYPE, levels = rev(top_event_types))
+  )
+
+plot_impact_heatmap <- function(
+    data,
+    value_column = IMPACT_SCORE,
+    title        = "Storm Impact by Event Type and Region",
+    subtitle     = "Higher scores indicate greater combined impacts",
+    low_color    = "#F7FBFF",
+    high_color   = "#B2182B",
+    show_values  = TRUE,
+    value_digits = 1
+) {
+  value_col <- rlang::enquo(value_column)
+
+  p <- ggplot(data, aes(x = EVENT_TYPE, y = REGION, fill = !!value_col)) +
+    geom_tile(color = "white", linewidth = 0.8) +
+    scale_fill_gradient(
+      low    = low_color, high   = high_color,
+      limits = c(0, 100), breaks = c(0, 25, 50, 75, 100),
+      name   = "Impact Score"
+    ) +
+    labs(title = title, subtitle = subtitle, x = "Storm Event Type", y = NULL) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title      = element_text(face = "bold", size = 16),
+      plot.subtitle   = element_text(color = "gray30"),
+      axis.text.x     = element_text(angle = 45, hjust = 1, vjust = 1),
+      axis.text.y     = element_text(face = "bold"),
+      panel.grid      = element_blank(),
+      legend.position = "right"
+    )
+
+  if (show_values) {
+    p <- p + geom_text(
+      aes(label = round(!!value_col, value_digits)),
+      size = 3, color = "black"
+    )
+  }
+  p
+}
+
+p_composite_heatmap <- plot_impact_heatmap(
+  data         = heatmap_data,
+  value_column = IMPACT_SCORE,
+  title        = "Storm Impact by Event Type and North Carolina Region",
+  subtitle     = "Composite score combines damage, injuries, and deaths; scores range from 0 to 100",
+  low_color    = "#F7FBFF",
+  high_color   = "#B2182B"
+)
+
+p_composite_heatmap
+
+ggsave(
+  filename = "nc_storm_composite_impact_heatmap.png",
+  plot     = p_composite_heatmap,
+  path     = results_dir,
+  width    = 16, height = 8, units = "in", dpi = 300
+)
+```
+
+## Figure 3 — Impact Components by Region
+
+Each panel isolates one impact dimension across the top event types and three regions. A logarithmic color scale is used because total damage values are orders of magnitude larger than injury or event counts.
+
+```{r}
+#| label: figure_impact_components
+#| echo: true
+#| fig-height: 10
+
+component_data <- regional_impacts_scored %>%
+  filter(EVENT_TYPE %in% top_event_types) %>%
+  select(REGION, EVENT_TYPE, EVENTS, INJURIES, DEATHS, TOTAL_DAMAGE) %>%
+  pivot_longer(
+    cols      = c(EVENTS, INJURIES, DEATHS, TOTAL_DAMAGE),
+    names_to  = "IMPACT_TYPE",
+    values_to = "VALUE"
+  ) %>%
+  mutate(
+    REGION = factor(
+      REGION,
+      levels = c("mountains", "central", "coastal"),
+      labels = c("Mountains", "Central", "Coastal")
+    ),
+    IMPACT_TYPE = factor(
+      IMPACT_TYPE,
+      levels = c("EVENTS", "INJURIES", "DEATHS", "TOTAL_DAMAGE"),
+      labels = c("Number of Events", "Injuries", "Deaths", "Total Damage")
+    ),
+    EVENT_TYPE = factor(EVENT_TYPE, levels = rev(top_event_types))
+  )
+
+p_component_heatmaps <- ggplot(
+  component_data,
+  aes(x = EVENT_TYPE, y = REGION, fill = VALUE)
+) +
+  geom_tile(color = "white", linewidth = 0.6) +
+  facet_wrap(~ IMPACT_TYPE, ncol = 2, scales = "free") +
+  scale_fill_viridis_c(
+    option = "C", trans = "log1p",
+    labels = label_number(big.mark = ",", scale_cut = cut_short_scale()),
+    name   = "Reported Value"
+  ) +
+  labs(
+    title    = "Storm Impact Components by Event Type and Region",
+    subtitle = "Darker cells indicate larger reported values; color scale is logarithmic",
+    x        = "Storm Event Type", y = NULL
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 16),
+    plot.subtitle = element_text(color = "gray30"),
+    axis.text.x   = element_text(angle = 45, hjust = 1),
+    axis.text.y   = element_text(face = "bold"),
+    panel.grid    = element_blank(),
+    strip.text    = element_text(face = "bold")
+  )
+
+p_component_heatmaps
+
+ggsave(
+  filename = "nc_storm_impact_components_by_region.png",
+  plot     = p_component_heatmaps,
+  path     = results_dir,
+  width    = 16, height = 10, units = "in", dpi = 300
+)
+```
+
+## Figure 4 — Overall Impact Ranking
+
+Composite scores are summed across all three regions to rank event types statewide. This collapses regional variation to highlight the highest-burden event types across North Carolina.
+
+```{r}
+#| label: figure_overall_impact_ranking
+#| echo: true
+
+plot_overall_impact <- function(data, top_n = 15, fill_low = "#D9F0D3", fill_high = "#B2182B") {
+  data %>%
+    slice_max(order_by = OVERALL_IMPACT_SCORE, n = top_n, with_ties = FALSE) %>%
+    mutate(EVENT_TYPE = fct_reorder(EVENT_TYPE, OVERALL_IMPACT_SCORE)) %>%
+    ggplot(aes(x = EVENT_TYPE, y = OVERALL_IMPACT_SCORE, fill = OVERALL_IMPACT_SCORE)) +
+    geom_col() +
+    coord_flip() +
+    scale_fill_gradient(low = fill_low, high = fill_high, guide = "none") +
+    scale_y_continuous(labels = label_number(accuracy = 0.1)) +
+    labs(
+      title    = "Overall Storm Impact by Event Type",
+      subtitle = "Impact scores summed across the Mountains, Central, and Coastal regions",
+      x        = NULL,
+      y        = "Summed Composite Impact Score"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title         = element_text(face = "bold", size = 16),
+      plot.subtitle      = element_text(color = "gray30"),
+      panel.grid.major.y = element_blank()
+    )
+}
+
+p_overall_impact <- plot_overall_impact(data = overall_event_impact, top_n = 15)
+p_overall_impact
+
+ggsave(
+  filename = "nc_storm_overall_impact_by_event_type.png",
+  plot     = p_overall_impact,
+  path     = results_dir,
+  width    = 12, height = 9, units = "in", dpi = 300
+)
+```
+
+## Figure 5 — Regional Comparison
+
+The same top `r top_n_event_types` event types are shown side by side for each region, preserving the geographic variation that the statewide ranking in Figure 4 collapses.
+
+```{r}
+#| label: figure_regional_comparison
+#| echo: true
+
+regional_comparison_data <- regional_impacts_scored %>%
+  filter(EVENT_TYPE %in% top_event_types) %>%
+  mutate(
+    REGION = factor(
+      REGION,
+      levels = c("mountains", "central", "coastal"),
+      labels = c("Mountains", "Central", "Coastal")
+    ),
+    EVENT_TYPE = fct_reorder(EVENT_TYPE, IMPACT_SCORE, .fun = max)
+  )
+
+p_regional_comparison <- ggplot(
+  regional_comparison_data,
+  aes(x = EVENT_TYPE, y = IMPACT_SCORE, fill = REGION)
+) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("Mountains" = "#2E8B57", "Central" = "#CD5C5C", "Coastal" = "#4682B4")
+  ) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  labs(
+    title    = "Regional Comparison of Storm Impact",
+    subtitle = "Composite impact score by event type and geographic region",
+    x        = NULL, y = "Composite Impact Score", fill = "Region"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title         = element_text(face = "bold", size = 16),
+    plot.subtitle      = element_text(color = "gray30"),
+    axis.text.y        = element_text(size = 9),
+    panel.grid.major.y = element_blank(),
+    legend.position    = "bottom"
+  )
+
+p_regional_comparison
+
+ggsave(
+  filename = "nc_storm_regional_impact_comparison.png",
+  plot     = p_regional_comparison,
+  path     = results_dir,
+  width    = 14, height = 10, units = "in", dpi = 300
+)
+```
+
+## Figure 6 — Economic Damage by Region
+
+Property and crop damage are shown separately for each region, in millions of dollars, aggregated across all recorded storm events.
+
+```{r}
+#| label: figure_damage_by_region
+#| echo: true
+
+damage_by_region <- regional_impacts_scored %>%
+  group_by(REGION) %>%
+  summarise(
+    PROPERTY_DAMAGE = sum(PROPERTY_DAMAGE, na.rm = TRUE),
+    CROP_DAMAGE     = sum(CROP_DAMAGE,     na.rm = TRUE),
+    .groups         = "drop"
+  ) %>%
+  mutate(
+    REGION = factor(
+      REGION,
+      levels = c("mountains", "central", "coastal"),
+      labels = c("Mountains", "Central", "Coastal")
+    )
+  ) %>%
+  pivot_longer(
+    cols      = c(PROPERTY_DAMAGE, CROP_DAMAGE),
+    names_to  = "DAMAGE_TYPE",
+    values_to = "DAMAGE"
+  ) %>%
+  mutate(
+    DAMAGE_TYPE = recode(
+      DAMAGE_TYPE,
+      PROPERTY_DAMAGE = "Property Damage",
+      CROP_DAMAGE     = "Crop Damage"
+    )
+  )
+
+p_damage_by_region <- ggplot(damage_by_region, aes(x = REGION, y = DAMAGE, fill = DAMAGE_TYPE)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = dollar_format(scale = 1e-6, suffix = "M")) +
+  scale_fill_manual(values = c("Property Damage" = "#8C2D04", "Crop Damage" = "#31A354")) +
+  labs(
+    title    = "Reported Property and Crop Damage by Region",
+    subtitle = "Aggregate NOAA damage estimates across all recorded storm events",
+    x        = NULL, y = "Damage (millions of dollars)", fill = "Damage Type"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title      = element_text(face = "bold", size = 16),
+    plot.subtitle   = element_text(color = "gray30"),
+    legend.position = "bottom"
+  )
+
+p_damage_by_region
+
+ggsave(
+  filename = "nc_storm_damage_by_region.png",
+  plot     = p_damage_by_region,
+  path     = results_dir,
+  width    = 11, height = 8, units = "in", dpi = 300
+)
+```
+
+## Figure 7 — Human Impacts by Region
+
+Total storm-related injuries and deaths are compared across the three regions, drawn from NOAA storm event records.
+
+```{r}
+#| label: figure_human_impacts
+#| echo: true
+
+human_impacts_by_region <- regional_impacts_scored %>%
+  group_by(REGION) %>%
+  summarise(
+    INJURIES = sum(INJURIES, na.rm = TRUE),
+    DEATHS   = sum(DEATHS,   na.rm = TRUE),
+    .groups  = "drop"
+  ) %>%
+  mutate(
+    REGION = factor(
+      REGION,
+      levels = c("mountains", "central", "coastal"),
+      labels = c("Mountains", "Central", "Coastal")
+    )
+  ) %>%
+  pivot_longer(
+    cols = c(INJURIES, DEATHS), names_to = "OUTCOME", values_to = "COUNT"
+  ) %>%
+  mutate(OUTCOME = recode(OUTCOME, INJURIES = "Injuries", DEATHS = "Deaths"))
+
+p_human_impacts <- ggplot(human_impacts_by_region, aes(x = REGION, y = COUNT, fill = OUTCOME)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = label_number(big.mark = ",")) +
+  scale_fill_manual(values = c("Injuries" = "#F28E2B", "Deaths" = "#B2182B")) +
+  labs(
+    title    = "Reported Human Impacts by Region",
+    subtitle = "Total injuries and deaths recorded in NOAA storm event records",
+    x        = NULL, y = "Number of people", fill = "Outcome"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title      = element_text(face = "bold", size = 16),
+    plot.subtitle   = element_text(color = "gray30"),
+    legend.position = "bottom"
+  )
+
+p_human_impacts
+
+ggsave(
+  filename = "nc_storm_human_impacts_by_region.png",
+  plot     = p_human_impacts,
+  path     = results_dir,
+  width    = 11, height = 8, units = "in", dpi = 300
+)
+```
+
+## Key Results
+
+### Top Event Types by Overall Impact
+
+The 10 highest-impact event types statewide, ranked by summed composite score across all three regions.
+
+```{r}
+#| label: results_top_event_types
+#| echo: true
+
+format_damage <- function(x) {
+  case_when(
+    x >= 1e9 ~ paste0("$", round(x / 1e9, 1), "B"),
+    x >= 1e6 ~ paste0("$", round(x / 1e6, 1), "M"),
+    x >= 1e3 ~ paste0("$", round(x / 1e3, 0), "K"),
+    TRUE     ~ paste0("$", round(x, 0))
+  )
+}
+
+overall_event_impact %>%
+  slice_head(n = 10) %>%
+  mutate(
+    OVERALL_IMPACT_SCORE = round(OVERALL_IMPACT_SCORE, 1),
+    TOTAL_DAMAGE         = format_damage(TOTAL_DAMAGE)
+  ) %>%
+  rename(
+    "Event Type"          = EVENT_TYPE,
+    "Impact Score"        = OVERALL_IMPACT_SCORE,
+    "Total Events"        = TOTAL_EVENTS,
+    "Total Injuries"      = TOTAL_INJURIES,
+    "Total Deaths"        = TOTAL_DEATHS,
+    "Total Damage (Est.)" = TOTAL_DAMAGE
+  ) %>%
+  DT::datatable(
+    rownames = FALSE,
+    class    = "display compact",
+    options  = list(dom = "t", pageLength = 10, scrollX = TRUE)
+  )
+```
+
+### Top Region × Event Combinations
+
+The 15 highest-scoring region × event type combinations, preserving the geographic breakdown.
+
+```{r}
+#| label: results_top_region_combos
+#| echo: true
+
+regional_impacts_scored %>%
+  arrange(desc(IMPACT_SCORE)) %>%
+  slice_head(n = 15) %>%
+  select(REGION, EVENT_TYPE, IMPACT_SCORE, EVENTS, INJURIES, DEATHS, TOTAL_DAMAGE) %>%
+  mutate(
+    REGION       = str_to_title(REGION),
+    IMPACT_SCORE = round(IMPACT_SCORE, 1),
+    TOTAL_DAMAGE = format_damage(TOTAL_DAMAGE)
+  ) %>%
+  rename(
+    "Region"              = REGION,
+    "Event Type"          = EVENT_TYPE,
+    "Impact Score"        = IMPACT_SCORE,
+    "Events"              = EVENTS,
+    "Injuries"            = INJURIES,
+    "Deaths"              = DEATHS,
+    "Total Damage (Est.)" = TOTAL_DAMAGE
+  ) %>%
+  DT::datatable(
+    rownames = FALSE,
+    class    = "display compact",
+    options  = list(dom = "t", pageLength = 15, scrollX = TRUE)
+  )
+```
+
+# Export
+
+Processed datasets are written to `results_dir` for downstream use or sharing.
+
+```{r}
+#| label: export_summary_tables
+
+write_csv(
+  storm_event_region,
+  file.path(results_dir, "nc_storm_event_region_level.csv")
+)
+
+write_csv(
+  regional_impacts_scored,
+  file.path(results_dir, "nc_storm_regional_impacts_scored.csv")
+)
+
+write_csv(
+  overall_event_impact,
+  file.path(results_dir, "nc_storm_overall_event_impact.csv")
+)
+
+cat("Analysis complete. Outputs saved to:\n", results_dir, "\n")
+```
