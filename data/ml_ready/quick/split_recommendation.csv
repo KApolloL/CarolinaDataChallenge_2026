@@ -1,0 +1,5 @@
+split,event_year,is_partial_year,events,with_coordinates,high_consequence,high_human_impact
+validation,2023,FALSE,112,83,1,4
+test,2024,FALSE,200,102,13,12
+test,2025,FALSE,161,57,1,2
+test,2026,TRUE,118,24,0,0

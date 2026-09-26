@@ -1,0 +1,1587 @@
+```{r}
+#| label: setup
+#| include: false
+
+# ---- Parameters and paths -------------------------------------------------
+p <- params
+project_dir <- normalizePath(p$project_dir, mustWork = FALSE)
+
+source(file.path(project_dir, "src", "R", "utils.R"))
+fw_log_reset()
+
+rp <- function(x) resolve_path(x, project_dir)
+
+paths <- list(
+  figures_dir       = rp(p$figures_dir),
+  tables_dir        = rp(p$tables_dir),
+  ml_dir            = rp(p$ml_dir),
+  derived_dir       = rp(p$derived_dir),
+  noaa_dir          = rp(p$noaa_dir),
+  nhd_zip           = rp(p$nhd_zip_path),
+  nhd_dir           = rp(p$nhd_dir),
+  ncdot_culverts    = rp(p$ncdot_culverts_path),
+  ncdot_structures  = rp(p$ncdot_structures_path),
+  dem               = rp(p$dem_path),
+  slope             = rp(p$slope_path),
+  roughness         = rp(p$roughness_path),
+  nlcd              = rp(p$nlcd_path),
+  soils_dir         = rp(p$soils_dir),
+  soil_spatial      = rp(p$soil_spatial_path),
+  nc_boundary       = rp(p$state_boundary_path),
+  county_boundaries = rp(p$county_boundaries_path),
+  rainfall          = rp(p$rainfall_path),
+  community         = rp(p$community_path),
+  interview         = rp(p$interview_path),
+  interview_web     = rp(p$interview_web_path),
+  interview_poster  = rp(p$interview_poster_path),
+  transcript        = rp(p$interview_transcript_path),
+  highlights        = rp(p$interview_highlights_path)
+)
+
+# Only output folders are created; raw-data folders are never written.
+for (d in c(paths$figures_dir, paths$tables_dir, paths$ml_dir, paths$derived_dir)) {
+  dir.create(d, recursive = TRUE, showWarnings = FALSE)
+}
+
+# ---- Packages ---------------------------------------------------------------
+required_pkgs <- c(
+  "tidyverse", "sf", "terra", "arrow", "janitor", "lubridate",
+  "scales", "patchwork", "DT", "jsonlite", "fs", "digest", "base64enc", "htmltools"
+)
+optional_pkgs <- c(plotly = "plotly", leaflet = "leaflet", httr2 = "httr2",
+                   soilDB = "soilDB", tigris = "tigris", elevatr = "elevatr")
+optional_needed <- c(
+  if (isTRUE(p$create_interactive_maps)) c("plotly", "leaflet"),
+  if (isTRUE(p$download_data)) c("httr2", "soilDB", "tigris", "elevatr")
+)
+pkg_available <- suppressWarnings(load_packages(required_pkgs, optional_pkgs[optional_pkgs %in% optional_needed]))
+# leaflet is a nice-to-have; plotly is used when it is missing, so drop that log entry.
+fw_log_env$entries <- subset(fw_log_env$entries, !(input == "R package 'leaflet'" & isTRUE(pkg_available["plotly"])))
+has_pkg <- function(pkg) isTRUE(pkg_available[pkg])
+
+for (f in c("prepare_noaa.R", "create_spatial_features.R", "export_ml_tables.R")) {
+  source(file.path(project_dir, "src", "R", f))
+}
+
+# ---- knitr / plotting options -----------------------------------------------
+knitr::opts_chunk$set(fig.align = "center", dpi = 150, out.width = "100%")
+knitr::opts_knit$set(root.dir = project_dir)
+options(bitmapType = "cairo", dplyr.summarise.inform = FALSE)
+
+fw_colors <- list(navy = "#12344d", teal = "#1b7a8c", river = "#4a9cc9", alert = "#b2182b",
+                  sand = "#f5f1e8", muted = "#5b6770", amber = "#e08e2b")
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(plot.title = element_text(face = "bold", color = fw_colors$navy, size = 14),
+          plot.subtitle = element_text(color = "gray35"),
+          plot.caption = element_text(color = "gray45", size = 8.5),
+          panel.grid.minor = element_blank(),
+          legend.position = "bottom")
+)
+map_theme <- theme_void(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", color = fw_colors$navy, size = 14),
+        plot.subtitle = element_text(color = "gray35"),
+        plot.caption = element_text(color = "gray45", size = 8.5),
+        legend.position = "bottom")
+
+region_levels <- c("mountains", "central", "coastal")
+region_labels <- c("Mountains", "Central", "Coastal")
+region_colors <- c(Mountains = "#2E8B57", Central = "#CD8C5C", Coastal = "#4682B4")
+
+years <- seq(p$start_year, p$end_year)
+eb <- buffer_label(p$event_buffer_m)
+sb <- buffer_label(p$stream_buffer_m)
+ib <- buffer_label(p$infrastructure_buffer_m)
+noaa_caption <- "Source: NOAA NCEI Storm Events Database"
+
+# ---- Presentation helpers -------------------------------------------------------
+callout <- function(type, title, body, collapse = FALSE) {
+  cat(sprintf("\n::: {.callout-%s%s}\n## %s\n\n%s\n:::\n\n", type,
+              if (collapse) ' collapse="true"' else "", title, paste(body, collapse = "\n\n")))
+}
+
+download_link <- function(path, label, mime = NULL) {
+  if (is.na(path) || !file.exists(path)) return(invisible(NULL))
+  uri <- base64enc::dataURI(file = path, mime = mime %||% mime_for(path))
+  knitr::asis_output(sprintf('\n<a class="fw-download" download="%s" href="%s">&#11015; %s</a>\n',
+                             basename(path), uri, label))
+}
+mime_for <- function(path) {
+  switch(tolower(tools::file_ext(path)),
+         png = "image/png", csv = "text/csv", json = "application/json",
+         parquet = "application/octet-stream", gpkg = "application/geopackage+sqlite3",
+         zip = "application/zip", mp4 = "video/mp4", "application/octet-stream")
+}
+
+figure_files <- character()
+table_files <- character()
+
+# Print a ggplot, save it to outs/figures, and add an embedded download link.
+show_fig <- function(plot, name, width = 10, height = 6) {
+  path <- file.path(paths$figures_dir, paste0(name, ".png"))
+  ggsave(path, plot, width = width, height = height, dpi = p$figure_dpi, bg = "white")
+  figure_files <<- unique(c(figure_files, path))
+  print(plot)
+  # The link downloads the image already shown on the page (see the script at
+  # the end of the document), so the figure is not embedded twice.
+  knitr::asis_output(sprintf('\n<a class="fw-download fw-fig-download" href="#" data-filename="%s.png">&#11015; Download figure (PNG)</a>\n', name))
+}
+
+# Interactive table with Copy / CSV / Excel buttons; also saved to outs/tables.
+dt <- function(data, name = NULL, page_length = 10, caption = NULL, filter = NULL) {
+  file_stub <- name %||% "floodwatch_table"
+  if (!is.null(name)) {
+    path <- file.path(paths$tables_dir, paste0(name, ".csv"))
+    readr::write_csv(data, path, na = "")
+    table_files <<- unique(c(table_files, path))
+  }
+  DT::datatable(
+    data,
+    rownames = FALSE,
+    class = "display compact stripe",
+    caption = caption,
+    extensions = "Buttons",
+    filter = filter %||% (if (nrow(data) > 25) "top" else "none"),
+    options = list(
+      pageLength = page_length,
+      scrollX = TRUE,
+      dom = "Bfrtip",
+      buttons = list(
+        list(extend = "copy", text = "Copy"),
+        list(extend = "csv", text = "CSV", filename = file_stub),
+        list(extend = "excel", text = "Excel", filename = file_stub)
+      )
+    )
+  )
+}
+
+stat_cards <- function(values, labels, alert = rep(FALSE, length(values))) {
+  cards <- paste0('<div class="stat-card', ifelse(alert, " alert", ""), '"><div class="stat-value">',
+                  values, '</div><div class="stat-label">', labels, "</div></div>", collapse = "")
+  cat('\n<div class="stat-grid">', cards, "</div>\n\n", sep = "")
+}
+
+dataset_card <- function(...) {
+  items <- list(...)
+  rows <- paste0("<tr><td>", names(items), "</td><td>", unlist(items), "</td></tr>", collapse = "")
+  cat('\n<div class="dataset-card"><table>', rows, "</table></div>\n\n", sep = "")
+}
+
+comma <- scales::comma
+dollars_short <- function(x) scales::dollar(x, scale_cut = scales::cut_short_scale(), accuracy = 0.1)
+```
+
+```{r}
+#| label: prepare-noaa
+#| include: false
+
+# Heavy lifting runs here so the story can quote real numbers up front.
+# The same code is displayed (folded) in the NOAA section.
+noaa <- load_noaa_tables(paths$noaa_dir, years, project_dir)
+
+prep <- build_event_level(
+  noaa,
+  state_name              = p$state_name,
+  years                   = years,
+  partial_years           = unlist(p$partial_years),
+  flood_pattern           = p$flood_event_pattern,
+  tropical_pattern        = p$tropical_event_pattern,
+  study_counties          = unlist(p$study_counties),
+  descriptor_words        = unlist(p$zone_descriptor_words),
+  special_coastal_pattern = p$special_coastal_zone_pattern,
+  coordinate_extent       = list(lon_min = p$coord_lon_min, lon_max = p$coord_lon_max,
+                                 lat_min = p$coord_lat_min, lat_max = p$coord_lat_max),
+  damage_missing_as_zero  = p$damage_missing_as_zero
+)
+noaa_inventory <- noaa$inventory
+rm(noaa); invisible(gc())
+
+event_level <- prep$event_level
+full_event_count <- nrow(event_level)
+
+# Optional subsetting (analysis_quick.qmd)
+subset_steps <- character()
+if (isTRUE(p$subset_enabled)) {
+  if (isTRUE(p$subset_study_area_only)) {
+    event_level <- dplyr::filter(event_level, in_study_area)
+    subset_steps <- c(subset_steps, "study-area events only")
+  }
+  if (isTRUE(p$subset_flood_only)) {
+    event_level <- dplyr::filter(event_level, is_flood_event == 1)
+    subset_steps <- c(subset_steps, "flood-related events only")
+  }
+  if (!is_blank(p$subset_max_events) && nrow(event_level) > p$subset_max_events) {
+    set.seed(p$subset_seed)
+    event_level <- dplyr::slice_sample(event_level, n = p$subset_max_events)
+    subset_steps <- c(subset_steps, sprintf("random sample of %s events (seed %s)", p$subset_max_events, p$subset_seed))
+  }
+  subset_steps <- c(sprintf("years %s-%s", p$start_year, p$end_year), subset_steps)
+  fw_log("warning", "subset", paste("Subset render:", paste(subset_steps, collapse = "; ")), "all results and exports")
+}
+
+# Story numbers
+study <- dplyr::filter(event_level, in_study_area)
+hl_window <- as.Date(c(p$highlight_start_date, p$highlight_end_date))
+hl <- dplyr::filter(study, event_date >= hl_window[1], event_date <= hl_window[2])
+story <- list(
+  events         = nrow(event_level),
+  study_events   = nrow(study),
+  study_deaths   = sum(study$total_deaths),
+  study_damage   = sum(study$total_damage),
+  hl_events      = nrow(hl),
+  hl_deaths      = sum(hl$total_deaths),
+  hl_injuries    = sum(hl$total_injuries),
+  hl_damage      = sum(hl$total_damage),
+  hl_flood       = sum(hl$is_flood_event),
+  hl_death_share = if (sum(study$total_deaths) > 0) sum(hl$total_deaths) / sum(study$total_deaths) else NA,
+  hl_damage_share = if (sum(study$total_damage) > 0) sum(hl$total_damage) / sum(study$total_damage) else NA
+)
+```
+
+```{r}
+#| label: subset-banner
+#| echo: false
+#| results: asis
+
+if (isTRUE(p$subset_enabled)) {
+  callout("warning", "Quick subset render: not the full analysis",
+          c(sprintf("This render uses **%s of %s** events (%s). Numbers, thresholds, and figures describe this subset only, and exports go to the subset folders. Render `analysis.qmd` for deliverable results.",
+                    comma(nrow(event_level)), comma(full_event_count), paste(subset_steps, collapse = "; "))))
+}
+```
+
+::: {.callout-tip collapse="true"}
+## How to read this report
+* **Code is folded.** Click any *Show code* bar to see the R behind a result, or use the **`</> Code`** menu at the top right of the page to expand or collapse all code at once.
+* **Tables are interactive.** Sort any column, search, and use the **Copy / CSV / Excel** buttons to download the full table.
+* **Figures can be downloaded.** Every figure has a *Download figure (PNG)* link underneath. Click a figure to enlarge it.
+* **Everything at once:** the [Downloads](#sec-downloads) section in the appendix bundles all figures, tables, and machine-learning files.
+:::
+
+# Why Blue Ridge FloodWatch {#sec-why}
+
+::: {.lead-text}
+Floods are measured in dollars and event counts, but people live them as lost homes, cut-off roads, and neighbors who didn't make it out. Blue Ridge FloodWatch uses public data to show **where storm impacts on people are most severe in Western North Carolina, and why**, so that communities, emergency planners, and infrastructure agencies can direct attention before the next storm rather than after it.
+:::
+
+```{r}
+#| label: story-cards
+#| echo: false
+#| results: asis
+
+if (story$hl_events > 0) {
+  stat_cards(
+    values = c(comma(story$hl_deaths), dollars_short(story$hl_damage), comma(story$hl_events),
+               scales::percent(story$hl_death_share, accuracy = 1)),
+    labels = c(sprintf("deaths recorded by NOAA in the study counties during %s (%s to %s)", p$highlight_event_name,
+                       format(hl_window[1], "%b %d"), format(hl_window[2], "%b %d, %Y")),
+               sprintf("reported property + crop damage in the study counties during %s", p$highlight_event_name),
+               sprintf("NOAA storm events logged in those counties that week (%s flood-related)", story$hl_flood),
+               sprintf("of all storm deaths recorded in the study counties, %s-%s", p$start_year, p$end_year)),
+    alert = c(TRUE, TRUE, FALSE, TRUE)
+  )
+}
+```
+
+## The problem
+
+In late September 2024, the remnants of **`r p$highlight_event_name`** stalled over the Blue Ridge. Rain fell for days on steep, saturated slopes. Rivers and small creeks rose into towns built along their banks, debris flows cut off mountain communities, and roads, bridges, and culverts failed when people needed them most.
+
+The numbers above come straight from the NOAA Storm Events records analyzed in this report. In the `r length(p$study_counties)` study counties (`r paste(p$study_counties, collapse = ", ")`), that single week accounts for **`r scales::percent(story$hl_death_share, accuracy = 1)` of the storm deaths** and **`r scales::percent(story$hl_damage_share, accuracy = 1)` of the reported damage** across `r p$start_year`-`r p$end_year`. In the mountains, a rare event can outweigh a decade of ordinary storms. That makes it hard to plan for, and it is why we need to understand the *places* that make an event deadly, not just the storms themselves.
+
+## In their words: growing up through Helene in Asheville
+
+```{r}
+#| label: interview
+#| echo: false
+#| results: asis
+
+speaker <- if (isTRUE(p$interview_is_anonymous)) "An Asheville resident (anonymous)" else p$interview_display_name
+video_file <- if (!is.na(paths$interview_web) && file.exists(paths$interview_web)) paths$interview_web else paths$interview
+
+if (!isTRUE(p$include_interview)) {
+  callout("note", "Interview section disabled", "`include_interview: false`.")
+} else if (is.na(video_file) || !file.exists(video_file)) {
+  check_input(video_file, "Interview video", FALSE, "place the file at `interview_path`", "interview section", project_dir)
+  callout("warning", "Interview video not found", sprintf("Expected at `%s`.", display_path(video_file, project_dir)))
+} else if (!isTRUE(p$interview_consent_confirmed)) {
+  callout("important", "Interview not displayed: consent not confirmed",
+          "Set `interview_consent_confirmed: true` once the interviewee has agreed to be shown.")
+} else {
+  cat(sprintf("To hear what a storm like this means in practice, we interviewed **%s**. With their consent, the conversation is included below. They describe losing power and water for weeks, missing a month of school, roads blocked for too long, and watching the river valley below their neighborhood fill to the rooftops, with almost no warning that a hurricane could reach the mountains.\n\n", speaker))
+  poster <- if (!is.na(paths$interview_poster) && file.exists(paths$interview_poster)) {
+    sprintf(' poster="%s"', base64enc::dataURI(file = paths$interview_poster, mime = "image/jpeg"))
+  } else ""
+  if (isTRUE(p$interview_embed_video)) {
+    # The compressed web copy is embedded directly, so the HTML is fully self-contained.
+    cat(sprintf('<div class="video-wrap"><video controls preload="metadata"%s src="%s"></video></div>\n\n',
+                poster, base64enc::dataURI(file = video_file, mime = "video/mp4")))
+  } else {
+    cat(sprintf('<div class="video-wrap"><video controls preload="metadata"%s src="%s" data-external="1"></video></div>\n\n',
+                poster, fs::path_rel(video_file, start = normalizePath(file.path(project_dir, "outs", "report"), mustWork = FALSE))))
+    cat("*Quick render: the video is linked, not embedded.*\n\n")
+  }
+}
+```
+
+```{r}
+#| label: interview-highlights
+#| echo: false
+#| results: asis
+
+fmt_time <- function(s) sprintf("%d:%02d", as.integer(s %/% 60), as.integer(round(s %% 60)))
+
+if (isTRUE(p$include_interview) && isTRUE(p$interview_consent_confirmed) && isTRUE(p$show_interview_quotes)) {
+  if (!is.na(paths$highlights) && file.exists(paths$highlights)) {
+    hi <- readr::read_csv(paths$highlights, show_col_types = FALSE)
+    cat("### What we heard\n\n")
+    for (theme in unique(hi$theme)) {
+      cat(sprintf("**%s**\n\n", theme))
+      rows <- hi[hi$theme == theme, ]
+      for (i in seq_len(nrow(rows))) {
+        cat(sprintf('<div class="quote-card">&ldquo;%s&rdquo;<br><span class="quote-time">%s</span></div>\n\n',
+                    htmltools::htmlEscape(rows$quote[i]), fmt_time(rows$start_s[i])))
+      }
+    }
+    cat("\nTheir experience maps onto what this project measures: homes and businesses in **river valleys** (stream proximity), **roads and crossings** that failed or stayed blocked (NCDOT infrastructure), and a storm that arrived with **little warning** (the reason to identify high-risk places in advance).\n\n")
+    cat("\n*Quotes were transcribed automatically with OpenAI Whisper (run locally) and lightly trimmed. Timestamps link each quote to its place in the video.*\n\n")
+  }
+  if (!is.na(paths$transcript) && file.exists(paths$transcript)) {
+    tr <- jsonlite::fromJSON(paths$transcript)$segments
+    text <- trimws(tr$text)
+    for (nm in unlist(p$interview_redact_names)) text <- gsub(nm, "[name]", text, fixed = TRUE)
+    lines <- sprintf("**[%s]** %s", fmt_time(tr$start), text)
+    callout("note", "Full interview transcript (automatic, unedited)", paste(lines, collapse = "  \n"), collapse = TRUE)
+  }
+}
+```
+
+## Our question and approach
+
+> **Which storm events in North Carolina become high-consequence (deadly or very costly), and what features of the landscape and built environment around them (steep terrain, nearby streams, road crossings, paved surfaces) help explain it?**
+
+We answer this in four steps. Each step is one section of this report.
+
+```{mermaid}
+%%| echo: false
+flowchart LR
+  A["<b>NOAA Storm Events</b><br/>what happened, where,<br/>deaths &amp; damage"] --> C["<b>Event-level table</b><br/>one row per storm event"]
+  B["<b>Landscape &amp; infrastructure</b><br/>NHD streams · 3DEP terrain<br/>NCDOT culverts &amp; bridges<br/>NLCD imperviousness · SSURGO"] --> D["<b>Spatial features</b><br/>measured around<br/>each event point"]
+  C --> D
+  D --> E["<b>ML-ready data</b><br/>targets, splits,<br/>feature dictionary"]
+  E --> F["<b>Model</b><br/>(Python, next phase)"]
+  F --> G["<b>Social good</b><br/>where to prepare,<br/>who is most at risk"]
+```
+
+# NOAA Storm Events: What Happened {#sec-noaa}
+
+## The dataset
+
+```{r}
+#| label: noaa-card
+#| echo: false
+#| results: asis
+
+dataset_card(
+  Source = "NOAA National Centers for Environmental Information (NCEI), Storm Events Database, bulk CSV files",
+  Contents = "Three linked tables per year: <b>details</b> (one row per event: type, place, time, deaths, injuries, damage, narrative), <b>fatalities</b> (one row per person killed), <b>locations</b> (one or more points per event)",
+  Coverage = sprintf("%s-%s, %s files, filtered to %s. Year(s) %s are incomplete.",
+                     p$start_year, p$end_year, nrow(noaa_inventory), tools::toTitleCase(tolower(p$state_name)),
+                     paste(p$partial_years, collapse = ", ")),
+  "Why we use it" = "It is the official record of which storms hurt people and property, and it defines the outcomes we want to explain",
+  Caveats = "Damage values are estimates in nominal dollars; many forecast-zone records have no coordinates"
+)
+```
+
+```{r}
+#| label: noaa-files
+
+noaa_inventory |>
+  dplyr::transmute(table, data_year, file = basename(file), noaa_revision_date = as.Date(creation_date, "%Y%m%d")) |>
+  dt(name = "noaa_input_files", page_length = 6)
+```
+
+## Preprocessing
+
+### One row per storm event
+
+The three NOAA tables can't simply be joined together. One event can have several fatality rows (one per person) and several location rows. A naive join repeats that event's deaths, injuries, and damage once per matching row, and summing afterwards inflates the totals. Our pipeline instead:
+
+* collapses the **details** table to one row per `EVENT_ID`, taking `max()` of the impacts (never a sum) and the first non-missing value of the metadata;
+* aggregates **fatalities** separately into per-event record counts;
+* aggregates **locations** separately, keeping a record count and the first point as a coordinate fallback.
+
+```{r}
+#| label: noaa-code
+#| ref.label: prepare-noaa
+#| eval: false
+```
+
+```{r}
+#| label: noaa-dup-table
+knitr::kable(prep$duplication_checks, format.args = list(big.mark = ","),
+             caption = "Rows per EVENT_ID before and after processing")
+```
+
+```{r}
+#| label: noaa-dup-assert
+#| echo: false
+#| results: asis
+after <- dplyr::filter(prep$duplication_checks, stringr::str_detect(table, "after"))
+if (after$max_rows_per_event == 1 && after$duplicated_events == 0) {
+  callout("tip", "Validation passed: exactly one row per event",
+          sprintf("%s events, %s distinct `EVENT_ID`s: `max_rows_per_event = 1`, `duplicate_events = 0`. As the table shows, the raw fatalities and locations tables have up to %s and %s rows per event, which is why they are aggregated separately.",
+                  comma(after$rows), comma(after$distinct_event_ids),
+                  prep$duplication_checks$max_rows_per_event[2], prep$duplication_checks$max_rows_per_event[3]))
+}
+```
+
+As a consistency check, we compared deaths in the details table with the number of fatality records. Differences are reported, not overwritten:
+
+```{r}
+#| label: noaa-fatality-consistency
+#| echo: false
+knitr::kable(prep$fatality_consistency, format.args = list(big.mark = ","))
+```
+
+### Assigning North Carolina regions
+
+NOAA records events either by **county** (`CZ_TYPE = "C"`) or by **National Weather Service forecast zone** (`CZ_TYPE = "Z"`, e.g. *INLAND PENDER*, *BURKE MOUNTAINS*, *HATTERAS ISLAND*). A zone's `CZ_FIPS` is a zone number, not a county code, so zones are matched by name. Each record gets the first rule that succeeds, and the rule used is stored with it:
+
+| Method | Rule |
+|---|---|
+| `exact_county_match` | County record matched on its 3-digit FIPS, or a zone name that is exactly a county name |
+| `forecast_zone_county_match` | Zone name matches a county after removing descriptors such as *Western*, *Inland*, *Greater*, *Mountains* |
+| `special_coastal_zone` | Barrier-island zones with no county in the name (*Outer Banks*, *Ocracoke*, *Hatteras*) |
+| `unmatched` | Left without a region; never defaulted to a region |
+
+```{r}
+#| label: region-summary
+#| echo: false
+#| results: asis
+event_level |>
+  dplyr::count(region_assignment_method, region, name = "events") |>
+  tidyr::pivot_wider(names_from = region, values_from = events, values_fill = 0) |>
+  knitr::kable(format.args = list(big.mark = ","), caption = "Events by assignment method and region") |>
+  print()
+unmatched <- dplyr::filter(prep$region_assignments, region_assignment_method == "unmatched")
+if (nrow(unmatched) > 0) {
+  callout("warning", sprintf("%d unmatched zone name(s)", nrow(unmatched)), paste0("`", unique(unmatched$CZ_NAME), "`", collapse = ", "))
+} else {
+  callout("tip", "Every county and zone record was matched", "No record fell through to `unmatched`.")
+}
+```
+
+```{r}
+#| label: region-zone-table
+prep$region_assignments |>
+  dplyr::filter(region_assignment_method != "exact_county_match") |>
+  dplyr::select(CZ_TYPE, CZ_FIPS, CZ_NAME, region, region_assignment_method, matched_county) |>
+  dplyr::arrange(region_assignment_method, CZ_NAME) |>
+  dt(name = "forecast_zone_matches", page_length = 8)
+```
+
+```{r}
+#| label: load-boundaries
+#| include: false
+
+nc_boundary <- if (!is.na(paths$nc_boundary) && file.exists(paths$nc_boundary)) {
+  sf::st_read(paths$nc_boundary, quiet = TRUE) |> clean_spatial_layer(p$analysis_crs)
+} else NULL
+counties <- if (!is.na(paths$county_boundaries) && file.exists(paths$county_boundaries)) {
+  sf::st_read(paths$county_boundaries, quiet = TRUE) |>
+    clean_spatial_layer(p$analysis_crs) |>
+    dplyr::mutate(county_name = toupper(NAME)) |>
+    dplyr::left_join(nc_county_lookup(), by = "county_name") |>
+    dplyr::mutate(in_study = county_name %in% toupper(p$study_counties))
+} else {
+  fw_log("warning", "NC county boundaries",
+         paste("Not found at", display_path(paths$county_boundaries, project_dir), "- maps use the state outline only."), "maps")
+  NULL
+}
+study_counties_sf <- if (!is.null(counties)) dplyr::filter(counties, in_study) else NULL
+study_bbox <- if (!is.null(study_counties_sf) && nrow(study_counties_sf) > 0) sf::st_bbox(sf::st_buffer(sf::st_union(study_counties_sf), 3000)) else NULL
+```
+
+```{r}
+#| label: plot-region-map
+#| fig-cap: "NC counties colored by the project's three-region scheme; the study counties are outlined."
+#| fig-height: 4.6
+if (!is.null(counties)) {
+  g <- ggplot(counties) +
+    geom_sf(aes(fill = factor(region, region_levels, region_labels)), color = "white", linewidth = 0.25) +
+    geom_sf(data = study_counties_sf, fill = NA, color = fw_colors$navy, linewidth = 0.8) +
+    scale_fill_manual(values = region_colors, name = NULL) +
+    labs(title = "Regions and study area",
+         subtitle = sprintf("Study area (%s): %d counties outlined", p$study_area, nrow(study_counties_sf)),
+         caption = "County boundaries: U.S. Census Bureau cartographic boundary file (2023)") +
+    map_theme
+  show_fig(g, "01_region_map", 11, 5)
+}
+```
+
+### Coverage and data quality
+
+```{r}
+#| label: event-coverage
+event_level |>
+  dplyr::group_by(year, is_partial_year) |>
+  dplyr::summarise(
+    events = dplyr::n(),
+    county_records = sum(cz_type == "C"),
+    zone_records = sum(cz_type == "Z"),
+    with_coordinates = sum(!is.na(longitude)),
+    flood_related = sum(is_flood_event),
+    study_area = sum(in_study_area),
+    deaths = sum(total_deaths),
+    damage = sum(total_damage)
+  ) |>
+  dplyr::mutate(damage = dollars_short(damage)) |>
+  dt(name = "noaa_coverage_by_year", page_length = 12)
+```
+
+```{r}
+#| label: partial-year-note
+#| echo: false
+#| results: asis
+if (length(p$partial_years) > 0) {
+  latest <- max(event_level$event_date[event_level$is_partial_year], na.rm = TRUE)
+  callout("warning", "Partial year",
+          sprintf("%s is flagged `is_partial_year`: the latest event in the file is dated %s, so its totals are incomplete and should not be compared with full years.",
+                  paste(p$partial_years, collapse = ", "), format(latest, "%B %d, %Y")))
+}
+```
+
+## What the storm records show
+
+### Storm activity over time
+
+```{r}
+#| label: plot-events-year
+#| fig-height: 5
+g <- event_level |>
+  dplyr::filter(!is.na(region)) |>
+  dplyr::count(year, region, is_partial_year) |>
+  dplyr::mutate(region = factor(region, region_levels, region_labels)) |>
+  ggplot(aes(factor(year), n, fill = region, alpha = is_partial_year)) +
+  geom_col(width = 0.75) +
+  scale_fill_manual(values = region_colors) +
+  scale_alpha_manual(values = c(`FALSE` = 1, `TRUE` = 0.45), labels = c("Full year", "Partial year")) +
+  scale_y_continuous(labels = comma) +
+  labs(title = "Storm events recorded per year across North Carolina",
+       subtitle = "Lighter bars mark the partial year", x = NULL, y = "Events",
+       fill = NULL, alpha = NULL, caption = noaa_caption)
+show_fig(g, "02_events_by_year_region", 10, 5)
+```
+
+```{r}
+#| label: plot-flood-calendar
+#| fig-height: 4.8
+flood_calendar <- event_level |>
+  dplyr::filter(is_flood_event == 1) |>
+  dplyr::count(event_year, event_month)
+g <- ggplot(flood_calendar, aes(factor(event_month), factor(event_year), fill = n)) +
+  geom_tile(color = "white", linewidth = 0.6) +
+  geom_text(aes(label = n), size = 2.8, color = "gray15") +
+  scale_fill_gradient(low = "#e8f1f7", high = fw_colors$navy, trans = "log10", name = "Flood-related events") +
+  scale_x_discrete(labels = month.abb) +
+  labs(title = "When flooding happens: flood-related events by month",
+       subtitle = "Flash floods, floods, heavy rain, and debris flows statewide", x = NULL, y = NULL, caption = noaa_caption) +
+  theme(panel.grid = element_blank(), legend.key.width = unit(1.4, "cm"))
+show_fig(g, "03_flood_calendar", 10, 5)
+```
+
+### Which storms cause harm
+
+```{r}
+#| label: plot-event-types
+#| fig-height: 7
+top_types <- event_level |>
+  dplyr::filter(!is.na(region)) |>
+  dplyr::count(region, event_type) |>
+  dplyr::group_by(region) |>
+  dplyr::slice_max(n, n = p$top_n_event_types, with_ties = FALSE) |>
+  dplyr::ungroup() |>
+  dplyr::mutate(region = factor(region, region_levels, region_labels),
+                event_key = paste(event_type, region, sep = "___"))
+g <- ggplot(top_types, aes(n, reorder(event_key, n), fill = region)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~region, scales = "free", ncol = 3) +
+  scale_y_discrete(labels = \(x) sub("___.*$", "", x)) +
+  scale_x_continuous(labels = comma) +
+  scale_fill_manual(values = region_colors) +
+  labs(title = sprintf("Most frequent event types by region (top %d)", p$top_n_event_types),
+       x = "Events", y = NULL, caption = noaa_caption)
+show_fig(g, "04_top_event_types_by_region", 13, 7)
+```
+
+```{r}
+#| label: plot-impacts
+#| fig-height: 6.5
+impact_by_type <- event_level |>
+  dplyr::group_by(event_type) |>
+  dplyr::summarise(events = dplyr::n(), deaths = sum(total_deaths), injuries = sum(total_injuries),
+                   damage = sum(total_damage))
+top_damage_types <- dplyr::slice_max(impact_by_type, damage, n = p$top_n_event_types, with_ties = FALSE)
+
+g1 <- ggplot(top_damage_types, aes(damage, reorder(event_type, damage))) +
+  geom_col(fill = "#8C2D04") +
+  scale_x_log10(labels = scales::label_dollar(scale_cut = scales::cut_short_scale())) +
+  labs(title = "Reported damage", subtitle = "log scale, nominal dollars", x = NULL, y = NULL)
+g2 <- top_damage_types |>
+  tidyr::pivot_longer(c(deaths, injuries), names_to = "outcome", values_to = "people") |>
+  ggplot(aes(people, reorder(event_type, damage), fill = outcome)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c(deaths = fw_colors$alert, injuries = fw_colors$amber), name = NULL) +
+  labs(title = "Deaths and injuries", subtitle = "people", x = NULL, y = NULL) +
+  theme(axis.text.y = element_blank())
+g <- (g1 | g2) + plot_annotation(
+  title = sprintf("Event types with the most reported damage, %s-%s", p$start_year, p$end_year),
+  caption = noaa_caption,
+  theme = theme(plot.title = element_text(face = "bold", color = fw_colors$navy, size = 14)))
+show_fig(g, "05_impacts_by_event_type", 13, 6.5)
+```
+
+```{r}
+#| label: impact-table
+impact_by_type |>
+  dplyr::arrange(dplyr::desc(damage)) |>
+  dplyr::mutate(damage = dollars_short(damage)) |>
+  dt(name = "impacts_by_event_type", page_length = 10)
+```
+
+### Western North Carolina: one week dominates
+
+```{r}
+#| label: plot-study-timeline
+#| fig-height: 5
+study_monthly <- study |>
+  dplyr::mutate(month = lubridate::floor_date(event_date, "month")) |>
+  dplyr::group_by(month) |>
+  dplyr::summarise(damage = sum(total_damage), deaths = sum(total_deaths))
+peak <- dplyr::slice_max(study_monthly, damage, n = 1)
+g <- ggplot(study_monthly, aes(month, damage)) +
+  geom_col(fill = fw_colors$teal, width = 25) +
+  geom_col(data = peak, fill = fw_colors$alert, width = 25) +
+  annotate("label", x = peak$month, y = peak$damage, hjust = 1.05, vjust = 1, size = 3.4, label.size = 0,
+           label = sprintf("%s: %s in damage\n%s deaths", format(peak$month, "%b %Y"), dollars_short(peak$damage), peak$deaths)) +
+  scale_y_continuous(labels = scales::label_dollar(scale_cut = scales::cut_short_scale())) +
+  labs(title = "Reported storm damage per month in the study counties",
+       subtitle = paste(p$study_counties, collapse = ", "), x = NULL, y = "Damage (nominal $)", caption = noaa_caption)
+show_fig(g, "06_study_area_damage_timeline", 11, 5)
+```
+
+The study-area events with the most damage are listed below. The narrative column is NOAA's own text, truncated to 300 characters.
+
+```{r}
+#| label: study-top-events
+study |>
+  dplyr::slice_max(total_damage, n = p$top_n_events_table, with_ties = FALSE) |>
+  dplyr::transmute(date = event_date, event_type, zone_or_county = cz_name,
+                   damage = dollars_short(total_damage), deaths = total_deaths, injuries = total_injuries,
+                   noaa_narrative = stringr::str_trunc(dplyr::coalesce(event_narrative, episode_narrative), 300)) |>
+  dt(name = "study_area_top_events", page_length = 5)
+```
+
+## What NOAA can't tell us, and why we added more data
+
+```{r}
+#| label: gap-numbers
+#| include: false
+gap <- list(
+  no_coords = mean(is.na(event_level$longitude)),
+  zone_no_coords = mean(is.na(event_level$longitude[event_level$cz_type == "Z"])),
+  flood_coords = mean(!is.na(event_level$longitude[event_level$is_flood_event == 1])),
+  rare = mean(event_level$total_deaths > 0)
+)
+```
+
+NOAA tells us **what** happened, **when**, and **how bad** it was. It does not tell us **why** one creek crossing became deadly while a similar storm a few miles away did little harm. Three gaps stand out:
+
+1. **Outcomes, not conditions.** The records describe the storm and its toll, not the ground it fell on: slope, how close homes and roads are to streams, whether water can soak in or runs off pavement.
+2. **Rare, extreme harm.** Only `r scales::percent(gap$rare, accuracy = 0.1)` of events caused a death. A model needs place-based context to tell a routine storm from a deadly one.
+3. **Location detail varies.** `r scales::percent(gap$no_coords, accuracy = 1)` of events (mostly forecast-zone records) have no coordinates, but `r scales::percent(gap$flood_coords, accuracy = 1)` of flood-related events do. For those events we can measure the landscape around the exact point where the event was reported.
+
+Each gap maps to a public dataset:
+
+| Question NOAA can't answer | Dataset we added | What it measures around each event |
+|---|---|---|
+| Was the event near a stream or river? | **USGS NHD High Resolution** (+ WBD watersheds) | distance to nearest stream, stream counts and density, containing HUC12 |
+| Was the ground steep or rugged? | **USGS 3DEP-derived elevation, slope, roughness** | elevation, slope, and roughness at the point and nearby |
+| Were roads crossing water nearby? | **NCDOT bridges/structures and culverts** | distance to and count of nearby crossings |
+| Was the land paved or natural? | **USGS Annual NLCD imperviousness** | % impervious surface at and around the point |
+| Would the soil absorb water? | **USDA SSURGO** | statewide soil summary (not yet mappable to events) |
+
+# The Supporting Datasets {#sec-datasets}
+
+Each dataset below has a summary card (source, contents, purpose, caveats) and a basic visualization.
+
+```{r}
+#| label: load-flowlines-study
+#| include: false
+flow_paths <- locate_nhd_layer("NHDFlowline", paths$nhd_dir, paths$nhd_zip)
+study_flowlines <- if (length(flow_paths) > 0 && !is.null(study_bbox)) {
+  load_nhd_flowlines(flow_paths, unlist(p$nhd_flowline_ftypes), p$analysis_crs,
+                     sf::st_bbox(sf::st_transform(sf::st_as_sfc(study_bbox), 4269))) |>
+    sf::st_filter(sf::st_union(study_counties_sf))
+} else NULL
+```
+
+## Streams and watersheds: USGS NHD High Resolution
+
+```{r}
+#| label: nhd-card
+#| echo: false
+#| results: asis
+nhd_date <- if (file.exists(paths$nhd_zip)) {
+  z <- utils::unzip(paths$nhd_zip, list = TRUE); max(as.Date(z$Date[grepl("NHDFlowline", z$Name)]))
+} else NA
+dataset_card(
+  Source = "USGS National Hydrography Dataset, High Resolution (1:24,000), North Carolina state extract; includes the Watershed Boundary Dataset (WBD)",
+  Contents = sprintf("Flowlines (streams, rivers, canals, artificial paths) split across %d shapefiles; HUC2-HUC16 watershed polygons%s",
+                     length(flow_paths), if (!is.na(nhd_date)) sprintf("; flowline files dated %s", nhd_date) else ""),
+  "Why we use it" = "Flood harm concentrates where people, roads, and buildings sit close to moving water",
+  "How we use it" = sprintf("StreamRiver (FType 460) and ArtificialPath (558) flowlines: distance to the nearest line, counts within %s and %s, and line density; the HUC12 subwatershed containing each event", sb, ib),
+  Caveats = "Point and buffer measures only. No upstream contributing area, flow accumulation, or HAND is computed"
+)
+```
+
+```{r}
+#| label: plot-nhd
+#| fig-height: 7.5
+if (!is.null(study_flowlines)) {
+  fl_plot <- study_flowlines |>
+    dplyr::mutate(kind = dplyr::case_when(ftype == 460 & !is.na(gnis_name) ~ "Named stream / river",
+                                          ftype == 460 ~ "Unnamed stream",
+                                          TRUE ~ "Artificial path (through lakes, wide rivers)"))
+  g <- ggplot() +
+    geom_sf(data = study_counties_sf, fill = "#fbfaf6", color = "gray55", linewidth = 0.35) +
+    geom_sf(data = dplyr::filter(fl_plot, kind == "Unnamed stream"), color = "#a9cfe6", linewidth = 0.12) +
+    geom_sf(data = dplyr::filter(fl_plot, kind != "Unnamed stream"), aes(color = kind), linewidth = 0.3) +
+    scale_color_manual(values = c("Named stream / river" = "#1f5f99", "Artificial path (through lakes, wide rivers)" = "#6a3d9a"), name = NULL) +
+    labs(title = "Streams and rivers of the study counties",
+         subtitle = sprintf("%s NHD High Resolution flowline segments (light blue = unnamed headwater streams)", comma(nrow(fl_plot))),
+         caption = "Source: USGS NHD High Resolution") +
+    map_theme
+  show_fig(g, "07_nhd_study_area_streams", 11, 8)
+}
+```
+
+```{r}
+#| label: nhd-table
+if (length(flow_paths) > 0) {
+  ftype_names <- c(`334` = "Connector", `336` = "Canal/Ditch", `420` = "Underground conduit", `428` = "Pipeline",
+                   `460` = "Stream/River", `558` = "Artificial path", `566` = "Coastline")
+  ftype_counts <- purrr::map(flow_paths, \(f) foreign::read.dbf(sub("\\.shp$", ".dbf", f), as.is = TRUE)["ftype"]) |>
+    dplyr::bind_rows() |>
+    dplyr::count(ftype, name = "segments_statewide") |>
+    dplyr::mutate(description = unname(ftype_names[as.character(ftype)]),
+                  used_in_features = ftype %in% unlist(p$nhd_flowline_ftypes)) |>
+    dplyr::arrange(dplyr::desc(segments_statewide))
+  dt(ftype_counts, name = "nhd_flowline_types", page_length = 8)
+}
+```
+
+```{r}
+#| label: plot-huc12
+#| fig-height: 4.6
+huc_paths <- locate_nhd_layer("WBDHU12", paths$nhd_dir, paths$nhd_zip)
+if (length(huc_paths) > 0 && !is.null(nc_boundary)) {
+  huc12 <- sf::st_read(huc_paths[[1]], quiet = TRUE) |> clean_spatial_layer(p$analysis_crs) |>
+    sf::st_filter(nc_boundary)
+  g <- ggplot() +
+    geom_sf(data = huc12, aes(fill = areasqkm), color = "white", linewidth = 0.05) +
+    geom_sf(data = study_counties_sf, fill = NA, color = fw_colors$navy, linewidth = 0.6) +
+    scale_fill_viridis_c(option = "G", direction = -1, name = "HUC12 area (sq. km)", trans = "sqrt") +
+    labs(title = "Subwatersheds (HUC12) intersecting North Carolina",
+         subtitle = sprintf("%s subwatersheds; study counties outlined", comma(nrow(huc12))),
+         caption = "Source: USGS Watershed Boundary Dataset") +
+    map_theme + theme(legend.key.width = unit(1.5, "cm"))
+  show_fig(g, "08_wbd_huc12", 11, 5)
+}
+```
+
+## Terrain: USGS 3DEP-derived elevation, slope, and roughness
+
+```{r}
+#| label: dem-card
+#| echo: false
+#| results: asis
+dem_res <- if (file.exists(paths$dem)) round(terra::res(terra::rast(paths$dem))[1], 1) else NA
+dataset_card(
+  Source = "Elevation tiles from the AWS Terrain Tiles service via the <code>elevatr</code> R package (U.S. coverage sourced from USGS 3DEP), zoom 10",
+  Contents = sprintf("Elevation (m), slope (degrees), and terrain roughness (m), clipped to North Carolina and projected to EPSG:%s at %s m cells", p$analysis_crs, dem_res),
+  "Why we use it" = "Steep, rugged terrain speeds runoff, feeds flash floods and debris flows, and isolates communities",
+  "How we use it" = sprintf("Value at the event point and mean within %s", eb),
+  Caveats = sprintf("%s m cells are coarser than native 1/3 arc-second 3DEP; aspect is not used; no HAND or flow accumulation", dem_res)
+)
+```
+
+```{r}
+#| label: plot-terrain
+#| fig-height: 5.5
+raster_df <- function(path, fact, crop_to = NULL) {
+  r <- terra::rast(path)[[1]]
+  if (!is.null(crop_to)) r <- terra::crop(r, terra::project(terra::vect(crop_to), terra::crs(r)), mask = TRUE)
+  if (fact > 1) r <- terra::aggregate(r, fact = fact, fun = "mean", na.rm = TRUE)
+  df <- as.data.frame(r, xy = TRUE, na.rm = TRUE)
+  names(df)[3] <- "value"
+  list(df = df, crs = terra::crs(r))
+}
+if (file.exists(paths$dem) && file.exists(paths$slope)) {
+  elev <- raster_df(paths$dem, fact = 8, crop_to = nc_boundary)
+  g1 <- ggplot(elev$df, aes(x, y, fill = value)) + geom_raster() +
+    scale_fill_gradientn(colors = terrain.colors(10), name = "Elevation (m)") +
+    coord_sf(crs = elev$crs, datum = NA) +
+    labs(title = "Elevation across North Carolina") + map_theme + theme(legend.key.width = unit(1.3, "cm"))
+  slope <- raster_df(paths$slope, fact = 2, crop_to = study_counties_sf)
+  g2 <- ggplot(slope$df, aes(x, y, fill = value)) + geom_raster() +
+    geom_sf(data = study_counties_sf, inherit.aes = FALSE, fill = NA, color = "white", linewidth = 0.3) +
+    scale_fill_viridis_c(option = "rocket", direction = -1, name = "Slope (degrees)") +
+    coord_sf(crs = slope$crs, datum = NA) +
+    labs(title = "Slope in the study counties") + map_theme + theme(legend.key.width = unit(1.3, "cm"))
+  g <- (g1 | g2) + plot_layout(widths = c(1.6, 1)) +
+    plot_annotation(caption = "Source: elevatr / AWS Terrain Tiles (USGS 3DEP in the U.S.)")
+  show_fig(g, "09_terrain", 13, 5.5)
+}
+```
+
+## Road crossings: NCDOT bridges, structures, and culverts
+
+```{r}
+#| label: ncdot-load
+#| include: false
+ncdot <- dplyr::bind_rows(
+  if (file.exists(paths$ncdot_structures)) load_point_layer(paths$ncdot_structures, p$analysis_crs) |> dplyr::transmute(asset = "Structure (bridge)"),
+  if (file.exists(paths$ncdot_culverts)) load_point_layer(paths$ncdot_culverts, p$analysis_crs) |> dplyr::transmute(asset = "Culvert")
+)
+ncdot_date <- if (file.exists(paths$ncdot_structures)) as.Date(file.info(paths$ncdot_structures)$mtime) else NA
+```
+
+```{r}
+#| label: ncdot-card
+#| echo: false
+#| results: asis
+dataset_card(
+  Source = "NCDOT_Structures ArcGIS REST service (North Carolina Department of Transportation)",
+  Contents = sprintf("%s structures (bridges) and %s culverts as points%s",
+                     comma(sum(ncdot$asset == "Structure (bridge)")), comma(sum(ncdot$asset == "Culvert")),
+                     if (!is.na(ncdot_date)) sprintf("; retrieved %s", ncdot_date) else ""),
+  "Why we use it" = "Where roads cross streams, floodwater damages infrastructure, strands people, and blocks emergency access",
+  "How we use it" = sprintf("Distance to the nearest structure and culvert, and counts within %s and %s", eb, ib),
+  Caveats = "The inventory may be incomplete (e.g., non-state-maintained crossings); absence of an asset in the layer does not prove none exists"
+)
+```
+
+```{r}
+#| label: plot-ncdot
+#| fig-height: 5
+if (nrow(ncdot) > 0 && !is.null(counties)) {
+  g <- ggplot() +
+    geom_sf(data = counties, fill = "#fbfaf6", color = "gray80", linewidth = 0.2) +
+    geom_sf(data = ncdot, aes(color = asset), size = 0.25, alpha = 0.6) +
+    geom_sf(data = study_counties_sf, fill = NA, color = fw_colors$navy, linewidth = 0.6) +
+    scale_color_manual(values = c("Structure (bridge)" = "#555555", "Culvert" = "#d95f02"), name = NULL) +
+    guides(color = guide_legend(override.aes = list(size = 3, alpha = 1))) +
+    labs(title = "NCDOT road-crossing inventory",
+         subtitle = "Each dot is one inventoried structure or culvert; study counties outlined",
+         caption = "Source: NCDOT Structures service") +
+    map_theme
+  show_fig(g, "10_ncdot_assets", 11, 5)
+}
+```
+
+```{r}
+#| label: ncdot-table
+if (nrow(ncdot) > 0 && !is.null(counties)) {
+  sf::st_join(ncdot, counties[c("NAME", "in_study", "ALAND")], join = sf::st_within) |>
+    sf::st_drop_geometry() |>
+    dplyr::filter(in_study) |>
+    dplyr::count(county = NAME, asset, ALAND) |>
+    tidyr::pivot_wider(names_from = asset, values_from = n, values_fill = 0) |>
+    dplyr::mutate(assets_per_100_km2 = round((`Structure (bridge)` + Culvert) / (ALAND / 1e8), 1)) |>
+    dplyr::select(-ALAND) |>
+    dplyr::arrange(dplyr::desc(assets_per_100_km2)) |>
+    dt(name = "ncdot_assets_study_counties", page_length = 11)
+}
+```
+
+## Paved surfaces: USGS Annual NLCD fractional imperviousness
+
+```{r}
+#| label: nlcd-card
+#| echo: false
+#| results: asis
+nlcd_res <- if (file.exists(paths$nlcd)) round(terra::res(terra::rast(paths$nlcd))[1], 1) else NA
+dataset_card(
+  Source = "USGS Annual National Land Cover Database (NLCD), Fractional Impervious Surface, via the USGS ImageServer",
+  Contents = sprintf("Percent impervious surface (0-100) for %s, North Carolina extent, %s m cells (EPSG:5070)", p$nlcd_vintage, nlcd_res),
+  "Why we use it" = "Pavement and rooftops shed water quickly, raising flood peaks in developed valleys",
+  "How we use it" = sprintf("Value at the event point and means within %s and %s", eb, ib),
+  Caveats = sprintf("A single <b>%s static contemporary exposure layer</b>, not historical land cover for each event year; export cap made cells coarser than native 30 m", p$nlcd_vintage)
+)
+```
+
+```{r}
+#| label: plot-nlcd
+#| fig-height: 6
+if (file.exists(paths$nlcd) && !is.null(study_counties_sf)) {
+  imp <- raster_df(paths$nlcd, fact = 2, crop_to = study_counties_sf)
+  imp$df$value[imp$df$value > 100] <- NA
+  g <- ggplot(imp$df, aes(x, y, fill = value)) + geom_raster() +
+    geom_sf(data = sf::st_transform(study_counties_sf, imp$crs), inherit.aes = FALSE, fill = NA, color = "gray40", linewidth = 0.3) +
+    scale_fill_gradientn(colors = c("#f7f7f2", "#fdd49e", "#fc8d59", "#d7301f", "#7f0000"),
+                         values = c(0, 0.05, 0.2, 0.5, 1), name = "Impervious (%)", na.value = NA) +
+    coord_sf(crs = imp$crs, datum = NA) +
+    labs(title = sprintf("Impervious surface in the study counties (%s)", p$nlcd_vintage),
+         subtitle = "Development concentrates in valleys along rivers, e.g. the Asheville area",
+         caption = "Source: USGS Annual NLCD Fractional Impervious Surface") +
+    map_theme + theme(legend.key.width = unit(1.4, "cm"))
+  show_fig(g, "11_nlcd_impervious_study_area", 11, 6.5)
+}
+```
+
+## Soils: USDA SSURGO
+
+```{r}
+#| label: soils-card
+#| echo: false
+#| results: asis
+soil_file <- file.path(paths$soils_dir, "nc_ssurgo_components.csv")
+soil_spatial_ok <- !is.na(paths$soil_spatial) && file.exists(paths$soil_spatial)
+if (isTRUE(p$include_soil_features) && !soil_spatial_ok) {
+  fw_log("warning", "SSURGO spatial geometry",
+         "include_soil_features is true but no map-unit geometry is available; event-level soil features disabled.", "soil features")
+}
+dataset_card(
+  Source = "USDA NRCS Soil Survey Geographic Database (SSURGO) via Soil Data Access (<code>soilDB</code>)",
+  Contents = "Tabular map-unit components (hydrologic soil group, drainage class, share of map unit) and horizons (saturated conductivity, water capacity) for NC survey areas",
+  "Why we use it" = "Soils that absorb water slowly (hydrologic groups C and D) produce more runoff",
+  "How we use it" = "Summary only. The files have no map-unit geometry, so soil values are <b>not</b> assigned to events (doing so would invent values)",
+  Caveats = "Event-level soil features need gSSURGO/SSURGO polygons joined by <code>mukey</code> (parameter <code>soil_spatial_path</code>)"
+)
+```
+
+```{r}
+#| label: plot-soils
+#| fig-height: 4.5
+if (file.exists(soil_file)) {
+  soils <- readr::read_csv(soil_file, show_col_types = FALSE) |>
+    dplyr::mutate(county = toupper(stringr::str_remove(areaname, " County, North Carolina$")),
+                  area = dplyr::if_else(county %in% toupper(p$study_counties), "Study counties", "Rest of NC"),
+                  comppct_r = as.numeric(comppct_r))
+  share <- function(var) {
+    soils |>
+      dplyr::filter(!is.na(.data[[var]])) |>
+      dplyr::group_by(area, value = .data[[var]]) |>
+      dplyr::summarise(weight = sum(comppct_r, na.rm = TRUE)) |>
+      dplyr::mutate(share = weight / sum(weight)) |>
+      dplyr::ungroup()
+  }
+  area_fill <- scale_fill_manual(values = c("Study counties" = fw_colors$teal, "Rest of NC" = "gray70"), name = NULL)
+  g1 <- ggplot(share("hydgrp"), aes(value, share, fill = area)) + geom_col(position = "dodge") +
+    scale_y_continuous(labels = scales::percent) + area_fill +
+    labs(title = "Hydrologic soil group", subtitle = "A = high infiltration ... D = very low", x = NULL, y = NULL)
+  g2 <- share("drainagecl") |>
+    ggplot(aes(share, reorder(value, share), fill = area)) + geom_col(position = "dodge") +
+    scale_x_continuous(labels = scales::percent) + area_fill +
+    labs(title = "Drainage class", x = NULL, y = NULL)
+  g <- (g1 | g2) + plot_layout(guides = "collect") &
+    theme(legend.position = "bottom")
+  g <- g + plot_annotation(caption = "Share of component percent within survey areas (not area-weighted). Source: USDA NRCS SSURGO")
+  show_fig(g, "12_ssurgo_summary", 12, 4.8)
+}
+```
+
+## Datasets not yet included
+
+```{r}
+#| label: optional-sources
+#| echo: false
+#| results: asis
+optional_features <- tibble::tibble(event_id = event_level$event_id)
+optional_feature_cols <- character()
+
+if (isTRUE(p$include_rainfall_features) &&
+    check_input(paths$rainfall, "Rainfall", FALSE, "CSV with `event_id` + numeric columns", "rainfall features", project_dir)) {
+  rain <- readr::read_csv(paths$rainfall, show_col_types = FALSE) |> janitor::clean_names()
+  if ("event_id" %in% names(rain)) {
+    rain <- rain |> dplyr::select(event_id, dplyr::where(is.numeric)) |> dplyr::distinct(event_id, .keep_all = TRUE) |>
+      dplyr::rename_with(\(x) paste0("rain_", x), -event_id)
+    optional_features <- dplyr::left_join(optional_features, rain, by = "event_id")
+    optional_feature_cols <- c(optional_feature_cols, setdiff(names(rain), "event_id"))
+  }
+}
+if (isTRUE(p$include_community_features) &&
+    check_input(paths$community, "Community vulnerability", FALSE, "county CSV with `county_fips` + numeric columns", "community features", project_dir)) {
+  comm <- readr::read_csv(paths$community, show_col_types = FALSE, col_types = readr::cols(county_fips = "c")) |> janitor::clean_names()
+  if ("county_fips" %in% names(comm)) {
+    comm <- comm |> dplyr::mutate(matched_county_fips = sprintf("%03d", as.integer(county_fips) %% 1000L)) |>
+      dplyr::select(matched_county_fips, dplyr::where(is.numeric)) |> dplyr::rename_with(\(x) paste0("comm_", x), -matched_county_fips)
+    optional_features <- optional_features |>
+      dplyr::left_join(dplyr::select(event_level, event_id, matched_county_fips), by = "event_id") |>
+      dplyr::left_join(comm, by = "matched_county_fips") |> dplyr::select(-matched_county_fips)
+    optional_feature_cols <- c(optional_feature_cols, setdiff(names(comm), "matched_county_fips"))
+  }
+}
+
+cat(sprintf("* **Rainfall** (e.g., event rainfall totals): %s\n", if (length(grep("^rain_", optional_feature_cols))) "included." else "not included yet. No other variable stands in for rainfall. Enable it with `include_rainfall_features` and `rainfall_path` (CSV keyed by `event_id`)."))
+cat(sprintf("* **Community vulnerability** (e.g., CDC/ATSDR Social Vulnerability Index): %s\n", if (length(grep("^comm_", optional_feature_cols))) "included." else "not included yet. Enable it with `include_community_features` and `community_path` (county CSV keyed by `county_fips`). This is the natural next step for the social-good goal: identifying *who* is most exposed, not just *where*."))
+```
+
+# Bringing the Data Together {#sec-integration}
+
+## One coordinate system, clean geometry
+
+The inputs arrive in four coordinate systems: WGS 84 (NOAA, NCDOT), NAD83 (NHD, WBD), NC State Plane (terrain), and CONUS Albers (NLCD). Every vector layer goes through the same three steps before any spatial operation:
+
+1. `st_zm()` drops Z/M dimensions. NHD flowlines are stored as `3D Measured` (XYZM), which GEOS cannot process.
+2. `st_make_valid()` repairs invalid geometries.
+3. `st_transform()` projects to **EPSG:`r p$analysis_crs`** (NAD83 / North Carolina, meters), where all distances and buffers are measured.
+
+Rasters are **never resampled**. Instead, event points and buffers are projected into each raster's own CRS for extraction, so the original cell values are preserved.
+
+## Features measured around every event
+
+```{r}
+#| label: feature-method-table
+#| echo: false
+tibble::tribble(
+  ~`Feature group`, ~Source, ~Features, ~Method,
+  "Stream proximity", "NHD HR", sprintf("distance_to_stream_m, streams_within_%s, streams_within_%s, stream_density_km_per_km2_%s", sb, ib, sb), "Nearest-line distance; count of lines touching a circular buffer; clipped line length / buffer area",
+  "Watershed", "WBD", "huc12, huc12_area_km2", "Subwatershed polygon containing the point (membership only)",
+  "Road crossings", "NCDOT", sprintf("distance_to_nearest_culvert_m / structure_m, culverts_/structures_within_%s and _%s", eb, ib), "Nearest-point distance; count within buffer",
+  "Terrain", "3DEP-derived", sprintf("elevation_m, slope_degrees, terrain_roughness, *_mean_%s", eb), "Cell value at point; mean of cells in buffer",
+  "Imperviousness", "Annual NLCD", sprintf("impervious_mean_event, impervious_mean_%s, impervious_mean_%s", eb, ib), "Cell value at point; mean of cells in buffer (0-100 %)"
+) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: spatial-features
+scope_filter <- switch(
+  p$feature_event_scope,
+  all               = rep(TRUE, nrow(event_level)),
+  flood             = event_level$is_flood_event == 1,
+  flood_or_tropical = event_level$is_flood_event == 1 | event_level$is_tropical_event == 1,
+  stop("feature_event_scope must be one of: all, flood, flood_or_tropical")
+)
+events_in_scope <- event_level[scope_filter, ]
+
+spatial_settings <- list(
+  analysis_crs = p$analysis_crs, geographic_crs = p$geographic_crs,
+  event_buffer_m = p$event_buffer_m, stream_buffer_m = p$stream_buffer_m,
+  infrastructure_buffer_m = p$infrastructure_buffer_m,
+  nhd_flowline_ftypes = unlist(p$nhd_flowline_ftypes), compute_stream_density = p$compute_stream_density,
+  include_nhd_features = p$include_nhd_features, include_wbd_features = p$include_wbd_features,
+  include_ncdot_features = p$include_ncdot_features, include_dem_features = p$include_dem_features,
+  include_nlcd_features = p$include_nlcd_features, nlcd_vintage = p$nlcd_vintage
+)
+
+spatial <- cached_spatial_features(
+  events_in_scope,
+  inputs      = paths[c("nhd_zip", "nhd_dir", "ncdot_culverts", "ncdot_structures", "dem", "slope", "roughness", "nlcd")],
+  settings    = spatial_settings,
+  cache_dir   = paths$derived_dir,
+  use_cache   = isTRUE(p$use_cached_features),
+  refresh     = isTRUE(p$refresh_derived_data),
+  project_dir = project_dir
+)
+feature_cols <- setdiff(names(spatial$features), "event_id")
+```
+
+```{r}
+#| label: spatial-cache-note
+#| echo: false
+#| results: asis
+callout("note", sprintf("Spatial features for %s events (%s)", comma(nrow(spatial$features)),
+                        if (spatial$from_cache) "loaded from cache" else "computed in this render"),
+        c(paste0("* ", spatial$methods, collapse = "\n"),
+          sprintf("Computed %s. The cache in `%s` is reused only when every setting and input file is unchanged; set `refresh_derived_data: true` to force a rebuild.",
+                  format(spatial$created, "%Y-%m-%d %H:%M"), display_path(paths$derived_dir, project_dir))))
+```
+
+## Input validation
+
+```{r}
+#| label: spatial-layers
+raster_row <- function(path, dataset) {
+  if (is.na(path) || !file.exists(path)) return(tibble::tibble(dataset = dataset, file = basename(path), crs = NA, cell_size_m = NA, cells = NA))
+  r <- terra::rast(path)
+  tibble::tibble(dataset = dataset, file = basename(path), crs = paste0("EPSG:", terra::crs(r, describe = TRUE)$code),
+                 cell_size_m = round(terra::res(r)[1], 1), cells = comma(terra::ncell(r)))
+}
+layer_table <- dplyr::bind_rows(
+  spatial$layer_summary |> dplyr::transmute(dataset, file, crs, geometry_before_cleaning = geometry_type, features = comma(features)),
+  dplyr::bind_rows(raster_row(paths$dem, "DEM"), raster_row(paths$slope, "Slope"), raster_row(paths$roughness, "Roughness"),
+                   raster_row(paths$nlcd, paste("NLCD imperviousness", p$nlcd_vintage))) |>
+    dplyr::transmute(dataset, file, crs, geometry_before_cleaning = paste0("raster, ", cell_size_m, " m cells"), features = cells)
+)
+dt(layer_table, name = "spatial_input_validation", page_length = 10)
+```
+
+## Assembling the event-level table
+
+```{r}
+#| label: targets-and-assembly
+event_level <- event_level |>
+  dplyr::mutate(split = assign_split(event_year, p$train_end_year, p$validation_end_year))
+
+targets <- add_targets(event_level,
+                       damage_quantile      = p$damage_quantile,
+                       positive_damage_only = p$target_positive_damage_only,
+                       death_target_value   = p$death_target_value,
+                       threshold_basis      = p$target_threshold_basis)
+event_level <- targets$events
+
+noaa_dates <- range(noaa_inventory$creation_date)
+vintages <- list(
+  noaa  = sprintf("NOAA Storm Events %s-%s (file revisions %s to %s)", p$start_year, p$end_year, noaa_dates[1], noaa_dates[2]),
+  nhd   = if (!is.na(nhd_date)) sprintf("NHD HR state extract (flowlines dated %s)", nhd_date) else "NHD HR state extract",
+  ncdot = if (!is.na(ncdot_date)) sprintf("NCDOT Structures service (retrieved %s)", ncdot_date) else "NCDOT Structures service",
+  dem   = "elevatr AWS terrain tiles (3DEP in US)",
+  nlcd  = paste("Annual NLCD", p$nlcd_vintage, "(static)")
+)
+row_vintage <- paste(c(vintages$noaa, if (p$include_nhd_features) vintages$nhd, if (p$include_ncdot_features) vintages$ncdot,
+                       if (p$include_dem_features) vintages$dem, if (p$include_nlcd_features) vintages$nlcd), collapse = "; ")
+
+model_table <- event_level |>
+  dplyr::left_join(spatial$features, by = "event_id") |>
+  dplyr::left_join(optional_features, by = "event_id") |>
+  dplyr::mutate(
+    has_features = event_id %in% spatial$features$event_id,
+    spatial_feature_method = dplyr::if_else(has_features, "point_buffer (no catchment/upstream area)", "none"),
+    source_vintage = row_vintage,
+    data_coverage_warning = purrr::pmap_chr(
+      list(has_features, event_coordinate_quality, is_partial_year, cz_type, event_id %in% events_in_scope$event_id),
+      function(has, quality, partial, cz, in_scope) {
+        flags <- c(if (!in_scope) "outside_feature_scope",
+                   if (in_scope && !has) paste0("no_usable_coordinates(", quality, ")"),
+                   if (partial) "partial_year",
+                   if (cz == "Z") "forecast_zone_record",
+                   if (has && p$include_ncdot_features) "ncdot_inventory_may_be_incomplete",
+                   if (has && p$include_nlcd_features) paste0("nlcd_", p$nlcd_vintage, "_static_layer"))
+        if (length(flags) == 0) "none" else paste(flags, collapse = "; ")
+      })
+  ) |>
+  dplyr::select(-has_features)
+
+roles <- column_roles(feature_cols, optional_feature_cols)
+model_table <- dplyr::select(model_table, dplyr::any_of(c(roles$identifier, roles$context, roles$predictor, roles$outcome, roles$target)))
+
+final_check <- duplication_check(model_table, "model table", "event_id")
+stopifnot(final_check$max_rows_per_event == 1, final_check$duplicated_events == 0)
+```
+
+The combined table has **`r comma(nrow(model_table))` rows** (one per storm event) and **`r ncol(model_table)` columns**. NOAA narratives are left out because they describe the outcomes.
+
+## Feature completeness and ranges
+
+```{r}
+#| label: plot-missingness
+#| fig-height: 6
+missingness <- model_table |>
+  dplyr::summarise(dplyr::across(dplyr::all_of(intersect(roles$predictor, names(model_table))), \(x) mean(is.na(x)))) |>
+  tidyr::pivot_longer(dplyr::everything(), names_to = "feature", values_to = "missing") |>
+  dplyr::arrange(missing)
+g <- ggplot(missingness, aes(missing, forcats::fct_inorder(feature))) +
+  geom_col(fill = fw_colors$teal) +
+  scale_x_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(title = "Share of events missing each predictor",
+       subtitle = "Spatial features are missing only where NOAA gives no usable coordinates; missing is never filled with zero",
+       x = NULL, y = NULL)
+show_fig(g, "13_predictor_missingness", 10, 6)
+```
+
+```{r}
+#| label: feature-summary
+model_table |>
+  dplyr::filter(!is.na(longitude)) |>
+  dplyr::select(dplyr::any_of(setdiff(feature_cols, c("huc12", "huc12_name")))) |>
+  tidyr::pivot_longer(dplyr::everything(), names_to = "feature") |>
+  dplyr::group_by(feature) |>
+  dplyr::summarise(n = sum(!is.na(value)), min = min(value, na.rm = TRUE), median = median(value, na.rm = TRUE),
+                   mean = mean(value, na.rm = TRUE), p90 = quantile(value, 0.9, na.rm = TRUE), max = max(value, na.rm = TRUE)) |>
+  dplyr::mutate(dplyr::across(min:max, \(x) round(x, 2))) |>
+  dt(name = "spatial_feature_summary", page_length = 25)
+```
+
+# What the Combined Data Shows {#sec-findings}
+
+The figures below are descriptive comparisons, not model results.
+
+```{r}
+#| label: plot-target-rate
+#| fig-height: 5
+balance <- model_table |>
+  dplyr::filter(!is.na(region)) |>
+  dplyr::group_by(event_year, region) |>
+  dplyr::summarise(events = dplyr::n(), rate = mean(high_consequence)) |>
+  dplyr::mutate(region = factor(region, region_levels, region_labels))
+g <- ggplot(balance, aes(event_year, rate, color = region)) +
+  geom_line(linewidth = 0.9) + geom_point(aes(size = events)) +
+  scale_color_manual(values = region_colors, name = NULL) +
+  scale_y_continuous(labels = scales::percent) + scale_x_continuous(breaks = years) +
+  labs(title = "How often events become high-consequence",
+       subtitle = sprintf("Share of events with a death or damage above %s (%s)", dollars_short(targets$threshold), p$target_threshold_basis),
+       x = NULL, y = NULL, size = "Events", caption = noaa_caption)
+show_fig(g, "14_high_consequence_rate", 10, 5)
+```
+
+```{r}
+#| label: plot-feature-target
+#| fig-height: 7
+compare_cols <- intersect(c("distance_to_stream_m", paste0("streams_within_", ib), paste0("slope_mean_", eb),
+                            "elevation_m", paste0("impervious_mean_", ib), paste0("structures_within_", ib),
+                            paste0("culverts_within_", ib), "distance_to_nearest_structure_m"), names(model_table))
+plot_data <- model_table |>
+  dplyr::filter(is_flood_event == 1, !is.na(longitude)) |>
+  dplyr::select(high_consequence, dplyr::all_of(compare_cols)) |>
+  tidyr::pivot_longer(-high_consequence, names_to = "feature") |>
+  dplyr::filter(!is.na(value)) |>
+  dplyr::mutate(label = factor(high_consequence, c(0, 1), c("Other", "High-consequence")))
+if (nrow(plot_data) > 0) {
+  g <- ggplot(plot_data, aes(label, value, fill = label)) +
+    geom_boxplot(outlier.alpha = 0.12, show.legend = FALSE, width = 0.6) +
+    facet_wrap(~feature, scales = "free_y", ncol = 4) +
+    scale_y_continuous(trans = scales::pseudo_log_trans(base = 10), labels = comma) +
+    scale_fill_manual(values = c("gray75", fw_colors$alert)) +
+    labs(title = "Flood-related events: surroundings of high-consequence vs. other events",
+         subtitle = "Descriptive comparison (pseudo-log scale); not a model result", x = NULL, y = NULL)
+  show_fig(g, "15_features_by_target", 13, 7)
+}
+```
+
+```{r}
+#| label: plot-correlation
+#| fig-height: 7
+num_features <- model_table |>
+  dplyr::filter(!is.na(longitude)) |>
+  dplyr::select(dplyr::any_of(setdiff(feature_cols, c("huc12", "huc12_name"))), high_consequence, high_human_impact) |>
+  dplyr::select(dplyr::where(is.numeric))
+cm <- stats::cor(num_features, use = "pairwise.complete.obs", method = "spearman")
+cm_long <- as.data.frame(as.table(cm)) |> dplyr::rename(a = Var1, b = Var2, rho = Freq)
+g <- ggplot(cm_long, aes(a, b, fill = rho)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = sprintf("%.2f", rho)), size = 2.2) +
+  scale_fill_gradient2(low = "#2166ac", mid = "white", high = fw_colors$alert, limits = c(-1, 1), name = "Spearman rho") +
+  labs(title = "How the features relate to each other and to the targets",
+       subtitle = "Spearman correlation, events with coordinates; strongly related features carry overlapping information", x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), panel.grid = element_blank(), legend.key.width = unit(1.4, "cm"))
+show_fig(g, "16_feature_correlation", 12, 10)
+```
+
+```{r}
+#| label: map-points
+#| include: false
+event_points <- model_table |>
+  dplyr::filter(!is.na(longitude)) |>
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = p$geographic_crs, remove = FALSE) |>
+  clean_spatial_layer(p$analysis_crs)
+```
+
+```{r}
+#| label: plot-map-statewide
+#| fig-height: 5.5
+if (isTRUE(p$create_static_maps) && !is.null(counties)) {
+  flood_pts <- dplyr::filter(event_points, is_flood_event == 1) |> dplyr::arrange(high_consequence) |>
+    dplyr::mutate(label = factor(high_consequence, c(0, 1), c("Other flood-related events", "High-consequence")))
+  g <- ggplot() +
+    geom_sf(data = counties, fill = "#fbfaf6", color = "gray80", linewidth = 0.2) +
+    geom_sf(data = study_counties_sf, fill = NA, color = fw_colors$navy, linewidth = 0.6) +
+    geom_sf(data = flood_pts, aes(color = label, size = label), alpha = 0.75) +
+    scale_color_manual(values = c(fw_colors$river, fw_colors$alert), name = NULL) +
+    scale_size_manual(values = c(0.5, 1.8), name = NULL) +
+    labs(title = "Where flood-related events became high-consequence",
+         subtitle = sprintf("%s-%s, events with NOAA coordinates; study counties outlined", p$start_year, p$end_year),
+         caption = noaa_caption) +
+    map_theme
+  show_fig(g, "17_map_statewide_flood_events", 12, 5.8)
+}
+```
+
+```{r}
+#| label: plot-map-study
+#| fig-height: 8
+if (isTRUE(p$create_static_maps) && !is.null(study_counties_sf)) {
+  named <- if (!is.null(study_flowlines)) dplyr::filter(study_flowlines, ftype == 460, !is.na(gnis_name)) else NULL
+  infra <- if (nrow(ncdot) > 0) sf::st_filter(ncdot, sf::st_union(study_counties_sf)) else NULL
+  study_pts <- event_points |> dplyr::filter(is_flood_event == 1) |> sf::st_filter(sf::st_union(study_counties_sf)) |>
+    dplyr::arrange(high_consequence) |>
+    dplyr::mutate(label = factor(high_consequence, c(0, 1), c("Other flood-related events", "High-consequence")))
+  g <- ggplot() +
+    geom_sf(data = study_counties_sf, fill = "#fbfaf6", color = "gray55", linewidth = 0.35) +
+    { if (!is.null(named)) geom_sf(data = named, color = "#7fb3d5", linewidth = 0.25) } +
+    { if (!is.null(infra)) geom_sf(data = infra, aes(shape = asset), color = "gray60", size = 0.35, alpha = 0.5) } +
+    geom_sf(data = study_pts, aes(fill = label, size = label), shape = 21, color = "white", stroke = 0.3, alpha = 0.95) +
+    geom_sf_text(data = study_counties_sf, aes(label = NAME), size = 2.8, color = "gray30", fontface = "bold") +
+    scale_fill_manual(values = c(fw_colors$amber, fw_colors$alert), name = NULL) +
+    scale_size_manual(values = c(1.9, 3.2), name = NULL) +
+    scale_shape_manual(values = c("Structure (bridge)" = 3, "Culvert" = 4), name = NULL) +
+    guides(shape = guide_legend(override.aes = list(size = 2.5, alpha = 1))) +
+    labs(title = "Study area: flood events, named streams, and road crossings",
+         caption = "Sources: NOAA Storm Events, USGS NHD HR, NCDOT") +
+    map_theme
+  show_fig(g, "18_map_study_area", 11, 9)
+}
+```
+
+```{r}
+#| label: map-interactive
+#| echo: false
+#| results: asis
+if (isTRUE(p$create_interactive_maps)) {
+  cat("### Explore the events interactively\n\nHover over a point for details; zoom and pan with the mouse. Map tiles need an internet connection.\n\n")
+}
+```
+
+```{r}
+#| label: map-interactive-widget
+if (isTRUE(p$create_interactive_maps) && has_pkg("plotly")) {
+  pts <- model_table |>
+    dplyr::filter(!is.na(longitude), is_flood_event == 1) |>
+    dplyr::mutate(status = ifelse(high_consequence == 1, "High-consequence", "Other flood-related"),
+                  hover = sprintf("<b>%s</b><br>%s | %s<br>Damage: %s | Deaths: %s | Injuries: %s",
+                                  event_type, event_date, cz_name, format_dollars(total_damage), total_deaths, total_injuries))
+  plotly::plot_ly(pts, type = "scattermapbox", mode = "markers", lon = ~longitude, lat = ~latitude,
+                  color = ~status, colors = c(fw_colors$alert, fw_colors$river),
+                  marker = list(size = ~ifelse(high_consequence == 1, 9, 5), opacity = 0.8),
+                  text = ~hover, hoverinfo = "text") |>
+    plotly::layout(mapbox = list(style = "open-street-map", zoom = 5.6, center = list(lon = -79.6, lat = 35.4)),
+                   legend = list(orientation = "h", y = -0.05), margin = list(l = 0, r = 0, t = 0, b = 0), height = 560)
+}
+```
+
+# Machine-Learning-Ready Data {#sec-ml}
+
+## Outcome labels
+
+```{r}
+#| label: target-table
+targets$definitions |>
+  dplyr::transmute(target_name, definition,
+                   damage_threshold = scales::dollar(damage_threshold_dollars),
+                   positives, prevalence = scales::percent(prevalence, accuracy = 0.1), leakage_warning) |>
+  knitr::kable()
+```
+
+::: {.callout-important}
+## Leakage rules for the modeling team
+* **Recompute the damage threshold on training rows only** before final evaluation. The exported threshold (`r scales::dollar(targets$threshold)`) was computed on `r p$target_threshold_basis`. The formula is in `target_config.json`.
+* **Never use outcome columns as predictors**: deaths, injuries, damage, `any_*`, fatality-record counts, or the damage-reported flags. The feature dictionary marks each column's role.
+* **Split by time** using the `split` column, and group cross-validation folds by `episode_id` so events from one storm stay together.
+* **Leave spatial NAs as missing.** They mean "no coordinates", not "zero".
+* **Imperviousness post-dates most events** (`r p$nlcd_vintage` layer). Check how much the model depends on it.
+:::
+
+## Recommended chronological split
+
+```{r}
+#| label: split-summary
+split_summary <- model_table |>
+  dplyr::group_by(split, event_year, is_partial_year) |>
+  dplyr::summarise(events = dplyr::n(), with_coordinates = sum(!is.na(longitude)),
+                   high_consequence = sum(high_consequence), high_human_impact = sum(high_human_impact)) |>
+  dplyr::ungroup() |>
+  dplyr::arrange(event_year)
+dt(split_summary, name = "split_recommendation", page_length = 12)
+```
+
+## Feature dictionary
+
+```{r}
+#| label: dictionary
+dictionary <- build_feature_dictionary(model_table, roles, spatial_settings, vintages)
+dictionary |>
+  dplyr::select(column_name, role, units, description, source_dataset, leakage_warning) |>
+  dt(name = "feature_dictionary", page_length = 12, filter = "top")
+```
+
+## Exported files
+
+```{r}
+#| label: ml-export
+target_config <- list(
+  target_name = p$target_name, damage_quantile = p$damage_quantile,
+  positive_damage_only = p$target_positive_damage_only, death_target_value = p$death_target_value,
+  threshold_basis = p$target_threshold_basis, damage_threshold_dollars = targets$threshold,
+  train_end_year = p$train_end_year, validation_end_year = p$validation_end_year,
+  partial_years = unlist(p$partial_years),
+  recompute_instructions = "threshold = quantile(total_damage[split == 'train' & total_damage > 0], damage_quantile); high_consequence = (total_deaths >= death_target_value) | (total_damage > threshold)"
+)
+manifest <- list(
+  created = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
+  params = p[setdiff(names(p), "project_dir")],
+  rows = nrow(model_table), columns = ncol(model_table),
+  spatial_methods = spatial$methods, coverage_notes = spatial$coverage,
+  vintages = vintages, pipeline_log = fw_log_table(), r_version = R.version.string
+)
+ml_files <- export_ml_tables(
+  model_table, roles, dictionary, targets$definitions, target_config, split_summary,
+  ml_dir = paths$ml_dir, export_csv = p$export_csv, export_parquet = p$export_parquet,
+  export_spatial_layer = p$export_spatial_layer, export_feature_dictionary = p$export_feature_dictionary,
+  analysis_crs = p$analysis_crs, geographic_crs = p$geographic_crs, manifest = manifest
+)
+```
+
+```{r}
+#| label: ml-files
+#| echo: false
+file_purpose <- c(
+  nc_storm_event_model_table = "All events: identifiers, context, predictors, outcomes, targets, split",
+  nc_flood_event_model_table = "Flood-related events only: the main table for a flood model",
+  nc_storm_predictors_only = "Identifiers + predictors only (no outcomes)",
+  nc_storm_targets = "Identifiers + outcomes + targets",
+  feature_dictionary = "Role, units, source, and leakage note for every column",
+  target_definitions = "Target rules, threshold, and prevalence",
+  split_recommendation = "Events and positives per year and split",
+  target_config = "Target settings and recompute formula (JSON)",
+  nc_storm_event_features = "Events as map points (GeoPackage, EPSG:32119)",
+  run_manifest = "Parameters, data vintages, and pipeline log for this run"
+)
+ml_files |>
+  dplyr::filter(exists) |>
+  dplyr::transmute(file = display_path(file, project_dir),
+                   purpose = unname(file_purpose[tools::file_path_sans_ext(basename(file))]),
+                   rows, columns, size_mb) |>
+  dt(page_length = 20)
+```
+
+Every file above was confirmed on disk after writing. The core files are bundled as **floodwatch_ml_ready.zip** in [Downloads](#sec-downloads).
+
+# Model Results {#sec-model}
+
+::: {.coming-soon}
+**Coming next: model training and evaluation (Python).**
+
+This section will present the model built on the files above:
+
+* baseline (logistic regression) and tree-based models trained on `r p$train_end_year` and earlier, tuned on `r p$train_end_year + 1`-`r p$validation_end_year`, and evaluated once on `r p$validation_end_year + 1`-`r p$end_year`;
+* precision-recall performance for the rare `high_consequence` class;
+* which landscape and infrastructure features drive the predictions;
+* maps of predicted risk and of misses in the study counties, and what they mean for communities.
+:::
+
+# Appendix {#sec-appendix}
+
+## Downloads {#sec-downloads}
+
+```{r}
+#| label: downloads
+#| echo: false
+#| results: asis
+zip_bundle <- function(files, zip_name) {
+  files <- files[file.exists(files)]
+  if (length(files) == 0) return(NULL)
+  out <- file.path(tempdir(), zip_name)
+  unlink(out)
+  utils::zip(out, files, flags = "-j9Xq")
+  out
+}
+tab_zip <- zip_bundle(table_files, "floodwatch_tables.zip")
+ml_zip  <- zip_bundle(file.path(paths$ml_dir, c("nc_flood_event_model_table.parquet", "nc_storm_event_model_table.parquet",
+                                                "feature_dictionary.csv", "target_definitions.csv", "target_config.json",
+                                                "split_recommendation.csv", "run_manifest.json")), "floodwatch_ml_ready.zip")
+cat(sprintf("* **Figures**: each figure has its own download link; high-resolution copies of all %d figures are saved in `%s`.\n", length(figure_files), p$figures_dir))
+cat(sprintf("\n* **All tables** (%d CSV files, also saved in `%s`)\n", length(table_files), p$tables_dir))
+if (!is.null(tab_zip)) print(download_link(tab_zip, "floodwatch_tables.zip"))
+cat(sprintf("\n* **Machine-learning files** (Parquet tables + documentation, also in `%s`)\n", p$ml_dir))
+if (!is.null(ml_zip)) print(download_link(ml_zip, "floodwatch_ml_ready.zip"))
+```
+
+## Limitations
+
+* **Point and buffer features only.** No upstream contributing area, HAND, or flow accumulation is computed, and HUC12 membership is not a drainage-area measure.
+* **Coordinates.** `r comma(sum(is.na(model_table$longitude)))` events (mostly forecast-zone records) have no usable NOAA coordinates. Their spatial features are missing; no centroids are substituted.
+* **Timing.** Imperviousness is a `r p$nlcd_vintage` layer, and NCDOT and NHD are current snapshots, not conditions in the year of each event.
+* **Damage** figures are NOAA estimates in nominal dollars. Blank damage fields are treated as 0 and flagged.
+* **Soils** are summarized from tabular SSURGO only. **Rainfall** and **community vulnerability** are not yet included.
+* **Partial year** `r paste(p$partial_years, collapse = ", ")` is incomplete.
+
+## Configuration
+
+```{r}
+#| label: config-summary
+#| echo: false
+tibble::tribble(
+  ~setting, ~value,
+  "years", sprintf("%s-%s (partial: %s)", p$start_year, p$end_year, paste(p$partial_years, collapse = ", ")),
+  "study area", sprintf("%s: %s", p$study_area, paste(p$study_counties, collapse = ", ")),
+  "CRS (analysis / geographic)", sprintf("EPSG:%s / EPSG:%s", p$analysis_crs, p$geographic_crs),
+  "buffers (event / stream / infrastructure)", sprintf("%s / %s / %s m", p$event_buffer_m, p$stream_buffer_m, p$infrastructure_buffer_m),
+  "feature event scope", p$feature_event_scope,
+  "NHD flowline FTypes", paste(p$nhd_flowline_ftypes, collapse = ", "),
+  "target", sprintf("deaths >= %s OR damage > q%s of %s damage (basis: %s)", p$death_target_value, p$damage_quantile,
+                    if (p$target_positive_damage_only) "positive" else "all", p$target_threshold_basis),
+  "split", sprintf("train <= %s, validation <= %s, test after", p$train_end_year, p$validation_end_year),
+  "download_data / use_cached_features / refresh_derived_data", paste(p$download_data, p$use_cached_features, p$refresh_derived_data, sep = " / ")
+) |> knitr::kable(col.names = c("Setting", "Value"))
+```
+
+## Input inventory
+
+```{r}
+#| label: input-inventory
+#| echo: false
+dplyr::bind_rows(
+  file_inventory_row(paths$noaa_dir, "NOAA Storm Events", TRUE, "events, outcomes, targets", project_dir),
+  file_inventory_row(paths$nhd_zip, "NHD HR state ZIP", FALSE, "streams (extracted only if needed)", project_dir),
+  file_inventory_row(paths$nhd_dir, "NHD extracted shapefiles", FALSE, "streams, HUC12", project_dir),
+  file_inventory_row(paths$ncdot_culverts, "NCDOT culverts", FALSE, "culvert features", project_dir),
+  file_inventory_row(paths$ncdot_structures, "NCDOT structures", FALSE, "structure features", project_dir),
+  file_inventory_row(paths$dem, "DEM", FALSE, "elevation", project_dir),
+  file_inventory_row(paths$slope, "Slope", FALSE, "slope", project_dir),
+  file_inventory_row(paths$roughness, "Roughness", FALSE, "roughness", project_dir),
+  file_inventory_row(paths$nlcd, "NLCD imperviousness", FALSE, "imperviousness", project_dir),
+  file_inventory_row(paths$soils_dir, "SSURGO tables", FALSE, "soil summary", project_dir),
+  file_inventory_row(paths$soil_spatial, "SSURGO map-unit geometry", FALSE, "event soil features", project_dir),
+  file_inventory_row(paths$county_boundaries, "County boundaries", FALSE, "maps", project_dir),
+  file_inventory_row(paths$nc_boundary, "State boundary", FALSE, "maps", project_dir),
+  file_inventory_row(paths$rainfall, "Rainfall", FALSE, "rainfall features", project_dir),
+  file_inventory_row(paths$community, "Community vulnerability", FALSE, "community features", project_dir),
+  file_inventory_row(paths$interview, "Interview video (original)", FALSE, "interview", project_dir),
+  file_inventory_row(paths$interview_web, "Interview video (web copy)", FALSE, "embedded video", project_dir)
+) |>
+  dt(page_length = 20)
+```
+
+## Pipeline log
+
+Every warning, skipped step, and fallback recorded during this render:
+
+```{r}
+#| label: pipeline-log
+#| echo: false
+log_tbl <- fw_log_table()
+if (nrow(log_tbl) == 0) cat("No warnings were recorded.") else dt(log_tbl, page_length = 10)
+```
+
+## Session info
+
+```{r}
+#| label: session-info
+#| echo: false
+si <- utils::sessionInfo()
+cat(R.version.string, "\n")
+cat("Packages:", paste(sprintf("%s %s", names(si$otherPkgs), vapply(si$otherPkgs, \(x) x$Version, character(1))), collapse = ", "))
+```
+
+```{=html}
+<script>
+// Figure download links: save the image shown in the same code cell.
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a.fw-fig-download");
+  if (!link) return;
+  const cell = link.closest(".cell") || link.parentElement;
+  const img = cell ? cell.querySelector(".cell-output-display img") : null;
+  if (!img) return;
+  e.preventDefault();
+  const a = document.createElement("a");
+  a.href = img.src;
+  a.download = link.dataset.filename || "figure.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+</script>
+```

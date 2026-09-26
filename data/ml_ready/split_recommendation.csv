@@ -1,0 +1,12 @@
+split,event_year,is_partial_year,events,high_consequence,high_human_impact,with_coordinates
+train,2016,FALSE,1656,112,49,1218
+train,2017,FALSE,1224,37,23,894
+train,2018,FALSE,1846,148,51,1186
+train,2019,FALSE,1447,48,24,1173
+train,2020,FALSE,1691,115,26,1292
+train,2021,FALSE,904,22,14,636
+validation,2022,FALSE,1586,40,14,1131
+validation,2023,FALSE,1380,16,17,1248
+test,2024,FALSE,1570,87,36,1315
+test,2025,FALSE,1679,24,13,1128
+test,2026,TRUE,906,1,5,389

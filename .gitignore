@@ -5,3 +5,8 @@
 .httr-oauth
 .DS_Store
 .quarto
+
+# Pipeline caches and render artifacts
+data/derived/
+_freeze/
+analysis_files/

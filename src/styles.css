@@ -1,0 +1,126 @@
+/* Blue Ridge FloodWatch report styles */
+
+:root {
+  --fw-navy: #12344d;
+  --fw-teal: #1b7a8c;
+  --fw-river: #4a9cc9;
+  --fw-alert: #b2182b;
+  --fw-sand: #f5f1e8;
+  --fw-ink: #1f2a33;
+  --fw-muted: #5b6770;
+}
+
+body { color: var(--fw-ink); }
+
+/* Headings */
+h2 {
+  color: var(--fw-navy);
+  border-bottom: 2px solid #e3e9ee;
+  padding-bottom: 6px;
+  margin-top: 2.6rem;
+}
+h3 { color: var(--fw-teal); margin-top: 1.8rem; }
+
+/* Section number chips in the TOC */
+#TOC .header-section-number, #toc .header-section-number { color: var(--fw-teal); }
+
+/* Lead paragraph */
+.lead-text { font-size: 1.12rem; line-height: 1.65; color: #2c3a44; }
+
+/* Key-number cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin: 1.4rem 0 1.8rem 0;
+}
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e3e9ee;
+  border-top: 4px solid var(--fw-teal);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(18, 52, 77, 0.06);
+}
+.stat-card.alert { border-top-color: var(--fw-alert); }
+.stat-card .stat-value { font-size: 1.7rem; font-weight: 700; color: var(--fw-navy); line-height: 1.1; }
+.stat-card.alert .stat-value { color: var(--fw-alert); }
+.stat-card .stat-label { font-size: 0.86rem; color: var(--fw-muted); margin-top: 4px; }
+
+/* Dataset cards */
+.dataset-card {
+  background: var(--fw-sand);
+  border-left: 5px solid var(--fw-teal);
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin: 0.8rem 0 1.2rem 0;
+}
+.dataset-card table { margin: 0; background: transparent; }
+.dataset-card td { padding: 3px 10px 3px 0; vertical-align: top; border: none; }
+.dataset-card td:first-child { font-weight: 600; color: var(--fw-navy); white-space: nowrap; }
+
+/* Interview */
+.video-wrap {
+  background: #0d1b24;
+  border-radius: 12px;
+  padding: 10px;
+  margin: 1rem 0 0.6rem 0;
+}
+.video-wrap video { width: 100%; border-radius: 8px; display: block; }
+.quote-card {
+  border-left: 4px solid var(--fw-river);
+  background: #f4f8fb;
+  padding: 10px 16px;
+  margin: 0.7rem 0;
+  border-radius: 0 8px 8px 0;
+}
+.quote-card .quote-time { font-size: 0.8rem; color: var(--fw-muted); font-family: SFMono-Regular, Menlo, monospace; }
+
+/* Download links */
+a.fw-download, .fw-download a {
+  display: inline-block;
+  font-size: 0.82rem;
+  padding: 3px 10px;
+  margin: 2px 6px 14px 0;
+  border: 1px solid var(--fw-teal);
+  border-radius: 14px;
+  color: var(--fw-teal);
+  text-decoration: none;
+}
+a.fw-download:hover, .fw-download a:hover { background: var(--fw-teal); color: #fff; }
+
+/* DataTables */
+.dataTables_wrapper { margin: 10px 0 24px 0; font-size: 0.85rem; }
+table.dataTable thead th { background-color: #eef3f6; color: var(--fw-navy); }
+.dt-buttons .dt-button {
+  font-size: 0.78rem !important;
+  padding: 3px 10px !important;
+  border-radius: 12px !important;
+  border: 1px solid #c9d6de !important;
+  background: #fff !important;
+}
+
+/* Code folding */
+details.code-fold summary, .cell details summary {
+  color: var(--fw-teal);
+  font-size: 0.85rem;
+}
+
+/* Figures */
+.cell-output-display img { border-radius: 6px; }
+.figure-caption, figcaption { color: var(--fw-muted); font-size: 0.88rem; }
+
+/* Placeholder section */
+.coming-soon {
+  border: 2px dashed #c9d6de;
+  border-radius: 12px;
+  padding: 18px 22px;
+  background: #fafcfd;
+}
+
+/* Pipeline diagram: use the full text width */
+.cell-output-display .mermaid svg, pre.mermaid svg, div.mermaid svg {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+}

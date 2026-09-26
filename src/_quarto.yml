@@ -1,0 +1,7 @@
+project:
+  type: default
+  # Rendered reports go to outs/report/ (relative to this src/ folder).
+  output-dir: ../outs/report
+  render:
+    - analysis.qmd
+    - analysis_quick.qmd

@@ -1,0 +1,163 @@
+{
+  "created": "2026-09-26 19:34:36 EDT",
+  "params": {
+    "data_dir": "data",
+    "results_dir": "outs",
+    "ml_dir": "data/ml_ready",
+    "derived_dir": "data/derived",
+    "media_dir": "media",
+    "noaa_dir": "data",
+    "nhd_zip_path": "data/NHD_H_North_Carolina_State_Shape.zip",
+    "nhd_dir": "data/nhd_nc",
+    "ncdot_culverts_path": "data/ncdot/ncdot_culverts_nc.gpkg",
+    "ncdot_structures_path": "data/ncdot/ncdot_structures_nc.gpkg",
+    "dem_path": "data/dem_3dep/3dep_dem_north_carolina_epsg32119.tif",
+    "slope_path": "data/dem_3dep/slope_degrees_epsg32119.tif",
+    "roughness_path": "data/dem_3dep/roughness_epsg32119.tif",
+    "nlcd_path": "data/nlcd_fractional_impervious/annual_nlcd_fractional_impervious_2023_NC.tif",
+    "nlcd_vintage": "2023",
+    "soils_dir": "data/usda_soils",
+    "soil_spatial_path": null,
+    "state_boundary_path": "data/nlcd_fractional_impervious/north_carolina_boundary.gpkg",
+    "county_boundaries_path": "data/reference/nc_counties.gpkg",
+    "rainfall_path": null,
+    "community_path": null,
+    "download_data": false,
+    "refresh_derived_data": false,
+    "use_cached_features": true,
+    "state_name": "NORTH CAROLINA",
+    "study_area": "western_nc",
+    "study_counties": ["Buncombe", "Henderson", "Haywood", "Madison", "McDowell", "Transylvania", "Yancey", "Avery", "Watauga", "Jackson", "Swain"],
+    "start_year": 2016,
+    "end_year": 2026,
+    "partial_years": 2026,
+    "analysis_crs": 32119,
+    "geographic_crs": 4326,
+    "coord_lon_min": -84.5,
+    "coord_lon_max": -75.3,
+    "coord_lat_min": 33.7,
+    "coord_lat_max": 36.7,
+    "flood_event_pattern": "flood|heavy rain|debris flow|landslide",
+    "tropical_event_pattern": "hurricane|tropical storm|tropical depression",
+    "feature_event_scope": "all",
+    "zone_descriptor_words": ["WESTERN", "EASTERN", "NORTHERN", "SOUTHERN", "CENTRAL", "INLAND", "COASTAL", "EAST", "WEST", "NORTH", "SOUTH", "GREATER", "MOUNTAINS"],
+    "special_coastal_zone_pattern": "OUTER BANKS|OCRACOKE ISLAND|HATTERAS ISLAND",
+    "event_buffer_m": 250,
+    "infrastructure_buffer_m": 1000,
+    "stream_buffer_m": 250,
+    "nhd_flowline_ftypes": [460, 558],
+    "compute_stream_density": true,
+    "target_name": "high_consequence",
+    "damage_quantile": 0.9,
+    "target_positive_damage_only": true,
+    "death_target_value": 1,
+    "target_threshold_basis": "all_events",
+    "damage_missing_as_zero": true,
+    "train_end_year": 2021,
+    "validation_end_year": 2023,
+    "include_nhd_features": true,
+    "include_wbd_features": true,
+    "include_dem_features": true,
+    "include_nlcd_features": true,
+    "include_ncdot_features": true,
+    "include_soil_features": false,
+    "include_rainfall_features": false,
+    "include_community_features": false,
+    "top_n_event_types": 15,
+    "top_n_events_table": 10,
+    "create_interactive_maps": false,
+    "create_static_maps": true,
+    "save_figures": true,
+    "include_interview": true,
+    "interview_path": "data/Interview.mp4",
+    "interview_transcript_path": null,
+    "interview_consent_confirmed": false,
+    "interview_is_anonymous": false,
+    "interview_display_name": "Asheville resident interviewee",
+    "show_interview_quotes": false,
+    "export_csv": true,
+    "export_parquet": true,
+    "export_spatial_layer": true,
+    "export_feature_dictionary": true
+  },
+  "rows": 15889,
+  "columns": 69,
+  "spatial_methods": ["NHD HR flowlines (ftype 460/558) from 2 shapefile(s): nearest distance and counts within 250m/1km", "NCDOT culverts/structures: nearest distance and counts within 250m/1km", "DEM-derived terrain (NA m cells): point value and mean within 250m"],
+  "coverage_notes": ["WBD HUC12 unavailable", "NCDOT culverts unavailable: features are NA", "NCDOT structures unavailable: features are NA", "NCDOT inventory may be incomplete; absence does not prove no asset exists", "3DEP elevation raster unavailable", "3DEP slope raster unavailable", "3DEP roughness raster unavailable", "NLCD imperviousness unavailable: features are NA"],
+  "vintages": {
+    "nhd": "NHD HR state extract",
+    "ncdot": "NCDOT Structures service",
+    "dem": "elevatr AWS terrain tiles (3DEP in US)",
+    "nlcd": "Annual NLCD 2023 (static)",
+    "noaa": "NOAA Storm Events 2016-2026 (file revisions c20260323 to c20260918)"
+  },
+  "pipeline_log": [
+    {
+      "level": "warning",
+      "input": "WBD HUC12",
+      "message": "WBDHU12 layer not found in NHD directory or ZIP.",
+      "affects": "HUC12 membership (set to NA)"
+    },
+    {
+      "level": "warning",
+      "input": "NCDOT culvert s",
+      "message": "Optional input missing. Expected at: data/ncdot/ncdot_culverts_nc.gpkg. To obtain it: render with download_data: true (NCDOT_Structures ArcGIS service) Skipped: NCDOT culvert features (set to NA)",
+      "affects": "NCDOT culvert features (set to NA)"
+    },
+    {
+      "level": "warning",
+      "input": "NCDOT structure s",
+      "message": "Optional input missing. Expected at: data/ncdot/ncdot_structures_nc.gpkg. To obtain it: render with download_data: true (NCDOT_Structures ArcGIS service) Skipped: NCDOT structure features (set to NA)",
+      "affects": "NCDOT structure features (set to NA)"
+    },
+    {
+      "level": "warning",
+      "input": "3DEP elevation raster",
+      "message": "Optional input missing. Expected at: data/dem_3dep/3dep_dem_north_carolina_epsg32119.tif. To obtain it: render with download_data: true (elevatr/AWS terrain tiles, terrain derived with terra) Skipped: elevation features (set to NA)",
+      "affects": "elevation features (set to NA)"
+    },
+    {
+      "level": "warning",
+      "input": "3DEP slope raster",
+      "message": "Optional input missing. Expected at: data/dem_3dep/slope_degrees_epsg32119.tif. To obtain it: render with download_data: true (elevatr/AWS terrain tiles, terrain derived with terra) Skipped: slope features (set to NA)",
+      "affects": "slope features (set to NA)"
+    },
+    {
+      "level": "warning",
+      "input": "3DEP roughness raster",
+      "message": "Optional input missing. Expected at: data/dem_3dep/roughness_epsg32119.tif. To obtain it: render with download_data: true (elevatr/AWS terrain tiles, terrain derived with terra) Skipped: roughness features (set to NA)",
+      "affects": "roughness features (set to NA)"
+    },
+    {
+      "level": "warning",
+      "input": "Annual NLCD fractional imperviousness",
+      "message": "Optional input missing. Expected at: data/nlcd_fractional_impervious/annual_nlcd_fractional_impervious_2023_NC.tif. To obtain it: render with download_data: true (USGS Annual NLCD ImageServer) Skipped: imperviousness features (set to NA)",
+      "affects": "imperviousness features (set to NA)"
+    },
+    {
+      "level": "info",
+      "input": "spatial features",
+      "message": "Computed features for 11610 events in 94.9 minutes.",
+      "affects": null
+    },
+    {
+      "level": "warning",
+      "input": "SSURGO components",
+      "message": "Optional input missing. Expected at: data/usda_soils/nc_ssurgo_components.csv. To obtain it: render with download_data: true Skipped: soil summary",
+      "affects": "soil summary"
+    },
+    {
+      "level": "warning",
+      "input": "NC state boundary",
+      "message": "Boundary file missing; static maps skipped.",
+      "affects": "maps"
+    },
+    {
+      "level": "warning",
+      "input": "Interview video",
+      "message": "Optional input missing. Expected at: data/Interview.mp4. To obtain it: place the file at `interview_path` or in `media_dir` Skipped: Community Voice section",
+      "affects": "Community Voice section"
+    }
+  ],
+  "r_version": "R version 4.5.3 (2026-03-11)"
+}

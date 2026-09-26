@@ -1,0 +1,200 @@
+---
+title: "Blue Ridge FloodWatch"
+subtitle: "Storm Impacts, Terrain, Infrastructure, and Community Resilience in Western North Carolina"
+author: "Carolina Data Challenge 2026 Team"
+date: today
+title-block-banner: "#12344d"
+title-block-banner-color: "#ffffff"
+
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-title: "Contents"
+    number-sections: true
+    number-depth: 2
+    code-fold: true
+    code-summary: "Show code"
+    code-tools:
+      source: false
+      toggle: true
+      caption: "Code"
+    embed-resources: true
+    theme: cosmo
+    css: styles.css
+    highlight-style: kate
+    lightbox: true
+    fig-align: center
+    page-layout: article
+    grid:
+      body-width: 1000px
+      sidebar-width: 260px
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: false
+
+params:
+  # All paths are relative to project_dir (this file lives in src/).
+  project_dir: ".."
+  figures_dir: "outs/figures"
+  tables_dir: "outs/tables"
+  ml_dir: "data/ml_ready"
+  derived_dir: "data/derived"
+
+  # Raw inputs (read-only)
+  noaa_dir: "data/raw/noaa"
+  nhd_zip_path: "data/raw/nhd/NHD_H_North_Carolina_State_Shape.zip"
+  nhd_dir: "data/raw/nhd/extracted"
+  ncdot_culverts_path: "data/raw/ncdot/ncdot_culverts_nc.gpkg"
+  ncdot_structures_path: "data/raw/ncdot/ncdot_structures_nc.gpkg"
+  dem_path: "data/raw/dem_3dep/3dep_dem_north_carolina_epsg32119.tif"
+  slope_path: "data/raw/dem_3dep/slope_degrees_epsg32119.tif"
+  roughness_path: "data/raw/dem_3dep/roughness_epsg32119.tif"
+  nlcd_path: "data/raw/nlcd/annual_nlcd_fractional_impervious_2023_NC.tif"
+  nlcd_vintage: "2023"
+  soils_dir: "data/raw/usda_soils"
+  soil_spatial_path: null
+  state_boundary_path: "data/raw/nlcd/north_carolina_boundary.gpkg"
+  county_boundaries_path: "data/raw/reference/nc_counties.gpkg"
+  rainfall_path: null
+  community_path: null
+
+  # Data processing
+  download_data: false
+  refresh_derived_data: false
+  use_cached_features: true
+
+  # Study area
+  state_name: "NORTH CAROLINA"
+  study_area: "Western North Carolina"
+  study_counties:
+    - "Buncombe"
+    - "Henderson"
+    - "Haywood"
+    - "Madison"
+    - "McDowell"
+    - "Transylvania"
+    - "Yancey"
+    - "Avery"
+    - "Watauga"
+    - "Jackson"
+    - "Swain"
+
+  # Signature event highlighted in the story (Hurricane/Tropical Storm Helene)
+  highlight_event_name: "Helene"
+  highlight_start_date: "2024-09-24"
+  highlight_end_date: "2024-09-30"
+
+  # Years
+  start_year: 2016
+  end_year: 2026
+  partial_years:
+    - 2026
+
+  # Coordinate systems
+  analysis_crs: 32119
+  geographic_crs: 4326
+  # Event coordinates outside this lon/lat box are treated as unusable
+  coord_lon_min: -84.5
+  coord_lon_max: -75.3
+  coord_lat_min: 33.7
+  coord_lat_max: 36.7
+
+  # Event filters
+  flood_event_pattern: "flood|heavy rain|debris flow|landslide"
+  tropical_event_pattern: "hurricane|tropical storm|tropical depression"
+  feature_event_scope: "all"
+
+  # Region assignment
+  zone_descriptor_words:
+    - "WESTERN"
+    - "EASTERN"
+    - "NORTHERN"
+    - "SOUTHERN"
+    - "CENTRAL"
+    - "INLAND"
+    - "COASTAL"
+    - "EAST"
+    - "WEST"
+    - "NORTH"
+    - "SOUTH"
+    - "GREATER"
+    - "MOUNTAINS"
+  special_coastal_zone_pattern: "OUTER BANKS|OCRACOKE ISLAND|HATTERAS ISLAND"
+
+  # Buffer distances in meters
+  event_buffer_m: 250
+  infrastructure_buffer_m: 1000
+  stream_buffer_m: 250
+
+  # NHD flowline types (FType): 460 StreamRiver, 558 ArtificialPath
+  nhd_flowline_ftypes:
+    - 460
+    - 558
+  compute_stream_density: true
+
+  # Target configuration
+  target_name: "high_consequence"
+  damage_quantile: 0.90
+  target_positive_damage_only: true
+  death_target_value: 1
+  target_threshold_basis: "all_events"
+  damage_missing_as_zero: true
+
+  # Chronological split
+  train_end_year: 2021
+  validation_end_year: 2023
+
+  # Spatial feature controls
+  include_nhd_features: true
+  include_wbd_features: true
+  include_dem_features: true
+  include_nlcd_features: true
+  include_ncdot_features: true
+  include_soil_features: false
+  include_rainfall_features: false
+  include_community_features: false
+
+  # Visualization controls
+  top_n_event_types: 15
+  top_n_events_table: 10
+  create_interactive_maps: true
+  create_static_maps: true
+  figure_dpi: 200
+
+  # Interview controls
+  include_interview: true
+  interview_path: "data/raw/media/Interview.mp4"
+  interview_web_path: "data/derived/media/interview_web.mp4"
+  interview_poster_path: "data/derived/media/interview_poster.jpg"
+  interview_embed_video: true
+  interview_transcript_path: "data/derived/media/interview_audio.json"
+  interview_highlights_path: "src/content/interview_highlights.csv"
+  interview_consent_confirmed: true
+  interview_is_anonymous: false
+  interview_display_name: "two friends who attended Asheville High School during Hurricane Helene"
+  show_interview_quotes: true
+  # Names spoken in the recording that are replaced with [name] in the written transcript
+  interview_redact_names:
+    - "Noah Goldblatt"
+    - "Everett"
+
+  # Subsetting (off for the full run; see analysis_quick.qmd)
+  subset_enabled: false
+  subset_study_area_only: false
+  subset_flood_only: false
+  subset_max_events: null
+  subset_seed: 2026
+
+  # Export controls
+  export_csv: true
+  export_parquet: true
+  export_spatial_layer: true
+  export_feature_dictionary: true
+---
+
+{{< include _analysis_body.qmd >}}

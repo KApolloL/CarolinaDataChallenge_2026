@@ -1,0 +1,12 @@
+{
+  "target_name": "high_consequence",
+  "damage_quantile": 0.9,
+  "positive_damage_only": true,
+  "death_target_value": 1,
+  "threshold_basis": "all_events",
+  "damage_threshold_dollars": 28700000.0000001,
+  "train_end_year": 2021,
+  "validation_end_year": 2023,
+  "partial_years": 2026,
+  "recompute_instructions": "threshold = quantile(total_damage[split == 'train' & total_damage > 0], damage_quantile); high_consequence = (total_deaths >= death_target_value) | (total_damage > threshold)"
+}
