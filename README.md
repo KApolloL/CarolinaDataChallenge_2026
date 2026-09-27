@@ -125,6 +125,10 @@ whisper data/derived/media/interview_audio.wav --model small --language en --out
 
 Rules: split by the `split` column; group CV folds by `episode_id`; the exported `high_consequence` already uses the training-years-only threshold ($200,000); never use outcome columns as predictors; keep spatial NAs as missing.
 
+## AI assistance
+
+We used **Claude** (Anthropic's AI assistant, via claude.ai) and **Claude Code** to help write the code in this repository: the R data pipeline (`src/R/`), the Quarto reports (`src/*.qmd`), the Python modeling code, and the interactive risk explorer. The team directed the analysis, chose the data sources and methods, and reviewed the code and results. All data comes from the public sources listed below, and every number in the reports is computed from that data by the code in this repository.
+
 ## Data sources
 
 | Dataset | Source |
