@@ -1,0 +1,34 @@
+CZ_TYPE,CZ_FIPS,CZ_NAME,region,region_assignment_method,matched_county
+Z,503,BURKE MOUNTAINS,mountains,forecast_zone_county_match,BURKE
+Z,501,CALDWELL MOUNTAINS,mountains,forecast_zone_county_match,CALDWELL
+Z,110,COASTAL BRUNSWICK,coastal,forecast_zone_county_match,BRUNSWICK
+Z,108,COASTAL NEW HANOVER,coastal,forecast_zone_county_match,NEW HANOVER
+Z,199,COASTAL ONSLOW,coastal,forecast_zone_county_match,ONSLOW
+Z,106,COASTAL PENDER,coastal,forecast_zone_county_match,PENDER
+Z,196,EAST CARTERET,coastal,forecast_zone_county_match,CARTERET
+Z,102,EASTERN CURRITUCK,coastal,forecast_zone_county_match,CURRITUCK
+Z,103,EASTERN DARE,coastal,forecast_zone_county_match,DARE
+Z,104,EASTERN HYDE,coastal,forecast_zone_county_match,HYDE
+Z,506,EASTERN MCDOWELL,mountains,forecast_zone_county_match,MCDOWELL
+Z,510,EASTERN POLK,mountains,forecast_zone_county_match,POLK
+Z,504,GREATER BURKE,mountains,forecast_zone_county_match,BURKE
+Z,502,GREATER CALDWELL,mountains,forecast_zone_county_match,CALDWELL
+Z,508,GREATER RUTHERFORD,mountains,forecast_zone_county_match,RUTHERFORD
+Z,109,INLAND BRUNSWICK,coastal,forecast_zone_county_match,BRUNSWICK
+Z,107,INLAND NEW HANOVER,coastal,forecast_zone_county_match,NEW HANOVER
+Z,198,INLAND ONSLOW,coastal,forecast_zone_county_match,ONSLOW
+Z,105,INLAND PENDER,coastal,forecast_zone_county_match,PENDER
+Z,505,MCDOWELL MOUNTAINS,mountains,forecast_zone_county_match,MCDOWELL
+Z,193,NORTHERN CRAVEN,coastal,forecast_zone_county_match,CRAVEN
+Z,59,NORTHERN JACKSON,mountains,forecast_zone_county_match,JACKSON
+Z,509,POLK MOUNTAINS,mountains,forecast_zone_county_match,POLK
+Z,507,RUTHERFORD MOUNTAINS,mountains,forecast_zone_county_match,RUTHERFORD
+Z,194,SOUTHERN CRAVEN,coastal,forecast_zone_county_match,CRAVEN
+Z,63,SOUTHERN JACKSON,mountains,forecast_zone_county_match,JACKSON
+Z,195,WEST CARTERET,coastal,forecast_zone_county_match,CARTERET
+Z,17,WESTERN CURRITUCK,coastal,forecast_zone_county_match,CURRITUCK
+Z,47,WESTERN DARE,coastal,forecast_zone_county_match,DARE
+Z,81,WESTERN HYDE,coastal,forecast_zone_county_match,HYDE
+Z,205,HATTERAS ISLAND,coastal,special_coastal_zone,
+Z,203,NORTHERN OUTER BANKS,coastal,special_coastal_zone,
+Z,204,OCRACOKE ISLAND,coastal,special_coastal_zone,

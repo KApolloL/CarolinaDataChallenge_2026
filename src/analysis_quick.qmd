@@ -1,7 +1,11 @@
 ---
-title: "Blue Ridge FloodWatch (quick subset)"
+title: "Carolina HighGround (quick subset)"
 subtitle: "Storm Impacts, Terrain, Infrastructure, and Community Resilience in Western North Carolina"
-author: "Carolina Data Challenge 2026 Team"
+author:
+  - Kent Lee
+  - Matthew Martin
+  - Aaron Chen
+  - Minh Nguyen
 date: today
 title-block-banner: "#12344d"
 title-block-banner-color: "#ffffff"
@@ -142,7 +146,7 @@ params:
   damage_quantile: 0.90
   target_positive_damage_only: true
   death_target_value: 1
-  target_threshold_basis: "all_events"
+  target_threshold_basis: "all_events"   # the quick subset has no training years
   damage_missing_as_zero: true
 
   # Chronological split
@@ -183,6 +187,8 @@ params:
     - "Noah Goldblatt"
     - "Everett"
 
+  modeling_section: false
+
   # Subsetting (quick run: fewer years, study area only, capped sample)
   subset_enabled: true
   subset_study_area_only: true
@@ -195,6 +201,11 @@ params:
   export_parquet: true
   export_spatial_layer: true
   export_feature_dictionary: true
+  allow_degraded_export: false
 ---
 
 {{< include _analysis_body.qmd >}}
+
+{{< include _model_placeholder.qmd >}}
+
+{{< include _appendix.qmd >}}

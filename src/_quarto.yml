@@ -3,5 +3,6 @@ project:
   # Rendered reports go to outs/report/ (relative to this src/ folder).
   output-dir: ../outs/report
   render:
+    - final_analysis_deliverable.qmd
     - analysis.qmd
     - analysis_quick.qmd

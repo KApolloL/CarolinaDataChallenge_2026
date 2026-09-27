@@ -1,0 +1,499 @@
+# Modeling and Results {#sec-model}
+
+::: {.lead-text}
+We trained three models to recognize which flood-related events became high-consequence. The inputs are what surrounds each event (terrain, streams, paved surfaces, community vulnerability, local flood history, and season), not the storm's own damage or death toll. The data were prepared in **R** and the models were fit in **Python (scikit-learn)**; both run in this one document through the `reticulate` package.
+:::
+
+## From R to Python
+
+```{r}
+#| label: py-setup
+# Point reticulate at the project's conda environment before any Python runs.
+# R's spatial packages and scikit-learn each bring their own OpenMP runtime;
+# two runtimes in one process crash gradient boosting. Single-threaded OpenMP
+# (set before Python starts) avoids the conflict.
+Sys.setenv(OMP_NUM_THREADS = "1", KMP_DUPLICATE_LIB_OK = "TRUE")
+library(reticulate)   # attaches `py`, R's view of Python objects
+use_condaenv(p$python_env, required = TRUE)
+paths$nri      <- rp(p$nri_path)
+paths$explorer <- rp(p$explorer_path)
+py_cfg <- reticulate::py_config()
+tibble::tibble(
+  item  = c("Python", "Environment", "Packages"),
+  value = c(py_cfg$version_string |> sub(" \\|.*", "", x = _), p$python_env,
+            "pandas, numpy, scikit-learn, shap, matplotlib")
+) |> knitr::kable(col.names = NULL)
+```
+
+The event table built in the earlier sections lives in R. Two model inputs are added in R before the hand-off:
+
+* **Local relief within `r comma(p$relief_radius_m / 1000)` km**: the highest minus the lowest DEM elevation within `r comma(p$relief_radius_m / 1000)` km of each event. Steep, deeply cut valleys funnel runoff; this measures that directly from the DEM.
+* **County code** for joining FEMA's National Risk Index in Python.
+
+```{r}
+#| label: relief-5km
+flood_events <- model_table |>
+  dplyr::filter(is_flood_event == 1, !is.na(longitude))
+
+relief_cache <- file.path(paths$derived_dir, sprintf("event_relief_%sm.parquet", p$relief_radius_m))
+relief_sig <- digest::digest(list(sort(flood_events$event_id), p$relief_radius_m, file_signature(paths$dem)))
+sig_file <- sub("\\.parquet$", ".sig", relief_cache)
+relief <- if (file.exists(relief_cache) && file.exists(sig_file) && identical(readLines(sig_file), relief_sig)) {
+  arrow::read_parquet(relief_cache)
+} else {
+  dem <- terra::rast(paths$dem)
+  pts <- sf::st_as_sf(flood_events[c("event_id", "longitude", "latitude")],
+                      coords = c("longitude", "latitude"), crs = p$geographic_crs) |>
+    clean_spatial_layer(p$analysis_crs)
+  buffers <- terra::vect(sf::st_buffer(pts, p$relief_radius_m))
+  hi <- terra::extract(dem, buffers, fun = max, na.rm = TRUE, ID = FALSE)[[1]]
+  lo <- terra::extract(dem, buffers, fun = min, na.rm = TRUE, ID = FALSE)[[1]]
+  out <- tibble::tibble(event_id = pts$event_id, local_relief_5km = hi - lo)
+  arrow::write_parquet(out, relief_cache)
+  writeLines(relief_sig, sub("\\.parquet$", ".sig", relief_cache))
+  out
+}
+
+# Columns handed to Python (dates as text so both languages agree on them)
+flood_ml <- flood_events |>
+  dplyr::left_join(relief, by = "event_id") |>
+  dplyr::transmute(
+    event_id, episode_id, event_date = as.character(event_date), event_year, event_month, split,
+    latitude, longitude, region, in_study_area, cz_name, event_type,
+    county_fips3 = suppressWarnings(as.integer(sub(";.*$", "", matched_county_fips))),
+    total_deaths, total_damage, high_consequence,
+    slope_degrees, elevation_m, impervious_mean_250m, distance_to_stream_m, local_relief_5km
+  ) |>
+  as.data.frame()
+damage_threshold <- targets$threshold
+```
+
+```{r}
+#| label: nri-card
+#| echo: false
+#| results: asis
+dataset_card(
+  Source = "FEMA National Risk Index (NRI), county table, version 1.20 (December 2025)",
+  Contents = "For every U.S. county: population, area, and the Social Vulnerability score (SOVI_SCORE), among many hazard measures",
+  "Why we use it" = "The same flood hurts some communities more than others; social vulnerability and population density capture <i>who</i> is exposed",
+  "How we use it" = "Joined to each event by its county; population density = population / area",
+  Caveats = "County-level values are shared by every event in a county; forecast-zone events use their first matched county"
+)
+```
+
+```{python}
+#| label: py-features
+import numpy as np
+import pandas as pd
+from sklearn.neighbors import BallTree
+
+cfg = r.p
+TARGET = "high_consequence"
+FEATURES = [
+    "slope_degrees", "elevation_m", "impervious_mean_250m", "distance_to_stream_m",
+    "population_density", "SOVI_SCORE",
+    "nearby_minor_flood_count_25km", "nearby_severe_flood_count_25km",
+    "local_relief_5km", "event_month", "peak_hurricane_season",
+]
+
+df = r.flood_ml.copy()
+df["event_date"] = pd.to_datetime(df["event_date"])
+df[TARGET] = df[TARGET].astype(int)
+
+# FEMA National Risk Index: social vulnerability and population density by county
+nri = pd.read_csv(r.paths["nri"], encoding="utf-8-sig",
+                  usecols=["STCOFIPS", "STATEABBRV", "POPULATION", "AREA", "SOVI_SCORE"])
+nri = nri[nri["STATEABBRV"] == "NC"].copy()
+nri["population_density"] = nri["POPULATION"] / nri["AREA"]
+nri["county_fips3"] = nri["STCOFIPS"] % 1000
+df = df.merge(nri[["county_fips3", "population_density", "SOVI_SCORE"]], on="county_fips3", how="left")
+
+# Local flood history: earlier flood events within 25 km in the previous 3 years,
+# split into minor and severe (high-consequence) events. Only past events count.
+df = df.sort_values("event_date").reset_index(drop=True)
+coords = np.radians(df[["latitude", "longitude"]].to_numpy())
+neighbors = BallTree(coords, metric="haversine").query_radius(coords, r=cfg["history_radius_km"] / 6371.0)
+dates, label = df["event_date"].to_numpy(), df[TARGET].to_numpy()
+window = np.timedelta64(365 * int(cfg["history_window_years"]), "D")
+minor, severe = [], []
+for i, idx in enumerate(neighbors):
+    past = (dates[idx] < dates[i]) & (dates[idx] >= dates[i] - window)
+    minor.append(int(np.sum(past & (label[idx] == 0))))
+    severe.append(int(np.sum(past & (label[idx] == 1))))
+df["nearby_minor_flood_count_25km"] = minor
+df["nearby_severe_flood_count_25km"] = severe
+
+# Season flag (Aug-Oct), from the flood calendar in Section 2
+df["peak_hurricane_season"] = df["event_month"].isin([8, 9, 10]).astype(int)
+
+devel = df[df["split"].isin(["train", "validation"])].reset_index(drop=True)
+test = df[df["split"] == "test"].reset_index(drop=True)
+
+availability = pd.DataFrame({
+    "feature": FEATURES,
+    "available_pct": [round(100 * df[f].notna().mean(), 1) for f in FEATURES],
+    "median": [round(float(df[f].median()), 2) for f in FEATURES],
+})
+summary = {
+    "devel_n": len(devel), "devel_pos": int(devel[TARGET].sum()),
+    "test_n": len(test), "test_pos": int(test[TARGET].sum()),
+}
+```
+
+```{r}
+#| label: feature-table
+#| echo: false
+feature_info <- tibble::tribble(
+  ~feature, ~group, ~source, ~meaning,
+  "slope_degrees", "Terrain", "DEM", "Slope at the event point",
+  "elevation_m", "Terrain", "DEM", "Elevation at the event point",
+  "local_relief_5km", "Terrain", "DEM (computed in R)", "Highest minus lowest elevation within 5 km",
+  "distance_to_stream_m", "Water", "NHD HR", "Distance to the nearest stream or river",
+  "impervious_mean_250m", "Development", "Annual NLCD 2023", "Mean % paved surface within 250 m",
+  "population_density", "People", "FEMA NRI", "County population per sq. mile",
+  "SOVI_SCORE", "People", "FEMA NRI", "County social vulnerability score",
+  "nearby_minor_flood_count_25km", "History", "NOAA (computed in Python)", "Earlier non-severe floods within 25 km, past 3 years",
+  "nearby_severe_flood_count_25km", "History", "NOAA (computed in Python)", "Earlier high-consequence floods within 25 km, past 3 years",
+  "event_month", "Season", "NOAA", "Month the event began",
+  "peak_hurricane_season", "Season", "NOAA (computed in Python)", "1 if August-October"
+)
+feature_info |>
+  dplyr::left_join(py$availability, by = "feature") |>
+  dt(name = "model_features", page_length = 11)
+```
+
+The models use **`r comma(py$summary$devel_n)` flood events from `r p$start_year`-`r p$validation_end_year`** for development (`r py$summary$devel_pos` high-consequence) and hold out **`r comma(py$summary$test_n)` events from `r p$validation_end_year + 1`-`r p$end_year`** (`r py$summary$test_pos` high-consequence) as a final test. The target is `high_consequence` with the damage threshold learned from training years only (`r scales::dollar(damage_threshold)`).
+
+## Three models, three trade-offs
+
+| Model | How it works | Strength | Trade-off |
+|---|---|---|---|
+| **Logistic regression** | One weight per feature, summed into a probability | Every weight can be read and explained | Assumes each feature acts on its own, along a straight line |
+| **Random forest** | 100 decision trees on random subsets of events and features; their votes are averaged | Captures combinations (e.g. steep *and* rural) | Harder to explain a single prediction |
+| **Histogram gradient boosting** | Trees built one after another, each correcting the last | Often the most accurate | The least transparent; reported for comparison |
+
+How we trained them:
+
+1. **Leakage-safe labels**: the damage threshold comes from training years only.
+2. **Class weights** (`class_weight="balanced"`): only about 5% of events are high-consequence, so without weighting a model can just predict "safe" every time.
+3. **Grouped cross-validation**: folds are grouped by `episode_id`, so events from one storm never sit on both sides of a split.
+4. **Median imputation fit inside each fold**, so missing values are filled using training rows only.
+5. **Calibration**: Platt scaling fit on *out-of-fold* predictions, so predicted probabilities can be read as real chances.
+
+```{python}
+#| label: py-cv
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import average_precision_score, roc_auc_score
+from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.preprocessing import StandardScaler
+
+MODELS = {
+    "Logistic regression": (lambda: LogisticRegression(max_iter=2000, class_weight="balanced", C=0.5), True),
+    "Random forest": (lambda: RandomForestClassifier(n_estimators=100, max_depth=6, class_weight="balanced",
+                                                    min_samples_leaf=5, max_features="sqrt", random_state=42), False),
+    "Gradient boosting": (lambda: HistGradientBoostingClassifier(max_depth=3, learning_rate=0.05, max_iter=300,
+                                                                class_weight="balanced", random_state=42), False),
+}
+
+def repeated_group_cv(build, scaled, X, y, groups, repeats, folds):
+    pr, roc = [], []
+    for rep in range(repeats):
+        skf = StratifiedGroupKFold(n_splits=folds, shuffle=True, random_state=100 + rep)
+        for tr, va in skf.split(X, y, groups):
+            imp = SimpleImputer(strategy="median", keep_empty_features=True).fit(X.iloc[tr])
+            X_tr, X_va = imp.transform(X.iloc[tr]), imp.transform(X.iloc[va])
+            if scaled:
+                sc = StandardScaler().fit(X_tr)
+                X_tr, X_va = sc.transform(X_tr), sc.transform(X_va)
+            p = build().fit(X_tr, y.iloc[tr]).predict_proba(X_va)[:, 1]
+            pr.append(average_precision_score(y.iloc[va], p))
+            roc.append(roc_auc_score(y.iloc[va], p))
+    return np.mean(pr), np.std(pr), np.mean(roc), np.std(roc)
+
+X, y, groups = devel[FEATURES], devel[TARGET], devel["episode_id"]
+rows = []
+for name, (build, scaled) in MODELS.items():
+    pr, pr_sd, roc, roc_sd = repeated_group_cv(build, scaled, X, y, groups,
+                                               int(cfg["cv_repeats"]), int(cfg["cv_folds"]))
+    rows.append({"model": name, "pr_auc": pr, "pr_auc_sd": pr_sd, "roc_auc": roc, "roc_auc_sd": roc_sd})
+rows.append({"model": "No-skill baseline", "pr_auc": float(y.mean()), "pr_auc_sd": np.nan,
+             "roc_auc": 0.5, "roc_auc_sd": np.nan})
+cv_results = pd.DataFrame(rows)
+best_cv = cv_results.iloc[:3].sort_values("pr_auc", ascending=False).iloc[0]
+```
+
+## Cross-validated performance
+
+```{r}
+#| label: cv-table
+#| echo: false
+py$cv_results |>
+  dplyr::mutate(
+    `PR-AUC` = ifelse(is.na(pr_auc_sd), sprintf("%.3f", pr_auc), sprintf("%.3f +/- %.3f", pr_auc, pr_auc_sd)),
+    `ROC-AUC` = ifelse(is.na(roc_auc_sd), sprintf("%.3f", roc_auc), sprintf("%.3f +/- %.3f", roc_auc, roc_auc_sd)),
+    `Lift over baseline (PR-AUC)` = ifelse(model == "No-skill baseline", "", sprintf("%.1fx", pr_auc / pr_auc[model == "No-skill baseline"]))
+  ) |>
+  dplyr::select(Model = model, `PR-AUC`, `ROC-AUC`, `Lift over baseline (PR-AUC)`) |>
+  knitr::kable(caption = sprintf("Repeated grouped cross-validation (%s x %s folds) on %s-%s flood events; mean +/- SD across folds",
+                                 p$cv_repeats, p$cv_folds, p$start_year, p$validation_end_year))
+```
+
+**PR-AUC is the number that matters here.** High-consequence events are rare, so a model can post a respectable ROC-AUC while still being poor at ranking the few events that matter. The no-skill PR-AUC equals the share of positives (`r sprintf("%.3f", py$cv_results$pr_auc[4])`); the best model, **`r py$best_cv$model`**, reaches **`r sprintf("%.3f", py$best_cv$pr_auc)`**, about **`r sprintf("%.1f", py$best_cv$pr_auc / py$cv_results$pr_auc[4])` times** better than chance. The spread across folds is wide because each fold holds only a handful of positive events.
+
+## Holdout test (`r p$validation_end_year + 1`-`r p$end_year`)
+
+```{python}
+#| label: py-final-fit
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
+
+def logit(p, eps=1e-6):
+    p = np.clip(p, eps, 1 - eps)
+    return np.log(p / (1 - p))
+
+def platt(oof_raw, y_true):
+    m = LogisticRegression().fit(logit(oof_raw).reshape(-1, 1), y_true)
+    return float(m.coef_[0][0]), float(m.intercept_[0])
+
+def calibrate(raw, scale, shift):
+    return 1 / (1 + np.exp(-(scale * logit(raw) + shift)))
+
+X_dev, y_dev = devel[FEATURES], devel[TARGET]
+X_test, y_test = test[FEATURES], test[TARGET]
+imputer = SimpleImputer(strategy="median", keep_empty_features=True).fit(X_dev)
+X_dev_i, X_test_i = imputer.transform(X_dev), imputer.transform(X_test)
+scaler = StandardScaler().fit(X_dev_i)
+inner_cv = StratifiedKFold(5, shuffle=True, random_state=42)
+
+fitted, preds = {}, {}
+for name, (build, scaled) in MODELS.items():
+    Xd = scaler.transform(X_dev_i) if scaled else X_dev_i
+    Xt = scaler.transform(X_test_i) if scaled else X_test_i
+    model = build().fit(Xd, y_dev)
+    raw = model.predict_proba(Xt)[:, 1]
+    oof = cross_val_predict(build(), Xd, y_dev, cv=inner_cv, method="predict_proba")[:, 1]
+    scale, shift = platt(oof, y_dev)
+    fitted[name] = model
+    preds[name] = {"raw": raw, "cal": calibrate(raw, scale, shift), "scale": scale, "shift": shift}
+
+holdout = pd.DataFrame([{
+    "model": n,
+    "pr_auc": average_precision_score(y_test, v["cal"]),
+    "roc_auc": roc_auc_score(y_test, v["cal"]),
+    "mean_predicted": float(v["cal"].mean()),
+} for n, v in preds.items()])
+test_base_rate = float(y_test.mean())
+
+# Calibration check (the "in-bag" bug): fitting Platt scaling on the random
+# forest's own training predictions instead of out-of-fold predictions.
+rf = fitted["Random forest"]
+inbag_scale, inbag_shift = platt(rf.predict_proba(X_dev_i)[:, 1], y_dev)
+rf_inbag = calibrate(preds["Random forest"]["raw"], inbag_scale, inbag_shift)
+calib_compare = pd.DataFrame({
+    "calibration": ["In-bag (fit on the training predictions)", "Out-of-fold (used here)", "Observed test rate"],
+    "mean_predicted": [float(rf_inbag.mean()), float(preds["Random forest"]["cal"].mean()), test_base_rate],
+    "max_predicted": [float(rf_inbag.max()), float(preds["Random forest"]["cal"].max()), np.nan],
+})
+```
+
+```{r}
+#| label: holdout-table
+#| echo: false
+py$holdout |>
+  dplyr::mutate(dplyr::across(c(pr_auc, roc_auc), \(x) sprintf("%.3f", x)),
+                mean_predicted = scales::percent(mean_predicted, accuracy = 0.1)) |>
+  dplyr::rename(Model = model, `PR-AUC` = pr_auc, `ROC-AUC` = roc_auc, `Mean predicted risk` = mean_predicted) |>
+  knitr::kable(caption = sprintf("Single holdout test on %s events (%s high-consequence, base rate %s). Illustrative: a small sample, so it is noisier than the cross-validation above.",
+                                 comma(py$summary$test_n), py$summary$test_pos, scales::percent(py$test_base_rate, accuracy = 0.1)))
+```
+
+```{python}
+#| label: py-pr-curve
+#| results: hide
+#| fig-width: 8
+#| fig-height: 6
+import matplotlib
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve
+
+plt.rcParams.update({"font.family": "sans-serif", "axes.spines.top": False, "axes.spines.right": False})
+colors = {"Logistic regression": "#1b7a8c", "Random forest": "#b2182b", "Gradient boosting": "#e08e2b"}
+fig, ax = plt.subplots(figsize=(8, 6))
+for name, v in preds.items():
+    precision, recall, _ = precision_recall_curve(y_test, v["cal"])
+    ax.plot(recall, precision, color=colors[name], linewidth=2.2,
+            label=f"{name} (AP = {average_precision_score(y_test, v['cal']):.3f})")
+ax.axhline(test_base_rate, linestyle="--", color="gray", linewidth=1.4, label=f"No-skill baseline ({test_base_rate:.3f})")
+ax.set_xlabel("Recall (share of high-consequence events caught)")
+ax.set_ylabel("Precision (share of flagged events that were high-consequence)")
+ax.set_title("Precision-recall on the holdout test years", loc="left", fontweight="bold", color="#12344d")
+ax.legend(frameon=False)
+ax.grid(alpha=0.25)
+fig.tight_layout()
+fig.savefig(f"{r.paths['figures_dir']}/19_model_pr_curve.png", dpi=int(cfg["figure_dpi"]), bbox_inches="tight")
+plt.show()
+```
+
+```{r}
+#| label: pr-link
+#| echo: false
+fig_link("19_model_pr_curve")
+```
+
+## Are the probabilities trustworthy? Calibration
+
+A model that says "10% risk" should be right about 10% of the time. Tree models are often poorly calibrated, so we rescale their scores with Platt scaling. **Where** that rescaling is fit matters. During development the team first fit it on the forest's own training predictions ("in-bag"). Those predictions are overconfident because the trees have already seen those rows, and the rescaling shrank every risk estimate. Fitting it on out-of-fold predictions fixed this:
+
+```{r}
+#| label: calib-table
+#| echo: false
+py$calib_compare |>
+  dplyr::mutate(mean_predicted = scales::percent(mean_predicted, accuracy = 0.1),
+                max_predicted = ifelse(is.na(max_predicted), "", scales::percent(max_predicted, accuracy = 0.1))) |>
+  dplyr::rename(`Random forest calibration` = calibration, `Mean predicted risk (test)` = mean_predicted,
+                `Highest predicted risk (test)` = max_predicted) |>
+  knitr::kable()
+```
+
+```{python}
+#| label: py-calibration
+#| results: hide
+#| fig-width: 11
+#| fig-height: 5
+from sklearn.calibration import calibration_curve
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 5), sharey=True)
+panels = [(preds["Random forest"]["raw"], "Random forest: raw scores"),
+          (preds["Random forest"]["cal"], "Random forest: calibrated (out-of-fold Platt)")]
+for ax, (probs, title) in zip(axes, panels):
+    frac_pos, mean_pred = calibration_curve(y_test, probs, n_bins=8, strategy="quantile")
+    ax.plot([0, 1], [0, 1], "k--", linewidth=1, label="Perfect calibration")
+    ax.plot(mean_pred, frac_pos, "o-", color="#b2182b", linewidth=2, label="Model")
+    ax.set_xlim(0, max(0.3, float(np.max(probs)) * 1.1))
+    ax.set_ylim(0, max(0.3, float(np.max(frac_pos)) * 1.2))
+    ax.set_title(title, loc="left", fontweight="bold", color="#12344d")
+    ax.set_xlabel("Mean predicted probability")
+    ax.grid(alpha=0.25)
+axes[0].set_ylabel("Observed share high-consequence")
+axes[0].legend(frameon=False)
+fig.tight_layout()
+fig.savefig(f"{r.paths['figures_dir']}/20_model_calibration.png", dpi=int(cfg["figure_dpi"]), bbox_inches="tight")
+plt.show()
+```
+
+```{r}
+#| label: calib-link
+#| echo: false
+fig_link("20_model_calibration")
+```
+
+## What drives the predictions
+
+```{python}
+#| label: py-shap
+#| results: hide
+#| fig-width: 9
+#| fig-height: 6.5
+import shap
+
+explainer = shap.TreeExplainer(fitted["Random forest"])
+X_shap = pd.DataFrame(X_test_i, columns=FEATURES)
+sv = explainer.shap_values(X_shap)
+sv = sv[1] if isinstance(sv, list) else sv
+if sv.ndim == 3:
+    sv = sv[:, :, 1]
+shap.summary_plot(sv, X_shap, show=False, plot_size=(9, 6.5))
+plt.title("Random forest: feature effects on predicted risk", loc="left",
+          fontweight="bold", color="#12344d", fontsize=12)
+plt.tight_layout()
+plt.savefig(f"{r.paths['figures_dir']}/21_model_shap_summary.png", dpi=int(cfg["figure_dpi"]), bbox_inches="tight")
+plt.show()
+
+shap_importance = (pd.Series(np.abs(sv).mean(axis=0), index=FEATURES)
+                   .sort_values(ascending=False).rename("mean_abs_shap").reset_index()
+                   .rename(columns={"index": "feature"}))
+
+# Logistic-regression weights on standardized features: sign = direction of the effect
+lr = fitted["Logistic regression"]
+lr_coefs = pd.DataFrame({"feature": FEATURES, "standardized_coefficient": lr.coef_[0]})
+
+# How many of the 100 trees ever split on each feature (a "dead feature" check)
+tree_use = pd.DataFrame({
+    "feature": FEATURES,
+    "trees_using_feature": [sum(j in set(t.tree_.feature[t.tree_.feature >= 0]) for t in fitted["Random forest"].estimators_)
+                            for j in range(len(FEATURES))],
+})
+```
+
+```{r}
+#| label: shap-link
+#| echo: false
+fig_link("21_model_shap_summary")
+```
+
+Each dot is one test event. Dots to the right pushed that event's predicted risk up, and color shows whether the feature's value was high (red) or low (blue). The table combines three views of each feature: its average influence in the random forest (mean |SHAP|), the direction of its effect in the logistic regression, and how many of the forest's 100 trees use it at all.
+
+```{r}
+#| label: driver-table
+#| echo: false
+drivers <- py$shap_importance |>
+  dplyr::left_join(py$lr_coefs, by = "feature") |>
+  dplyr::left_join(py$tree_use, by = "feature") |>
+  dplyr::mutate(direction_in_logistic_model = ifelse(standardized_coefficient > 0, "raises risk", "lowers risk"),
+                dplyr::across(c(mean_abs_shap, standardized_coefficient), \(x) round(x, 4)))
+dt(drivers, name = "model_feature_drivers", page_length = 11)
+```
+
+```{r}
+#| label: driver-notes
+#| echo: false
+#| results: asis
+dir_of <- function(f) drivers$direction_in_logistic_model[drivers$feature == f]
+top3 <- paste(head(drivers$feature, 3), collapse = ", ")
+cat(sprintf("* **Strongest drivers** (random forest): %s.\n", top3))
+minor_dir <- dir_of("nearby_minor_flood_count_25km"); severe_dir <- dir_of("nearby_severe_flood_count_25km")
+if (minor_dir != severe_dir) {
+  cat(sprintf("* **Flood history cuts both ways:** more earlier *minor* floods nearby %s, while more earlier *severe* floods nearby %s. This is consistent with communities adapting after routine floods, while severe events cluster in the most exposed places.\n", minor_dir, severe_dir))
+} else {
+  cat(sprintf("* **Flood history:** both earlier minor and earlier severe floods nearby %s in this run.\n", minor_dir))
+}
+cat(sprintf("* **Paved surface** %s. In NOAA's records many urban flood reports are minor nuisance flooding, while the deadliest events occur in rural, steep terrain.\n",
+            dir_of("impervious_mean_250m")))
+cat(sprintf("* **Season** (`peak_hurricane_season`) %s and is used by %s of 100 trees.\n",
+            dir_of("peak_hurricane_season"), drivers$trees_using_feature[drivers$feature == "peak_hurricane_season"]))
+```
+
+## Lessons from development
+
+These findings come from the team's testing while building the models and the interactive explorer below. They are reported here as documented during development and are **not recomputed** in this document.
+
+* **A dead feature and a mountain inversion.** An early version used an `is_tropical_event` flag that none of the 100 random-forest trees ever split on, so the whole "hurricane vs. ordinary storm" distinction rode on `event_month` alone. Across 90 mountain grid cells the team tested, 82% scored a hurricane scenario as *less* risky than a typical storm. Adding the `peak_hurricane_season` flag improved cross-validated PR-AUC (0.208 to 0.220) but did not remove the inversion (85.6% of cells), which reflects how few severe training examples exist. The logistic model cannot invert this way, because its season effect is one fixed weight applied everywhere.
+* **The calibration bug.** Fitting calibration on in-bag predictions capped the most extreme input the team tried at 2.6% predicted risk; refitting on out-of-fold predictions raised it to 7.9%. The table in the calibration section shows the same effect on this run's test years.
+
+## Interactive risk explorer
+
+The team also built a browser-based explorer. It maps historical flood events, shows a structural risk surface, and has a scenario calculator where you set terrain, community, and storm inputs and see the estimated probability change.
+
+```{r}
+#| label: explorer
+#| echo: false
+#| results: asis
+if (isTRUE(p$embed_explorer) && !is.na(paths$explorer) && file.exists(paths$explorer)) {
+  callout("note", "About the explorer",
+          "It runs entirely in your browser. Its models were exported from an earlier training run, so its numbers can differ slightly from the tables above. It is a teaching and exploration tool, **not an operational flood warning**.")
+  uri <- base64enc::dataURI(file = paths$explorer, mime = "text/html")
+  cat(sprintf('<iframe src="%s" title="Carolina HighGround risk explorer" style="width:100%%; height:900px; border:1px solid #d7e0e6; border-radius:10px;" loading="lazy"></iframe>\n\n', uri))
+  cat(download_link(paths$explorer, "Download the explorer (HTML) to open full-screen"))
+} else {
+  callout("note", "Explorer not embedded", sprintf("Expected at `%s`.", p$explorer_path))
+}
+```
+
+## Modeling limitations
+
+* **Small number of severe events.** About `r py$summary$devel_pos` high-consequence flood events in the development years; results vary noticeably across folds, and the holdout test is small.
+* **Helene dominates the test years.** One storm contributes many of the test positives, so holdout scores partly measure how well the model recognizes that single event.
+* **County-level vulnerability.** SOVI and population density are the same for every event in a county.
+* **Static layers.** Imperviousness (2023) and the infrastructure and stream snapshots post-date most events.
+* **No rainfall.** The models describe where impacts are severe *given* a flood-related event, not whether a storm will flood; they are not a forecast.

@@ -1,0 +1,10 @@
+dataset,file,crs,geometry_before_cleaning,features
+NHD flowlines,NHDFlowline_0.shp,NAD83,3D Measured Line String,"550,000"
+NHD flowlines,NHDFlowline_1.shp,NAD83,3D Measured Line String,"330,191"
+WBD HUC12,WBDHU12.shp,NAD83,Polygon,"2,541"
+NCDOT culverts,ncdot_culverts_nc.gpkg,WGS 84,Point,"3,062"
+NCDOT structures,ncdot_structures_nc.gpkg,WGS 84,Point,"14,318"
+DEM,3dep_dem_north_carolina_epsg32119.tif,EPSG:32119,"raster, 62.2 m cells","102,035,307"
+Slope,slope_degrees_epsg32119.tif,EPSG:32119,"raster, 62.2 m cells","102,035,307"
+Roughness,roughness_epsg32119.tif,EPSG:32119,"raster, 62.2 m cells","102,035,307"
+NLCD imperviousness 2023,annual_nlcd_fractional_impervious_2023_NC.tif,EPSG:5070,"raster, 39 m cells","176,260,000"

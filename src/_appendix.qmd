@@ -1,0 +1,130 @@
+# Appendix {#sec-appendix}
+
+## Downloads {#sec-downloads}
+
+```{r}
+#| label: downloads
+#| echo: false
+#| results: asis
+zip_bundle <- function(files, zip_name) {
+  files <- files[file.exists(files)]
+  if (length(files) == 0) return(NULL)
+  out <- file.path(tempdir(), zip_name)
+  unlink(out)
+  utils::zip(out, files, flags = "-j9Xq")
+  out
+}
+tab_zip <- zip_bundle(table_files, "carolina_highground_tables.zip")
+ml_zip  <- zip_bundle(file.path(paths$ml_dir, c("nc_flood_event_model_table.parquet", "nc_storm_event_model_table.parquet",
+                                                "feature_dictionary.csv", "target_definitions.csv", "target_config.json",
+                                                "split_recommendation.csv", "run_manifest.json")), "carolina_highground_ml_ready.zip")
+cat(sprintf("* **Figures**: each figure has its own download link; high-resolution copies of all %d figures are saved in `%s`.\n", length(figure_files), p$figures_dir))
+cat(sprintf("\n* **All tables** (%d CSV files, also saved in `%s`)\n", length(table_files), p$tables_dir))
+if (!is.null(tab_zip)) cat(download_link(tab_zip, "carolina_highground_tables.zip"))
+cat(sprintf("\n* **Machine-learning files** (Parquet tables + documentation, also in `%s`)\n", p$ml_dir))
+if (!is.null(ml_zip)) cat(download_link(ml_zip, "carolina_highground_ml_ready.zip"))
+```
+
+## Limitations
+
+* **Point and buffer features only.** No upstream contributing area, HAND, or flow accumulation is computed, and HUC12 membership is not a drainage-area measure.
+* **Coordinates.** `r comma(sum(is.na(model_table$longitude)))` events (mostly forecast-zone records) have no usable NOAA coordinates. Their spatial features are missing; no centroids are substituted.
+* **Timing.** Imperviousness is a `r p$nlcd_vintage` layer, and NCDOT and NHD are current snapshots, not conditions in the year of each event.
+* **Damage** figures are NOAA estimates in nominal dollars. Blank damage fields are treated as 0 and flagged.
+* **Soils** are summarized from tabular SSURGO only. **Rainfall** is not included. `r if (isTRUE(p$modeling_section)) "**Community vulnerability** enters only at the modeling stage, as county-level FEMA NRI values." else "**Community vulnerability** is not yet included."`
+* **Partial year** `r paste(p$partial_years, collapse = ", ")` is incomplete.
+
+## Configuration
+
+```{r}
+#| label: config-summary
+#| echo: false
+tibble::tribble(
+  ~setting, ~value,
+  "years", sprintf("%s-%s (partial: %s)", p$start_year, p$end_year, paste(p$partial_years, collapse = ", ")),
+  "study area", sprintf("%s: %s", p$study_area, paste(p$study_counties, collapse = ", ")),
+  "CRS (analysis / geographic)", sprintf("EPSG:%s / EPSG:%s", p$analysis_crs, p$geographic_crs),
+  "buffers (event / stream / infrastructure)", sprintf("%s / %s / %s m", p$event_buffer_m, p$stream_buffer_m, p$infrastructure_buffer_m),
+  "feature event scope", p$feature_event_scope,
+  "NHD flowline FTypes", paste(p$nhd_flowline_ftypes, collapse = ", "),
+  "target", sprintf("deaths >= %s OR damage > q%s of %s damage (basis: %s)", p$death_target_value, p$damage_quantile,
+                    if (p$target_positive_damage_only) "positive" else "all", p$target_threshold_basis),
+  "split", sprintf("train <= %s, validation <= %s, test after", p$train_end_year, p$validation_end_year),
+  "download_data / use_cached_features / refresh_derived_data", paste(p$download_data, p$use_cached_features, p$refresh_derived_data, sep = " / ")
+) |> knitr::kable(col.names = c("Setting", "Value"))
+```
+
+## Input inventory
+
+```{r}
+#| label: input-inventory
+#| echo: false
+dplyr::bind_rows(
+  file_inventory_row(paths$noaa_dir, "NOAA Storm Events", TRUE, "events, outcomes, targets", project_dir),
+  file_inventory_row(paths$nhd_zip, "NHD HR state ZIP", FALSE, "streams (extracted only if needed)", project_dir),
+  file_inventory_row(paths$nhd_dir, "NHD extracted shapefiles", FALSE, "streams, HUC12", project_dir),
+  file_inventory_row(paths$ncdot_culverts, "NCDOT culverts", FALSE, "culvert features", project_dir),
+  file_inventory_row(paths$ncdot_structures, "NCDOT structures", FALSE, "structure features", project_dir),
+  file_inventory_row(paths$dem, "DEM", FALSE, "elevation", project_dir),
+  file_inventory_row(paths$slope, "Slope", FALSE, "slope", project_dir),
+  file_inventory_row(paths$roughness, "Roughness", FALSE, "roughness", project_dir),
+  file_inventory_row(paths$nlcd, "NLCD imperviousness", FALSE, "imperviousness", project_dir),
+  file_inventory_row(paths$soils_dir, "SSURGO tables", FALSE, "soil summary", project_dir),
+  file_inventory_row(paths$soil_spatial, "SSURGO map-unit geometry", FALSE, "event soil features", project_dir),
+  file_inventory_row(paths$county_boundaries, "County boundaries", FALSE, "maps", project_dir),
+  file_inventory_row(paths$nc_boundary, "State boundary", FALSE, "maps", project_dir),
+  file_inventory_row(paths$rainfall, "Rainfall", FALSE, "rainfall features", project_dir),
+  file_inventory_row(paths$community, "Community vulnerability", FALSE, "community features", project_dir),
+  file_inventory_row(paths$interview, "Interview video (original)", FALSE, "interview", project_dir),
+  file_inventory_row(paths$interview_web, "Interview video (web copy)", FALSE, "embedded video", project_dir)
+) |>
+  dt(page_length = 20)
+```
+
+## Pipeline log
+
+Every warning, skipped step, and fallback recorded during this render:
+
+```{r}
+#| label: pipeline-log
+#| echo: false
+log_tbl <- fw_log_table()
+if (nrow(log_tbl) == 0) cat("No warnings were recorded.") else dt(log_tbl, page_length = 10)
+```
+
+## Session info
+
+```{r}
+#| label: session-info
+#| echo: false
+si <- utils::sessionInfo()
+cat(R.version.string, "\n")
+cat("Packages:", paste(sprintf("%s %s", names(si$otherPkgs), vapply(si$otherPkgs, \(x) x$Version, character(1))), collapse = ", "))
+```
+
+```{=html}
+<script>
+// Figure download links: save the image shown in the same code cell.
+document.addEventListener("click", function (e) {
+  const link = e.target.closest("a.fw-fig-download");
+  if (!link) return;
+  // Look in the link's own cell first, then in earlier cells (e.g. a Python
+  // figure whose link is emitted by the R cell right after it).
+  let cell = link.closest(".cell") || link.parentElement;
+  let img = cell ? cell.querySelector(".cell-output-display img, img") : null;
+  let prev = cell;
+  while (!img && prev && (prev = prev.previousElementSibling)) {
+    const imgs = prev.querySelectorAll("img");
+    if (imgs.length) img = imgs[imgs.length - 1];
+  }
+  if (!img) return;
+  e.preventDefault();
+  const a = document.createElement("a");
+  a.href = img.src;
+  a.download = link.dataset.filename || "figure.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+</script>
+```

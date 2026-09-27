@@ -10,3 +10,12 @@
 data/derived/
 _freeze/
 analysis_files/
+
+# Large files: keep the repo pushable (GitHub rejects files > 100 MB).
+# Raw inputs can be re-downloaded (see README); rendered reports are rebuilt with quarto.
+outs/report/*.html
+data/derived/
+data/raw/nhd/
+data/raw/dem_3dep/
+data/raw/media/
+data/raw/nri/

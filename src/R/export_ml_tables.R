@@ -1,5 +1,5 @@
 # ============================================================
-# Blue Ridge FloodWatch — targets and Python ML handoff
+# Carolina HighGround — targets and Python ML handoff
 # ============================================================
 #
 # Adds documented outcome labels, assigns a chronological split,

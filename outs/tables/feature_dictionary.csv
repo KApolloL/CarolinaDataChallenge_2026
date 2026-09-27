@@ -1,0 +1,70 @@
+column_name,role,units,description,source_dataset,leakage_warning
+event_id,identifier,,NOAA EVENT_ID (unique row key),NOAA Storm Events,
+episode_id,identifier,,NOAA EPISODE_ID; several events can share an episode (use for grouped CV),NOAA Storm Events,
+event_date,context,,"Event begin date (NOAA BEGIN_DATE_TIME, local standard time of the CZ)",NOAA Storm Events,
+year,context,,NOAA YEAR field,NOAA Storm Events,
+event_year,context,,Calendar year of event begin date,NOAA Storm Events,
+split,context,,Recommended chronological split,Derived from NOAA,
+is_partial_year,context,,Event year is listed in partial_years (incomplete NOAA year),Derived from NOAA,
+cz_name,context,,NOAA county or forecast-zone name,NOAA Storm Events,
+cz_type,context,,"C = county record, Z = forecast-zone record",NOAA Storm Events,
+cz_fips,context,,County FIPS (C) or NWS zone number (Z),NOAA Storm Events,
+wfo,context,,NWS Weather Forecast Office,NOAA Storm Events,
+matched_county,context,,County name(s) matched from the CZ record,Derived from NOAA,
+matched_county_fips,context,,3-digit county FIPS of matched county(ies),Derived from NOAA,
+region_assignment_method,context,,exact_county_match / forecast_zone_county_match / special_coastal_zone / unmatched,Derived from NOAA,
+in_study_area,context,,Matched county is in the configured study_counties,Derived from NOAA,
+flood_cause,context,,NOAA FLOOD_CAUSE (flood events only),NOAA Storm Events,Recorded after the event; excluded from predictors
+event_coordinate_quality,context,,Source of the event coordinate,NOAA Storm Events,
+spatial_feature_method,context,,Methods used to compute this row's spatial features,NOAA Storm Events,
+source_vintage,context,,Source dataset vintages for this row,NOAA Storm Events,
+data_coverage_warning,context,,Coverage caveats for this row,NOAA Storm Events,
+huc12,context,,WBD HUC12 containing the event point,USGS WBD,
+huc12_name,context,,WBD HUC12 name,USGS WBD,
+event_type,predictor,,NOAA EVENT_TYPE,NOAA Storm Events,"Known at report time; fine for post-event triage models, not for pre-event forecasting"
+region,predictor,,NC region (mountains/central/coastal) from county or zone name,Derived from NOAA,
+event_month,predictor,,Month of event begin date,NOAA Storm Events,
+event_day_of_year,predictor,,Day of year of event begin date,NOAA Storm Events,
+longitude,predictor,decimal degrees (EPSG:4326),Event longitude (EPSG:4326) from NOAA BEGIN_LON or first locations-table point,NOAA Storm Events,
+latitude,predictor,decimal degrees (EPSG:4326),Event latitude (EPSG:4326) from NOAA BEGIN_LAT or first locations-table point,NOAA Storm Events,
+is_flood_event,predictor,,EVENT_TYPE matches flood_event_pattern,Derived from NOAA,
+is_tropical_event,predictor,,EVENT_TYPE matches tropical_event_pattern,Derived from NOAA,
+distance_to_stream_m,predictor,meters,Distance to nearest NHD HR flowline of the configured ftypes,USGS NHD High Resolution,
+streams_within_250m,predictor,count,Count of NHD HR flowline segments within 250m,USGS NHD High Resolution,
+streams_within_1km,predictor,count,Count of NHD HR flowline segments within 1km,USGS NHD High Resolution,
+stream_density_km_per_km2_250m,predictor,km per km^2,Flowline length (km) per km^2 within 250m,USGS NHD High Resolution,
+huc12_area_km2,predictor,km^2,Area of the containing HUC12 (not upstream contributing area),USGS WBD,
+distance_to_nearest_culvert_m,predictor,meters,Distance to nearest NCDOT culvert,NCDOT Structures service,
+culverts_within_250m,predictor,count,Count of NCDOT culverts within 250m,NCDOT Structures service,
+culverts_within_1km,predictor,count,Count of NCDOT culverts within 1km,NCDOT Structures service,
+distance_to_nearest_structure_m,predictor,meters,Distance to nearest NCDOT structure (bridge layer),NCDOT Structures service,
+structures_within_250m,predictor,count,Count of NCDOT structures within 250m,NCDOT Structures service,
+structures_within_1km,predictor,count,Count of NCDOT structures within 1km,NCDOT Structures service,
+elevation_m,predictor,meters,DEM elevation at the event point,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
+elevation_mean_250m,predictor,meters,Mean DEM elevation within 250m,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
+slope_degrees,predictor,degrees,Slope at the event point,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
+slope_mean_250m,predictor,degrees,Mean slope within 250m,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
+terrain_roughness,predictor,meters (elevation range),Terrain roughness (elevation range in 3x3 window) at the event point,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
+roughness_mean_250m,predictor,meters (elevation range),Mean terrain roughness within 250m,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
+impervious_mean_event,predictor,percent (0-100),Annual NLCD fractional imperviousness (%) at the event point,USGS Annual NLCD,2023 static layer; post-dates most events (possible temporal leakage)
+impervious_mean_250m,predictor,percent (0-100),Mean Annual NLCD imperviousness (%) within 250m,USGS Annual NLCD,2023 static layer; post-dates most events (possible temporal leakage)
+impervious_mean_1km,predictor,percent (0-100),Mean Annual NLCD imperviousness (%) within 1km,USGS Annual NLCD,2023 static layer; post-dates most events (possible temporal leakage)
+injuries_direct,outcome,count,NOAA direct injuries,NOAA Storm Events,Outcome: never use as a predictor
+injuries_indirect,outcome,count,NOAA indirect injuries,NOAA Storm Events,Outcome: never use as a predictor
+total_injuries,outcome,count,Direct + indirect injuries,NOAA Storm Events,Outcome: never use as a predictor
+deaths_direct,outcome,count,NOAA direct deaths,NOAA Storm Events,Outcome: never use as a predictor
+deaths_indirect,outcome,count,NOAA indirect deaths,NOAA Storm Events,Outcome: never use as a predictor
+total_deaths,outcome,count,Direct + indirect deaths,NOAA Storm Events,Outcome: never use as a predictor
+property_damage_dollars,outcome,US dollars (nominal),"NOAA DAMAGE_PROPERTY in dollars (nominal, not inflation-adjusted)",NOAA Storm Events,Outcome: never use as a predictor
+crop_damage_dollars,outcome,US dollars (nominal),NOAA DAMAGE_CROPS in dollars (nominal),NOAA Storm Events,Outcome: never use as a predictor
+total_damage,outcome,US dollars (nominal),Property + crop damage (nominal dollars),NOAA Storm Events,Outcome: never use as a predictor
+property_damage_reported,outcome,,1 if NOAA DAMAGE_PROPERTY was non-blank,NOAA Storm Events,Outcome: never use as a predictor
+crop_damage_reported,outcome,,1 if NOAA DAMAGE_CROPS was non-blank,NOAA Storm Events,Outcome: never use as a predictor
+any_death,outcome,,total_deaths > 0,NOAA Storm Events,Outcome: never use as a predictor
+any_injury,outcome,,total_injuries > 0,NOAA Storm Events,Outcome: never use as a predictor
+any_damage,outcome,,total_damage > 0,NOAA Storm Events,Outcome: never use as a predictor
+fatality_records,outcome,count,Rows in NOAA fatalities table for this event,NOAA Storm Events,Outcome: never use as a predictor
+fatality_records_direct,outcome,,Fatality records with FATALITY_TYPE = D,NOAA Storm Events,Outcome: never use as a predictor
+fatality_records_indirect,outcome,,Fatality records with FATALITY_TYPE = I,NOAA Storm Events,Outcome: never use as a predictor
+high_consequence,target,,Primary target (see target_definitions.csv),Derived from NOAA,Target: recompute damage threshold on training rows before final evaluation
+high_human_impact,target,,Secondary target (see target_definitions.csv),Derived from NOAA,Target: recompute damage threshold on training rows before final evaluation

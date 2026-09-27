@@ -1,5 +1,5 @@
 # ============================================================
-# Blue Ridge FloodWatch — event-level spatial features
+# Carolina HighGround — event-level spatial features
 # ============================================================
 #
 # Point/buffer-based features around each NOAA event point:

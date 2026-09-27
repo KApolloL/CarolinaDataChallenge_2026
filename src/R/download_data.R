@@ -1,5 +1,5 @@
 # ============================================================
-# Blue Ridge FloodWatch — optional data downloads
+# Carolina HighGround — optional data downloads
 # ============================================================
 #
 # Refactored from src/data_scraper.R. Nothing here runs unless the

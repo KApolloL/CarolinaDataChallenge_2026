@@ -1,0 +1,8 @@
+ftype,segments_statewide,description,used_in_features
+460,622843,Stream/River,TRUE
+558,188040,Artificial path,TRUE
+336,59729,Canal/Ditch,FALSE
+566,5547,Coastline,FALSE
+334,3932,Connector,FALSE
+428,98,Pipeline,FALSE
+420,2,Underground conduit,FALSE

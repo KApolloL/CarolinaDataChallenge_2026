@@ -1,0 +1,13 @@
+# Model Results {#sec-model}
+
+::: {.coming-soon}
+**Coming next: model training and evaluation (Python).**
+
+This section will present the model built on the files above:
+
+* baseline (logistic regression) and tree-based models trained on `r p$train_end_year` and earlier, tuned on `r p$train_end_year + 1`-`r p$validation_end_year`, and evaluated once on `r p$validation_end_year + 1`-`r p$end_year`;
+* precision-recall performance for the rare `high_consequence` class;
+* which landscape and infrastructure features drive the predictions;
+* maps of predicted risk and of misses in the study counties, and what they mean for communities.
+:::
+

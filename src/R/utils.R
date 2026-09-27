@@ -1,5 +1,5 @@
 # ============================================================
-# Blue Ridge FloodWatch — shared helpers
+# Carolina HighGround — shared helpers
 # ============================================================
 #
 # Sourced by analysis.qmd and by the other scripts in scripts/.

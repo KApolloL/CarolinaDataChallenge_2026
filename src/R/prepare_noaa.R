@@ -1,5 +1,5 @@
 # ============================================================
-# Blue Ridge FloodWatch — NOAA Storm Events preparation
+# Carolina HighGround — NOAA Storm Events preparation
 # ============================================================
 #
 # Builds an event-level table with exactly one row per EVENT_ID.

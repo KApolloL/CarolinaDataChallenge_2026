@@ -1,3 +1,0 @@
-target_name,definition,damage_threshold_dollars,damage_quantile,positive_damage_only,death_target_value,threshold_basis,threshold_pool_n,positives,prevalence,leakage_warning
-high_consequence,1 if total_deaths >= 1 OR total_damage > the 0.9 quantile of positive damage values (basis: all_events); 0 otherwise.,28700000.00000006,0.9,TRUE,1,all_events,100,15,0.025380710659898477,Threshold computed on all events (descriptive). Recompute on training rows only before final model evaluation.
-high_human_impact,1 if total_deaths >= 1 OR total_injuries >= 1; 0 otherwise.,,,,1,,,18,0.030456852791878174,Outcome label; never use injuries or deaths as predictors.

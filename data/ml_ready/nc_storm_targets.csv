@@ -956,8 +956,8 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 650939,108670,2016-07-08,2016,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
 650944,108670,2016-07-08,2016,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 650948,108670,2016-07-08,2016,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
-650953,108670,2016-07-08,2016,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
-650967,108670,2016-07-08,2016,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+650953,108670,2016-07-08,2016,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
+650967,108670,2016-07-08,2016,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 652781,108670,2016-07-08,2016,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 654309,108426,2016-07-08,2016,Hail,central,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 654314,108426,2016-07-08,2016,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -999,7 +999,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 647926,108141,2016-07-15,2016,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 647927,108141,2016-07-15,2016,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 647928,108141,2016-07-15,2016,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-647929,108141,2016-07-15,2016,Thunderstorm Wind,central,train,FALSE,1,0,1,0,0,0,150000,0,150000,1,1,0,1,1,0,0,0,1,1
+647929,108141,2016-07-15,2016,Thunderstorm Wind,central,train,FALSE,1,0,1,0,0,0,150000,0,150000,1,1,0,1,1,0,0,0,0,1
 647930,108141,2016-07-15,2016,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 647931,108141,2016-07-15,2016,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,10000,10000,20000,1,1,0,0,1,0,0,0,0,0
 647932,108141,2016-07-15,2016,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -1254,7 +1254,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 657580,109780,2016-09-02,2016,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 657611,109780,2016-09-02,2016,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 657629,109780,2016-09-02,2016,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,5400000,0,5400000,1,1,0,0,1,0,0,0,1,0
-658906,109780,2016-09-02,2016,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+658906,109780,2016-09-02,2016,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 658907,109780,2016-09-02,2016,Tornado,coastal,train,FALSE,0,0,0,0,0,0,75000,0,75000,1,1,0,0,1,0,0,0,0,0
 660119,110529,2016-09-02,2016,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 660120,110529,2016-09-02,2016,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
@@ -1384,7 +1384,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 661456,110544,2016-09-29,2016,Flash Flood,central,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 661463,110544,2016-09-29,2016,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 661465,110544,2016-09-29,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,25000,0,25000,1,1,0,0,1,0,0,0,0,0
-661468,110544,2016-09-29,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+661468,110544,2016-09-29,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 661470,110544,2016-09-29,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 661477,110544,2016-09-29,2016,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 661480,110544,2016-09-29,2016,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -1432,13 +1432,13 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 662034,109645,2016-10-08,2016,Strong Wind,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 662035,109645,2016-10-08,2016,Strong Wind,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 662235,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
-662239,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+662239,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 662248,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
 662311,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
 662312,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 662313,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,1000000,0,1000000,1,1,0,0,1,0,0,0,1,0
-662315,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
-662316,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+662315,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
+662316,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 662317,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 662318,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,55000,0,55000,1,1,0,0,1,0,0,0,0,0
 662319,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
@@ -1470,7 +1470,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 662381,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 662382,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 662383,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
-662666,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+662666,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 662713,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
 662714,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 662715,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,75000,0,75000,1,1,0,0,1,0,0,0,0,0
@@ -1491,7 +1491,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 663374,109645,2016-10-08,2016,Strong Wind,central,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 663375,109645,2016-10-08,2016,Strong Wind,central,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 663376,109645,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-663377,109645,2016-10-08,2016,Strong Wind,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+663377,109645,2016-10-08,2016,Strong Wind,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 663379,109645,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,1,1,0,0,0,1,1,1,0,0,1,0,1,1,1
 663381,109645,2016-10-08,2016,Strong Wind,central,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 663383,109645,2016-10-08,2016,Strong Wind,central,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
@@ -1590,7 +1590,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 664224,111315,2016-10-08,2016,Flood,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 664226,111315,2016-10-08,2016,Flood,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 664228,111315,2016-10-08,2016,Flood,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
-664229,111315,2016-10-08,2016,Flood,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+664229,111315,2016-10-08,2016,Flood,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 664343,110904,2016-10-08,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
 659774,110427,2016-10-09,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 659776,110427,2016-10-09,2016,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -2022,7 +2022,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 688942,114845,2017-04-25,2017,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 694825,114845,2017-04-25,2017,High Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 694826,114845,2017-04-25,2017,High Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-696350,115868,2017-04-25,2017,Flash Flood,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+696350,115868,2017-04-25,2017,Flash Flood,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 696352,115868,2017-04-25,2017,Flash Flood,central,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 696385,115868,2017-04-25,2017,Flash Flood,central,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 696386,115868,2017-04-25,2017,Flash Flood,central,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
@@ -2154,7 +2154,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 704287,117068,2017-05-05,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,5200,0,5200,1,1,0,0,1,0,0,0,0,0
 704288,117068,2017-05-05,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 704436,116341,2017-05-05,2017,Tornado,coastal,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
-704441,116341,2017-05-05,2017,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+704441,116341,2017-05-05,2017,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 704445,116341,2017-05-05,2017,Tornado,coastal,train,FALSE,0,0,0,0,0,0,15000,0,15000,1,1,0,0,1,0,0,0,0,0
 704446,116341,2017-05-05,2017,Tornado,coastal,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 700404,116458,2017-05-09,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,2500,0,2500,1,1,0,0,1,0,0,0,0,0
@@ -2413,7 +2413,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 716715,119425,2017-07-03,2017,Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 699042,116267,2017-07-05,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 699043,116267,2017-07-05,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
-713499,118768,2017-07-05,2017,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+713499,118768,2017-07-05,2017,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 713500,118768,2017-07-05,2017,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 713501,118768,2017-07-05,2017,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 713502,118768,2017-07-05,2017,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -2541,7 +2541,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 714843,118955,2017-07-18,2017,Hail,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 714845,118955,2017-07-18,2017,Hail,central,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 715150,118955,2017-07-18,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-715151,118955,2017-07-18,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+715151,118955,2017-07-18,2017,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 715152,118955,2017-07-18,2017,Hail,central,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 715153,118955,2017-07-18,2017,Hail,central,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 716431,119322,2017-07-18,2017,Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -2737,10 +2737,10 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 723359,120775,2017-09-23,2017,Rip Current,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 724207,120989,2017-10-07,2017,Rip Current,coastal,train,FALSE,0,0,0,1,0,1,0,0,0,1,1,1,0,0,1,1,0,1,1
 724208,120989,2017-10-07,2017,Rip Current,coastal,train,FALSE,0,0,0,2,0,2,0,0,0,1,1,1,0,0,2,2,0,1,1
-723118,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+723118,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 723119,120737,2017-10-08,2017,Tornado,central,train,FALSE,0,0,0,0,0,0,20000,0,20000,1,1,0,0,1,0,0,0,0,0
 723120,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
-723125,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+723125,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 723130,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 723254,120737,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,300000,0,300000,1,1,0,0,1,0,0,0,1,0
 723703,120870,2017-10-08,2017,Tornado,mountains,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,0,0,0,1,0,0,0,0,0
@@ -3167,8 +3167,8 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 747055,124516,2018-03-02,2018,High Wind,mountains,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,0,0,0,1,0,0,0,0,0
 747056,124516,2018-03-02,2018,High Wind,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,0,0,0,1,0,0,0,1,0
 747068,124516,2018-03-02,2018,High Wind,central,train,FALSE,0,0,0,0,0,0,30000,0,30000,1,0,0,0,1,0,0,0,0,0
-747069,124516,2018-03-02,2018,High Wind,central,train,FALSE,0,0,0,0,0,0,110000,0,110000,1,0,0,0,1,0,0,0,1,0
-747070,124516,2018-03-02,2018,High Wind,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,0,0,0,1,0,0,0,1,0
+747069,124516,2018-03-02,2018,High Wind,central,train,FALSE,0,0,0,0,0,0,110000,0,110000,1,0,0,0,1,0,0,0,0,0
+747070,124516,2018-03-02,2018,High Wind,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,0,0,0,1,0,0,0,0,0
 747124,124430,2018-03-02,2018,Strong Wind,central,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 747125,124430,2018-03-02,2018,Strong Wind,central,train,FALSE,0,0,0,0,0,0,15000,0,15000,1,1,0,0,1,0,0,0,0,0
 747126,124430,2018-03-02,2018,Strong Wind,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
@@ -3363,7 +3363,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 753740,125637,2018-04-15,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 753745,125637,2018-04-15,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 753747,125637,2018-04-15,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-753752,125637,2018-04-15,2018,Tornado,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+753752,125637,2018-04-15,2018,Tornado,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 754019,125637,2018-04-15,2018,Tornado,central,train,FALSE,0,2,2,0,1,1,65000000,0,65000000,1,1,1,1,1,1,0,1,1,1
 754498,125247,2018-04-15,2018,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 754499,125247,2018-04-15,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -3748,7 +3748,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 769306,128218,2018-06-25,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 769310,128218,2018-06-25,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 769311,128218,2018-06-25,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-769320,128218,2018-06-25,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+769320,128218,2018-06-25,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 769322,128218,2018-06-25,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 769324,128218,2018-06-25,2018,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 769332,128218,2018-06-25,2018,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -3988,7 +3988,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 767881,128028,2018-08-02,2018,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,700,0,700,1,0,0,0,1,0,0,0,0,0
 767882,128028,2018-08-02,2018,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,0,0,0,1,0,0,0,0,0
 767883,128028,2018-08-02,2018,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,500,0,500,1,0,0,0,1,0,0,0,0,0
-778303,128028,2018-08-02,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+778303,128028,2018-08-02,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 778305,128028,2018-08-02,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 778366,128028,2018-08-02,2018,Heavy Rain,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 778371,128028,2018-08-02,2018,Heavy Rain,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -4214,7 +4214,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 787013,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,13800000,0,13800000,1,0,0,0,1,0,0,0,1,0
 787014,130979,2018-09-13,2018,Hurricane (Typhoon),coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 787015,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,1170000,0,1170000,1,0,0,0,1,0,0,0,1,0
-787016,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,0,0,0,1,0,0,0,1,0
+787016,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,0,0,0,1,0,0,0,0,0
 787017,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 787018,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,14000,0,14000,1,0,0,0,1,0,0,0,0,0
 787020,130979,2018-09-13,2018,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -4259,7 +4259,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 786264,131166,2018-09-14,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 786760,130719,2018-09-14,2018,Hurricane (Typhoon),coastal,train,FALSE,1,0,1,0,0,0,1000000000,0,1000000000,1,1,0,1,1,0,0,0,1,1
 786762,130719,2018-09-14,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
-786771,130719,2018-09-14,2018,Hurricane (Typhoon),coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+786771,130719,2018-09-14,2018,Hurricane (Typhoon),coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 786772,130719,2018-09-14,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 786783,130719,2018-09-14,2018,Hurricane (Typhoon),coastal,train,FALSE,0,0,0,0,0,0,300000000,0,300000000,1,1,0,0,1,0,0,0,1,0
 786801,130719,2018-09-14,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,30000,0,30000,1,1,0,0,1,0,0,0,0,0
@@ -4273,10 +4273,10 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 784840,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 784841,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,300000,0,300000,1,1,0,0,1,0,0,0,1,0
 784842,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,0,0,0,1,0,0,0,0,0
-784844,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,0,0,0,1,0,0,0,1,0
+784844,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,0,0,0,1,0,0,0,0,0
 784846,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-784848,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
-784855,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,0,0,0,1,0,0,0,1,0
+784848,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
+784855,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,0,0,0,1,0,0,0,0,0
 784856,130719,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 784985,130979,2018-09-15,2018,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 785787,130979,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -4316,7 +4316,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 786508,130719,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 786509,130719,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,40000,0,40000,1,1,0,0,1,0,0,0,0,0
 786765,130719,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
-786773,130719,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+786773,130719,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 786794,130719,2018-09-15,2018,Flash Flood,coastal,train,FALSE,0,0,0,1,0,1,5000000,0,5000000,1,1,1,0,1,1,1,0,1,1
 787176,131166,2018-09-15,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 787774,131166,2018-09-15,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
@@ -4351,7 +4351,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 786313,131166,2018-09-16,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 786314,131166,2018-09-16,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 786319,131166,2018-09-16,2018,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-786483,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+786483,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 786484,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 786485,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 786501,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,30000,0,30000,1,1,0,0,1,0,0,0,0,0
@@ -4360,7 +4360,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 786767,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,2000000,0,2000000,1,1,0,0,1,0,0,0,1,0
 786775,130243,2018-09-16,2018,Flood,mountains,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 786777,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,300000,0,300000,1,1,0,0,1,0,0,0,1,0
-786805,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+786805,130719,2018-09-16,2018,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 787512,130243,2018-09-16,2018,Heavy Rain,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 787824,131692,2018-09-16,2018,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 787827,131692,2018-09-16,2018,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
@@ -4485,8 +4485,8 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 789612,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 789613,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 789614,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
-789615,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
-789616,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,1,0,1,0,0,0,200000,0,200000,1,1,0,1,1,0,0,0,1,1
+789615,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
+789616,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,1,0,1,0,0,0,200000,0,200000,1,1,0,1,1,0,0,0,0,1
 789617,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 789618,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 789619,131955,2018-10-11,2018,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
@@ -4628,7 +4628,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 788742,131868,2018-12-08,2018,Winter Storm,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 788747,131868,2018-12-08,2018,Winter Storm,central,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 788748,131868,2018-12-08,2018,Winter Storm,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-788752,131868,2018-12-08,2018,Winter Storm,mountains,train,FALSE,0,0,0,0,0,0,175000,0,175000,1,0,0,0,1,0,0,0,1,0
+788752,131868,2018-12-08,2018,Winter Storm,mountains,train,FALSE,0,0,0,0,0,0,175000,0,175000,1,0,0,0,1,0,0,0,0,0
 788762,131868,2018-12-08,2018,Winter Storm,central,train,FALSE,0,0,0,0,1,1,0,0,0,0,0,1,0,0,1,0,1,1,1
 798056,133371,2018-12-08,2018,Heavy Snow,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 798057,133371,2018-12-08,2018,Heavy Snow,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -4998,8 +4998,8 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 820432,136732,2019-04-19,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,650000,0,650000,1,1,0,0,1,0,0,0,1,0
 820433,136732,2019-04-19,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,400000,0,400000,1,1,0,0,1,0,0,0,1,0
 820452,136732,2019-04-19,2019,Tornado,central,train,FALSE,0,0,0,0,0,0,2000000,0,2000000,1,1,0,0,1,0,0,0,1,0
-820455,136732,2019-04-19,2019,Tornado,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
-820555,136732,2019-04-19,2019,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,110000,0,110000,1,1,0,0,1,0,0,0,1,0
+820455,136732,2019-04-19,2019,Tornado,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
+820555,136732,2019-04-19,2019,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,110000,0,110000,1,1,0,0,1,0,0,0,0,0
 820577,136732,2019-04-19,2019,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 820578,136732,2019-04-19,2019,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,1500,0,1500,1,1,0,0,1,0,0,0,0,0
 820579,136732,2019-04-19,2019,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -5357,7 +5357,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 831486,138123,2019-05-31,2019,Hail,coastal,train,FALSE,0,0,0,0,0,0,50000,250000,300000,1,1,0,0,1,0,0,0,1,0
 831487,138123,2019-05-31,2019,Hail,coastal,train,FALSE,0,0,0,0,0,0,20000,0,20000,1,1,0,0,1,0,0,0,0,0
 831489,138123,2019-05-31,2019,Hail,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-831490,138123,2019-05-31,2019,Hail,coastal,train,FALSE,0,0,0,0,0,0,50000,100000,150000,1,1,0,0,1,0,0,0,1,0
+831490,138123,2019-05-31,2019,Hail,coastal,train,FALSE,0,0,0,0,0,0,50000,100000,150000,1,1,0,0,1,0,0,0,0,0
 831491,138123,2019-05-31,2019,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 831492,138123,2019-05-31,2019,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,25000,0,25000,1,1,0,0,1,0,0,0,0,0
 831493,138123,2019-05-31,2019,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
@@ -5952,7 +5952,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 856825,142735,2019-09-05,2019,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 856840,140548,2019-09-05,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 857310,142735,2019-09-05,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
-857311,142735,2019-09-05,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+857311,142735,2019-09-05,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 857312,142735,2019-09-05,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,20000,50000,70000,1,1,0,0,1,0,0,0,0,0
 857363,142888,2019-09-05,2019,Tornado,coastal,train,FALSE,1,0,1,0,0,0,500000,0,500000,1,1,0,1,1,0,0,0,1,1
 857364,142888,2019-09-05,2019,Tornado,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
@@ -6276,10 +6276,10 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 872725,145042,2020-02-06,2020,Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 872768,145042,2020-02-06,2020,Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 872819,145042,2020-02-06,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-873435,145042,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,118000,0,118000,1,1,0,0,1,0,0,0,1,0
+873435,145042,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,118000,0,118000,1,1,0,0,1,0,0,0,0,0
 874188,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 874205,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
-874233,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+874233,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 874235,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 874302,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 874307,145578,2020-02-06,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,2500,0,2500,1,1,0,0,1,0,0,0,0,0
@@ -6310,10 +6310,10 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 874585,145216,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 874589,145216,2020-02-06,2020,Flood,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 874667,145042,2020-02-06,2020,Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-874668,145042,2020-02-06,2020,Flood,mountains,train,FALSE,0,0,0,0,0,0,139000,0,139000,1,1,0,0,1,0,0,0,1,0
+874668,145042,2020-02-06,2020,Flood,mountains,train,FALSE,0,0,0,0,0,0,139000,0,139000,1,1,0,0,1,0,0,0,0,0
 874670,145042,2020-02-06,2020,Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 874682,145042,2020-02-06,2020,Flood,central,train,FALSE,0,0,0,0,0,0,30000,0,30000,1,1,0,0,1,0,0,0,0,0
-874719,145042,2020-02-06,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,145000,0,145000,1,1,0,0,1,0,0,0,1,0
+874719,145042,2020-02-06,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,145000,0,145000,1,1,0,0,1,0,0,0,0,0
 874725,145042,2020-02-06,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 874746,145250,2020-02-06,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 874748,145250,2020-02-06,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
@@ -6365,7 +6365,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 877889,145216,2020-02-06,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 877890,145216,2020-02-06,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 877891,145216,2020-02-06,2020,Flood,central,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
-878243,145216,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+878243,145216,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 878247,145216,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 878346,145216,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 878348,145216,2020-02-06,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
@@ -6631,11 +6631,11 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 879870,146424,2020-04-13,2020,High Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 884405,147130,2020-04-13,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,340000,0,340000,1,1,0,0,1,0,0,0,1,0
 884858,147130,2020-04-13,2020,Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-885110,147130,2020-04-13,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,160000,0,160000,1,1,0,0,1,0,0,0,1,0
+885110,147130,2020-04-13,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,160000,0,160000,1,1,0,0,1,0,0,0,0,0
 885208,147130,2020-04-13,2020,Flood,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 885389,147254,2020-04-13,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 885390,147254,2020-04-13,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,3000,0,3000,1,1,0,0,1,0,0,0,0,0
-885529,147279,2020-04-13,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+885529,147279,2020-04-13,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 885531,147279,2020-04-13,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,8000,0,8000,1,1,0,0,1,0,0,0,0,0
 885532,147279,2020-04-13,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 885558,147279,2020-04-13,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
@@ -6657,14 +6657,14 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 887094,147364,2020-04-13,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 887367,147364,2020-04-13,2020,Flood,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 887369,147364,2020-04-13,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
-887505,147364,2020-04-13,2020,Debris Flow,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+887505,147364,2020-04-13,2020,Debris Flow,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 887506,147364,2020-04-13,2020,Debris Flow,mountains,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 887508,147364,2020-04-13,2020,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 887511,147364,2020-04-13,2020,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 887512,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 887513,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 887514,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
-887516,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+887516,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 887621,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 887622,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,1,0,1,0,0,0,50000,0,50000,1,1,0,1,1,0,0,0,0,1
 887634,147364,2020-04-13,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -6801,7 +6801,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 879864,146421,2020-04-30,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 879865,146421,2020-04-30,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 886518,147418,2020-04-30,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
-887796,147577,2020-04-30,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+887796,147577,2020-04-30,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 887797,147577,2020-04-30,2020,Flood,central,train,FALSE,0,0,0,1,0,1,10000,0,10000,1,1,1,0,1,1,1,0,1,1
 887801,147577,2020-04-30,2020,Flood,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 888302,147622,2020-04-30,2020,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
@@ -7179,7 +7179,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 914242,151726,2020-08-03,2020,Heavy Rain,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 914245,151726,2020-08-03,2020,Heavy Rain,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 914246,151726,2020-08-03,2020,Heavy Rain,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-916387,151183,2020-08-03,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+916387,151183,2020-08-03,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 916388,151183,2020-08-03,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 916389,151183,2020-08-03,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,1000000,0,1000000,1,1,0,0,1,0,0,0,1,0
 916392,151183,2020-08-03,2020,Tornado,coastal,train,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
@@ -7220,7 +7220,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 917022,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 917026,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
 917031,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
-917033,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+917033,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 917037,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 917039,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 917043,151991,2020-08-04,2020,Tropical Storm,coastal,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
@@ -7392,7 +7392,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 916228,152152,2020-08-21,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 919476,152640,2020-08-21,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 916237,152156,2020-08-24,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-916238,152156,2020-08-24,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,110000,0,110000,1,1,0,0,1,0,0,0,1,0
+916238,152156,2020-08-24,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,110000,0,110000,1,1,0,0,1,0,0,0,0,0
 916372,152156,2020-08-24,2020,Heavy Rain,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 919480,152641,2020-08-24,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,40000,0,40000,1,1,0,0,1,0,0,0,0,0
 919484,152643,2020-08-28,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -7543,7 +7543,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 925066,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 925067,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 926050,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,20000,0,20000,1,1,0,0,1,0,0,0,0,0
-926060,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+926060,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 926076,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 926104,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,80000,0,80000,1,1,0,0,1,0,0,0,0,0
 926114,153456,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
@@ -7553,7 +7553,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 926157,153456,2020-10-29,2020,Flood,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 926159,153456,2020-10-29,2020,Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 926160,153456,2020-10-29,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
-926161,153456,2020-10-29,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+926161,153456,2020-10-29,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 926162,153456,2020-10-29,2020,Debris Flow,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 926163,153456,2020-10-29,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,250000,0,250000,1,1,0,0,1,0,0,0,1,0
 926164,153456,2020-10-29,2020,Flash Flood,central,train,FALSE,0,0,0,0,0,0,25000,0,25000,1,1,0,0,1,0,0,0,0,0
@@ -7579,7 +7579,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 926613,153851,2020-10-29,2020,Flash Flood,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 926721,153855,2020-10-29,2020,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
 926788,153851,2020-10-29,2020,Tropical Storm,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-926790,153851,2020-10-29,2020,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+926790,153851,2020-10-29,2020,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 926791,153851,2020-10-29,2020,Tropical Storm,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 926792,153851,2020-10-29,2020,Tropical Storm,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 926793,153851,2020-10-29,2020,Tropical Storm,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -8099,7 +8099,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 951039,157337,2021-03-18,2021,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 951679,157396,2021-03-18,2021,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 951680,157396,2021-03-18,2021,Hail,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-951717,156769,2021-03-18,2021,Tornado,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+951717,156769,2021-03-18,2021,Tornado,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 951720,156769,2021-03-18,2021,Tornado,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 951724,156769,2021-03-18,2021,Tornado,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 951725,156769,2021-03-18,2021,Tornado,central,train,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
@@ -8297,7 +8297,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 962647,159171,2021-05-29,2021,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,35000,0,35000,1,1,0,0,1,0,0,0,0,0
 962648,159171,2021-05-29,2021,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 962754,159182,2021-05-29,2021,Thunderstorm Wind,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-967598,160093,2021-06-02,2021,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+967598,160093,2021-06-02,2021,Tornado,coastal,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 967599,160093,2021-06-02,2021,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
 970213,160561,2021-06-02,2021,Tornado,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 964908,159553,2021-06-03,2021,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -8650,7 +8650,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 982280,162681,2021-08-17,2021,Flood,mountains,train,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 982282,162681,2021-08-17,2021,Flood,mountains,train,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
 982283,162681,2021-08-17,2021,Flood,mountains,train,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
-982362,162681,2021-08-17,2021,Lightning,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+982362,162681,2021-08-17,2021,Lightning,central,train,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 983507,162681,2021-08-17,2021,Thunderstorm Wind,mountains,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 983510,162681,2021-08-17,2021,Thunderstorm Wind,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1027405,162681,2021-08-17,2021,Debris Flow,mountains,train,FALSE,0,0,0,1,0,1,200000,0,200000,1,1,1,0,1,1,1,0,1,1
@@ -8731,7 +8731,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 990638,164089,2021-10-09,2021,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 990642,164089,2021-10-09,2021,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 990647,164089,2021-10-09,2021,Flash Flood,coastal,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-990652,164089,2021-10-09,2021,Flash Flood,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+990652,164089,2021-10-09,2021,Flash Flood,central,train,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 990658,164089,2021-10-09,2021,Flash Flood,central,train,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 990659,164089,2021-10-09,2021,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 990660,164089,2021-10-09,2021,Flash Flood,central,train,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -8787,7 +8787,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 998149,165203,2022-01-03,2022,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 998151,165203,2022-01-03,2022,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 998156,165203,2022-01-03,2022,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1000804,165547,2022-01-03,2022,High Wind,central,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+1000804,165547,2022-01-03,2022,High Wind,central,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 1000805,165547,2022-01-03,2022,High Wind,central,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1001779,165044,2022-01-03,2022,Strong Wind,central,validation,FALSE,0,0,0,0,0,0,2500,0,2500,1,1,0,0,1,0,0,0,0,0
 1004221,165130,2022-01-03,2022,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
@@ -9526,7 +9526,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1030018,169997,2022-05-23,2022,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1030019,169997,2022-05-23,2022,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1030020,169997,2022-05-23,2022,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-1031315,169849,2022-05-23,2022,Tornado,central,validation,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1031315,169849,2022-05-23,2022,Tornado,central,validation,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1019933,168456,2022-05-26,2022,Heavy Rain,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1019936,168456,2022-05-26,2022,Heavy Rain,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1023588,168964,2022-05-26,2022,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
@@ -10752,7 +10752,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1106091,181637,2023-06-20,2023,Flash Flood,coastal,validation,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 1120261,183381,2023-06-20,2023,Flash Flood,mountains,validation,FALSE,0,0,0,0,0,0,20000,0,20000,1,1,0,0,1,0,0,0,0,0
 1120262,183381,2023-06-20,2023,Flash Flood,central,validation,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
-1120263,183381,2023-06-20,2023,Flash Flood,central,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+1120263,183381,2023-06-20,2023,Flash Flood,central,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 1112323,182525,2023-06-21,2023,Flash Flood,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1096831,180047,2023-06-22,2023,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1096832,180047,2023-06-22,2023,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -11085,7 +11085,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1117523,182974,2023-07-09,2023,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 1118219,182453,2023-07-09,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 1118220,182453,2023-07-09,2023,Lightning,mountains,validation,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
-1118221,182453,2023-07-09,2023,Lightning,central,validation,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1118221,182453,2023-07-09,2023,Lightning,central,validation,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1123755,182453,2023-07-09,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,15000,0,15000,1,1,0,0,1,0,0,0,0,0
 1125397,182453,2023-07-09,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 1127847,184299,2023-07-09,2023,Thunderstorm Wind,coastal,validation,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -11246,14 +11246,14 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1136751,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1136752,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1136753,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1136754,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+1136754,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 1136755,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1136756,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 1136757,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1136758,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 1136759,185366,2023-08-07,2023,Thunderstorm Wind,mountains,validation,FALSE,0,0,0,0,0,0,50000,0,50000,1,1,0,0,1,0,0,0,0,0
 1136760,185366,2023-08-07,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1136761,185366,2023-08-07,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+1136761,185366,2023-08-07,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 1136762,185366,2023-08-07,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1136763,185366,2023-08-07,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1136764,185366,2023-08-07,2023,Thunderstorm Wind,central,validation,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -12230,7 +12230,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1186733,192340,2024-05-08,2024,Thunderstorm Wind,mountains,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1186746,192340,2024-05-08,2024,Tornado,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1186747,192340,2024-05-08,2024,Tornado,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1186748,192340,2024-05-08,2024,Tornado,central,test,FALSE,2,0,2,0,0,0,200000,0,200000,1,1,0,1,1,0,0,0,1,1
+1186748,192340,2024-05-08,2024,Tornado,central,test,FALSE,2,0,2,0,0,0,200000,0,200000,1,1,0,1,1,0,0,0,0,1
 1186752,192340,2024-05-08,2024,Tornado,mountains,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1186754,192340,2024-05-08,2024,Tornado,mountains,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1186761,192340,2024-05-08,2024,Tornado,mountains,test,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
@@ -12662,7 +12662,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1204999,194912,2024-07-30,2024,Flash Flood,mountains,test,FALSE,0,0,0,0,0,0,100000,0,100000,1,1,0,0,1,0,0,0,0,0
 1205000,194912,2024-07-30,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1207949,194912,2024-07-30,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1207950,194912,2024-07-30,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+1207950,194912,2024-07-30,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 1207948,195441,2024-07-31,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 1211419,195874,2024-08-01,2024,Thunderstorm Wind,mountains,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1189344,192757,2024-08-02,2024,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
@@ -12693,7 +12693,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1208413,195547,2024-08-03,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,1000,0,1000,1,0,0,0,1,0,0,0,0,0
 1208414,195547,2024-08-03,2024,Thunderstorm Wind,mountains,test,FALSE,0,0,0,0,0,0,10000,2000,12000,1,1,0,0,1,0,0,0,0,0
 1208415,195547,2024-08-03,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,65000,0,65000,1,0,0,0,1,0,0,0,0,0
-1208473,195516,2024-08-03,2024,Tornado,central,test,FALSE,0,0,0,0,0,0,120000,0,120000,1,1,0,0,1,0,0,0,1,0
+1208473,195516,2024-08-03,2024,Tornado,central,test,FALSE,0,0,0,0,0,0,120000,0,120000,1,1,0,0,1,0,0,0,0,0
 1208857,195516,2024-08-03,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 1208858,195516,2024-08-03,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 1208859,195516,2024-08-03,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,4000,0,4000,1,1,0,0,1,0,0,0,0,0
@@ -12833,7 +12833,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1214885,196155,2024-08-08,2024,Flash Flood,mountains,test,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 1214886,196155,2024-08-08,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,500,0,500,1,1,0,0,1,0,0,0,0,0
 1214887,196155,2024-08-08,2024,Flash Flood,mountains,test,FALSE,0,0,0,0,0,0,3000,0,3000,1,1,0,0,1,0,0,0,0,0
-1214891,196155,2024-08-08,2024,Strong Wind,central,test,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,1,0
+1214891,196155,2024-08-08,2024,Strong Wind,central,test,FALSE,0,0,0,0,0,0,200000,0,200000,1,1,0,0,1,0,0,0,0,0
 1214892,196155,2024-08-08,2024,Strong Wind,central,test,FALSE,0,0,0,0,0,0,40000,0,40000,1,1,0,0,1,0,0,0,0,0
 1214893,196155,2024-08-08,2024,Strong Wind,central,test,FALSE,0,0,0,0,0,0,40000,0,40000,1,1,0,0,1,0,0,0,0,0
 1214894,196155,2024-08-08,2024,Strong Wind,central,test,FALSE,0,0,0,0,0,0,40000,0,40000,1,1,0,0,1,0,0,0,0,0
@@ -12932,7 +12932,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1211386,195862,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1211387,195862,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1211388,195862,2024-08-18,2024,Thunderstorm Wind,mountains,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1211389,195862,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1211389,195862,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1211393,195862,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1211609,195920,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,500,0,500,1,0,0,0,1,0,0,0,0,0
 1211611,195920,2024-08-18,2024,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,500,0,500,1,0,0,0,1,0,0,0,0,0
@@ -13208,7 +13208,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1218213,196694,2024-09-27,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,50000000,0,50000000,1,1,0,0,1,0,0,0,1,0
 1218214,196694,2024-09-27,2024,Flash Flood,mountains,test,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
 1218216,196694,2024-09-27,2024,Debris Flow,mountains,test,FALSE,0,0,0,13,0,13,1000000,0,1000000,1,1,1,0,1,13,13,0,1,1
-1218218,196694,2024-09-27,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1218218,196694,2024-09-27,2024,Flash Flood,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1218219,196694,2024-09-27,2024,Flood,mountains,test,FALSE,0,0,0,0,0,0,400000,0,400000,1,1,0,0,1,0,0,0,1,0
 1218221,196694,2024-09-27,2024,Flood,mountains,test,FALSE,0,0,0,0,0,0,1000000,0,1000000,1,1,0,0,1,0,0,0,1,0
 1218230,196694,2024-09-27,2024,Flood,mountains,test,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
@@ -13648,7 +13648,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1230785,199088,2025-03-05,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1230786,199088,2025-03-05,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1230787,199088,2025-03-05,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-1241568,200399,2025-03-05,2025,Tornado,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1241568,200399,2025-03-05,2025,Tornado,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1242245,200473,2025-03-05,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 1242246,200473,2025-03-05,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
 1242247,200473,2025-03-05,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,2000,0,2000,1,1,0,0,1,0,0,0,0,0
@@ -13739,7 +13739,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1239773,200215,2025-03-17,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1239774,200215,2025-03-17,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1239778,200215,2025-03-17,2025,Thunderstorm Wind,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-1247978,201084,2025-03-17,2025,Tornado,coastal,test,FALSE,8,0,8,0,0,0,185000,0,185000,1,1,0,1,1,0,0,0,1,1
+1247978,201084,2025-03-17,2025,Tornado,coastal,test,FALSE,8,0,8,0,0,0,185000,0,185000,1,1,0,1,1,0,0,0,0,1
 1247979,201084,2025-03-17,2025,Tornado,coastal,test,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 1243172,200087,2025-03-31,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 1243174,200087,2025-03-31,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
@@ -14411,7 +14411,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1279162,205069,2025-06-26,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1279166,205069,2025-06-26,2025,Hail,central,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1279291,205088,2025-06-26,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
-1279296,205088,2025-06-26,2025,Thunderstorm Wind,mountains,test,FALSE,0,0,0,0,0,0,175000,15000,190000,1,1,0,0,1,0,0,0,1,0
+1279296,205088,2025-06-26,2025,Thunderstorm Wind,mountains,test,FALSE,0,0,0,0,0,0,175000,15000,190000,1,1,0,0,1,0,0,0,0,0
 1279298,205088,2025-06-26,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
 1279300,205088,2025-06-26,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,1000,0,1000,1,1,0,0,1,0,0,0,0,0
 1266782,203323,2025-06-27,2025,Thunderstorm Wind,central,test,FALSE,0,0,0,0,0,0,5000,0,5000,1,1,0,0,1,0,0,0,0,0
@@ -14473,7 +14473,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1280360,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,1,0,1,20000,0,20000,1,1,1,0,1,1,1,0,1,1
 1280368,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,30000000,0,30000000,1,1,0,0,1,0,0,0,1,0
 1280370,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,500000,0,500000,1,1,0,0,1,0,0,0,1,0
-1280371,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1280371,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1280373,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
 1280375,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1280377,204671,2025-07-06,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,10000,0,10000,1,1,0,0,1,0,0,0,0,0
@@ -14849,7 +14849,7 @@ event_id,episode_id,event_date,event_year,event_type,region,split,is_partial_yea
 1291195,206961,2025-08-20,2025,Storm Surge/Tide,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1293036,207250,2025-08-20,2025,Flash Flood,mountains,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
 1277105,204789,2025-08-21,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0
-1277112,204789,2025-08-21,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,1,0
+1277112,204789,2025-08-21,2025,Flash Flood,central,test,FALSE,0,0,0,0,0,0,150000,0,150000,1,1,0,0,1,0,0,0,0,0
 1291181,206946,2025-08-21,2025,Tropical Storm,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1291182,206946,2025-08-21,2025,Tropical Storm,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 1291183,206946,2025-08-21,2025,Tropical Storm,coastal,test,FALSE,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

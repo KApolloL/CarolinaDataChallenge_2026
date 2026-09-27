@@ -1,0 +1,12 @@
+,mean_abs_shap_value
+event_month,0.1157225021090003
+impervious_mean_250m,0.06126214494528073
+peak_hurricane_season,0.057836060488979414
+local_relief_5km,0.035503523201721496
+elevation_m,0.03271708119709418
+nearby_minor_flood_count_25km,0.03093582657681556
+slope_degrees,0.024294728722352835
+SOVI_SCORE,0.014131927381683113
+population_density,0.010586163753364722
+distance_to_stream_m,0.010547403275416435
+nearby_severe_flood_count_25km,0.005826701359337997

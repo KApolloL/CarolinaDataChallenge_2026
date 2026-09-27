@@ -122,14 +122,19 @@ show_fig <- function(plot, name, width = 10, height = 6) {
   ggsave(path, plot, width = width, height = height, dpi = p$figure_dpi, bg = "white")
   figure_files <<- unique(c(figure_files, path))
   print(plot)
-  # The link downloads the image already shown on the page (see the script at
-  # the end of the document), so the figure is not embedded twice.
+  fig_link(name)
+}
+
+# Download link for the figure shown just above. The link saves the image that
+# is already on the page (see the script at the end of the document), so the
+# figure is not embedded twice.
+fig_link <- function(name) {
   knitr::asis_output(sprintf('\n<a class="fw-download fw-fig-download" href="#" data-filename="%s.png">&#11015; Download figure (PNG)</a>\n', name))
 }
 
 # Interactive table with Copy / CSV / Excel buttons; also saved to outs/tables.
 dt <- function(data, name = NULL, page_length = 10, caption = NULL, filter = NULL) {
-  file_stub <- name %||% "floodwatch_table"
+  file_stub <- name %||% "carolina_highground_table"
   if (!is.null(name)) {
     path <- file.path(paths$tables_dir, paste0(name, ".csv"))
     readr::write_csv(data, path, na = "")
@@ -258,10 +263,10 @@ if (isTRUE(p$subset_enabled)) {
 * **Everything at once:** the [Downloads](#sec-downloads) section in the appendix bundles all figures, tables, and machine-learning files.
 :::
 
-# Why Blue Ridge FloodWatch {#sec-why}
+# Why Carolina HighGround {#sec-why}
 
 ::: {.lead-text}
-Floods are measured in dollars and event counts, but people live them as lost homes, cut-off roads, and neighbors who didn't make it out. Blue Ridge FloodWatch uses public data to show **where storm impacts on people are most severe in Western North Carolina, and why**, so that communities, emergency planners, and infrastructure agencies can direct attention before the next storm rather than after it.
+Floods are measured in dollars and event counts, but people live them as lost homes, cut-off roads, and neighbors who didn't make it out. Carolina HighGround uses public data to show **where storm impacts on people are most severe in Western North Carolina, and why**, so that communities, emergency planners, and infrastructure agencies can direct attention before the next storm rather than after it.
 :::
 
 ```{r}
@@ -369,7 +374,7 @@ flowchart LR
   B["<b>Landscape &amp; infrastructure</b><br/>NHD streams · 3DEP terrain<br/>NCDOT culverts &amp; bridges<br/>NLCD imperviousness · SSURGO"] --> D["<b>Spatial features</b><br/>measured around<br/>each event point"]
   C --> D
   D --> E["<b>ML-ready data</b><br/>targets, splits,<br/>feature dictionary"]
-  E --> F["<b>Model</b><br/>(Python, next phase)"]
+  E --> F["<b>Model</b><br/>(Python, via reticulate)"]
   F --> G["<b>Social good</b><br/>where to prepare,<br/>who is most at risk"]
 ```
 
@@ -1026,7 +1031,10 @@ if (isTRUE(p$include_community_features) &&
 }
 
 cat(sprintf("* **Rainfall** (e.g., event rainfall totals): %s\n", if (length(grep("^rain_", optional_feature_cols))) "included." else "not included yet. No other variable stands in for rainfall. Enable it with `include_rainfall_features` and `rainfall_path` (CSV keyed by `event_id`)."))
-cat(sprintf("* **Community vulnerability** (e.g., CDC/ATSDR Social Vulnerability Index): %s\n", if (length(grep("^comm_", optional_feature_cols))) "included." else "not included yet. Enable it with `include_community_features` and `community_path` (county CSV keyed by `county_fips`). This is the natural next step for the social-good goal: identifying *who* is most exposed, not just *where*."))
+cat(sprintf("* **Community vulnerability**: %s\n",
+            if (length(grep("^comm_", optional_feature_cols))) "included." else
+            if (isTRUE(p$modeling_section)) "not part of this spatial feature table, but county social vulnerability (SOVI) and population density from FEMA's National Risk Index are added at the modeling stage ([Section 7](#sec-model))." else
+            "not included yet. Enable it with `include_community_features` and `community_path` (county CSV keyed by `county_fips`). This is the natural next step for the social-good goal: identifying *who* is most exposed, not just *where*."))
 ```
 
 # Bringing the Data Together {#sec-integration}
@@ -1367,7 +1375,7 @@ targets$definitions |>
 
 ::: {.callout-important}
 ## Leakage rules for the modeling team
-* **Recompute the damage threshold on training rows only** before final evaluation. The exported threshold (`r scales::dollar(targets$threshold)`) was computed on `r p$target_threshold_basis`. The formula is in `target_config.json`.
+* **Damage threshold:** `r if (p$target_threshold_basis == "train_split") sprintf("computed from training years only (%s), so the target is leakage-safe as exported.", scales::dollar(targets$threshold)) else sprintf("computed on all events (%s). Recompute it on training rows only before final evaluation; the formula is in target_config.json.", scales::dollar(targets$threshold))`
 * **Never use outcome columns as predictors**: deaths, injuries, damage, `any_*`, fatality-record counts, or the damage-reported flags. The feature dictionary marks each column's role.
 * **Split by time** using the `split` column, and group cross-validation folds by `episode_id` so events from one storm stay together.
 * **Leave spatial NAs as missing.** They mean "no coordinates", not "zero".
@@ -1416,12 +1424,42 @@ manifest <- list(
   spatial_methods = spatial$methods, coverage_notes = spatial$coverage,
   vintages = vintages, pipeline_log = fw_log_table(), r_version = R.version.string
 )
-ml_files <- export_ml_tables(
-  model_table, roles, dictionary, targets$definitions, target_config, split_summary,
-  ml_dir = paths$ml_dir, export_csv = p$export_csv, export_parquet = p$export_parquet,
-  export_spatial_layer = p$export_spatial_layer, export_feature_dictionary = p$export_feature_dictionary,
-  analysis_crs = p$analysis_crs, geographic_crs = p$geographic_crs, manifest = manifest
-)
+# Guard: never overwrite the ML handoff with degraded data. If a feature group
+# that is switched on came out entirely empty (e.g. its input files were not
+# found), the export is skipped unless allow_degraded_export is TRUE.
+feature_groups <- feature_column_names(spatial_settings)
+enabled_groups <- c(nhd = p$include_nhd_features, wbd = p$include_wbd_features, ncdot = p$include_ncdot_features,
+                    dem = p$include_dem_features, nlcd = p$include_nlcd_features)
+located_rows <- !is.na(model_table$longitude)
+degraded_groups <- names(enabled_groups)[enabled_groups & vapply(names(enabled_groups), function(g) {
+  cols <- intersect(feature_groups[[g]], names(model_table))
+  length(cols) == 0 || all(is.na(as.matrix(model_table[located_rows, cols])))
+}, logical(1))]
+
+if (length(degraded_groups) > 0 && !isTRUE(p$allow_degraded_export)) {
+  fw_log("error", "ML export", paste("Skipped: feature group(s) entirely missing:", paste(degraded_groups, collapse = ", "),
+                                     "- check the input paths. Existing files in", display_path(paths$ml_dir, project_dir), "were left unchanged."),
+         "ML export")
+  ml_files <- tibble::tibble(file = character(), rows = integer(), columns = integer(), exists = logical(), size_mb = numeric())
+} else {
+  ml_files <- export_ml_tables(
+    model_table, roles, dictionary, targets$definitions, target_config, split_summary,
+    ml_dir = paths$ml_dir, export_csv = p$export_csv, export_parquet = p$export_parquet,
+    export_spatial_layer = p$export_spatial_layer, export_feature_dictionary = p$export_feature_dictionary,
+    analysis_crs = p$analysis_crs, geographic_crs = p$geographic_crs, manifest = manifest
+  )
+}
+```
+
+```{r}
+#| label: ml-export-guard
+#| echo: false
+#| results: asis
+if (length(degraded_groups) > 0 && !isTRUE(p$allow_degraded_export)) {
+  callout("important", "ML files were NOT written",
+          sprintf("These enabled feature groups came out entirely missing: **%s**. That almost always means their input files were not found (see the input inventory in the appendix). The existing files in `%s` were left unchanged.",
+                  paste(degraded_groups, collapse = ", "), display_path(paths$ml_dir, project_dir)))
+}
 ```
 
 ```{r}
@@ -1447,141 +1485,5 @@ ml_files |>
   dt(page_length = 20)
 ```
 
-Every file above was confirmed on disk after writing. The core files are bundled as **floodwatch_ml_ready.zip** in [Downloads](#sec-downloads).
+Every file above was confirmed on disk after writing. The core files are bundled as **carolina_highground_ml_ready.zip** in [Downloads](#sec-downloads).
 
-# Model Results {#sec-model}
-
-::: {.coming-soon}
-**Coming next: model training and evaluation (Python).**
-
-This section will present the model built on the files above:
-
-* baseline (logistic regression) and tree-based models trained on `r p$train_end_year` and earlier, tuned on `r p$train_end_year + 1`-`r p$validation_end_year`, and evaluated once on `r p$validation_end_year + 1`-`r p$end_year`;
-* precision-recall performance for the rare `high_consequence` class;
-* which landscape and infrastructure features drive the predictions;
-* maps of predicted risk and of misses in the study counties, and what they mean for communities.
-:::
-
-# Appendix {#sec-appendix}
-
-## Downloads {#sec-downloads}
-
-```{r}
-#| label: downloads
-#| echo: false
-#| results: asis
-zip_bundle <- function(files, zip_name) {
-  files <- files[file.exists(files)]
-  if (length(files) == 0) return(NULL)
-  out <- file.path(tempdir(), zip_name)
-  unlink(out)
-  utils::zip(out, files, flags = "-j9Xq")
-  out
-}
-tab_zip <- zip_bundle(table_files, "floodwatch_tables.zip")
-ml_zip  <- zip_bundle(file.path(paths$ml_dir, c("nc_flood_event_model_table.parquet", "nc_storm_event_model_table.parquet",
-                                                "feature_dictionary.csv", "target_definitions.csv", "target_config.json",
-                                                "split_recommendation.csv", "run_manifest.json")), "floodwatch_ml_ready.zip")
-cat(sprintf("* **Figures**: each figure has its own download link; high-resolution copies of all %d figures are saved in `%s`.\n", length(figure_files), p$figures_dir))
-cat(sprintf("\n* **All tables** (%d CSV files, also saved in `%s`)\n", length(table_files), p$tables_dir))
-if (!is.null(tab_zip)) print(download_link(tab_zip, "floodwatch_tables.zip"))
-cat(sprintf("\n* **Machine-learning files** (Parquet tables + documentation, also in `%s`)\n", p$ml_dir))
-if (!is.null(ml_zip)) print(download_link(ml_zip, "floodwatch_ml_ready.zip"))
-```
-
-## Limitations
-
-* **Point and buffer features only.** No upstream contributing area, HAND, or flow accumulation is computed, and HUC12 membership is not a drainage-area measure.
-* **Coordinates.** `r comma(sum(is.na(model_table$longitude)))` events (mostly forecast-zone records) have no usable NOAA coordinates. Their spatial features are missing; no centroids are substituted.
-* **Timing.** Imperviousness is a `r p$nlcd_vintage` layer, and NCDOT and NHD are current snapshots, not conditions in the year of each event.
-* **Damage** figures are NOAA estimates in nominal dollars. Blank damage fields are treated as 0 and flagged.
-* **Soils** are summarized from tabular SSURGO only. **Rainfall** and **community vulnerability** are not yet included.
-* **Partial year** `r paste(p$partial_years, collapse = ", ")` is incomplete.
-
-## Configuration
-
-```{r}
-#| label: config-summary
-#| echo: false
-tibble::tribble(
-  ~setting, ~value,
-  "years", sprintf("%s-%s (partial: %s)", p$start_year, p$end_year, paste(p$partial_years, collapse = ", ")),
-  "study area", sprintf("%s: %s", p$study_area, paste(p$study_counties, collapse = ", ")),
-  "CRS (analysis / geographic)", sprintf("EPSG:%s / EPSG:%s", p$analysis_crs, p$geographic_crs),
-  "buffers (event / stream / infrastructure)", sprintf("%s / %s / %s m", p$event_buffer_m, p$stream_buffer_m, p$infrastructure_buffer_m),
-  "feature event scope", p$feature_event_scope,
-  "NHD flowline FTypes", paste(p$nhd_flowline_ftypes, collapse = ", "),
-  "target", sprintf("deaths >= %s OR damage > q%s of %s damage (basis: %s)", p$death_target_value, p$damage_quantile,
-                    if (p$target_positive_damage_only) "positive" else "all", p$target_threshold_basis),
-  "split", sprintf("train <= %s, validation <= %s, test after", p$train_end_year, p$validation_end_year),
-  "download_data / use_cached_features / refresh_derived_data", paste(p$download_data, p$use_cached_features, p$refresh_derived_data, sep = " / ")
-) |> knitr::kable(col.names = c("Setting", "Value"))
-```
-
-## Input inventory
-
-```{r}
-#| label: input-inventory
-#| echo: false
-dplyr::bind_rows(
-  file_inventory_row(paths$noaa_dir, "NOAA Storm Events", TRUE, "events, outcomes, targets", project_dir),
-  file_inventory_row(paths$nhd_zip, "NHD HR state ZIP", FALSE, "streams (extracted only if needed)", project_dir),
-  file_inventory_row(paths$nhd_dir, "NHD extracted shapefiles", FALSE, "streams, HUC12", project_dir),
-  file_inventory_row(paths$ncdot_culverts, "NCDOT culverts", FALSE, "culvert features", project_dir),
-  file_inventory_row(paths$ncdot_structures, "NCDOT structures", FALSE, "structure features", project_dir),
-  file_inventory_row(paths$dem, "DEM", FALSE, "elevation", project_dir),
-  file_inventory_row(paths$slope, "Slope", FALSE, "slope", project_dir),
-  file_inventory_row(paths$roughness, "Roughness", FALSE, "roughness", project_dir),
-  file_inventory_row(paths$nlcd, "NLCD imperviousness", FALSE, "imperviousness", project_dir),
-  file_inventory_row(paths$soils_dir, "SSURGO tables", FALSE, "soil summary", project_dir),
-  file_inventory_row(paths$soil_spatial, "SSURGO map-unit geometry", FALSE, "event soil features", project_dir),
-  file_inventory_row(paths$county_boundaries, "County boundaries", FALSE, "maps", project_dir),
-  file_inventory_row(paths$nc_boundary, "State boundary", FALSE, "maps", project_dir),
-  file_inventory_row(paths$rainfall, "Rainfall", FALSE, "rainfall features", project_dir),
-  file_inventory_row(paths$community, "Community vulnerability", FALSE, "community features", project_dir),
-  file_inventory_row(paths$interview, "Interview video (original)", FALSE, "interview", project_dir),
-  file_inventory_row(paths$interview_web, "Interview video (web copy)", FALSE, "embedded video", project_dir)
-) |>
-  dt(page_length = 20)
-```
-
-## Pipeline log
-
-Every warning, skipped step, and fallback recorded during this render:
-
-```{r}
-#| label: pipeline-log
-#| echo: false
-log_tbl <- fw_log_table()
-if (nrow(log_tbl) == 0) cat("No warnings were recorded.") else dt(log_tbl, page_length = 10)
-```
-
-## Session info
-
-```{r}
-#| label: session-info
-#| echo: false
-si <- utils::sessionInfo()
-cat(R.version.string, "\n")
-cat("Packages:", paste(sprintf("%s %s", names(si$otherPkgs), vapply(si$otherPkgs, \(x) x$Version, character(1))), collapse = ", "))
-```
-
-```{=html}
-<script>
-// Figure download links: save the image shown in the same code cell.
-document.addEventListener("click", function (e) {
-  const link = e.target.closest("a.fw-fig-download");
-  if (!link) return;
-  const cell = link.closest(".cell") || link.parentElement;
-  const img = cell ? cell.querySelector(".cell-output-display img") : null;
-  if (!img) return;
-  e.preventDefault();
-  const a = document.createElement("a");
-  a.href = img.src;
-  a.download = link.dataset.filename || "figure.png";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-});
-</script>
-```

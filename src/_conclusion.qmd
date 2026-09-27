@@ -1,0 +1,41 @@
+# What This Means for Western North Carolina {#sec-conclusion}
+
+```{r}
+#| label: conclusion-numbers
+#| include: false
+drv <- py$shap_importance
+dir_lr <- setNames(ifelse(py$lr_coefs$standardized_coefficient > 0, "raises", "lowers"), py$lr_coefs$feature)
+best <- py$best_cv
+plural <- function(verb) sub("s$", "", verb)   # "raises" -> "raise" for plural subjects
+```
+
+::: {.lead-text}
+Helene showed that in the mountains, one storm can outweigh a decade of ordinary ones. Carolina HighGround turns a decade of public records into a clearer picture of **where storms are most likely to become deadly or very costly, and why**, so that preparation can start before the next one.
+:::
+
+## Key findings
+
+1. **Rare events dominate the toll.** In our `r length(p$study_counties)` study counties, a single week of `r p$highlight_event_name` accounts for `r scales::percent(story$hl_death_share, accuracy = 1)` of the storm deaths and `r scales::percent(story$hl_damage_share, accuracy = 1)` of the reported damage recorded from `r p$start_year` to `r p$end_year`. Planning around "typical" storms misses the ones that matter most.
+2. **Place and people explain part of the risk.** Using only what surrounds an event (terrain, water, development, community vulnerability, local flood history, and season), our best model (`r tolower(best$model)`) ranks high-consequence flood events about **`r sprintf("%.1f", best$pr_auc / py$cv_results$pr_auc[4])` times better than chance** (cross-validated PR-AUC `r sprintf("%.3f", best$pr_auc)`).
+3. **The riskiest places are not the most developed ones.** More paved surface `r dir_lr[["impervious_mean_250m"]]` predicted risk, while steeper slopes `r plural(dir_lr[["slope_degrees"]])` it: severe harm concentrates in rural, mountainous terrain rather than in cities.
+4. **Vulnerability and history matter.** Higher county social vulnerability `r dir_lr[["SOVI_SCORE"]]` risk. Earlier *minor* floods nearby `r plural(dir_lr[["nearby_minor_flood_count_25km"]])` it, while earlier *severe* floods `r plural(dir_lr[["nearby_severe_flood_count_25km"]])` it.
+
+## Who could use this
+
+| Audience | How it helps |
+|---|---|
+| **County emergency managers** | Identify communities whose surroundings resemble past high-consequence events, and pre-position supplies (water, generators) before hurricane season |
+| **NCDOT and local road agencies** | Prioritize inspection of crossings in steep, stream-dense, rural areas, where blocked roads cut off communities for weeks |
+| **Schools and community organizations** | Plan continuity for places likely to lose power, water, and internet access for long periods, as our interviewees experienced |
+| **Residents** | Understand that "hurricanes don't reach the mountains" is no longer a safe assumption |
+
+## Next steps
+
+* **Add rainfall** (e.g., Stage IV radar totals) so the model can separate *how much rain fell* from *where it fell*.
+* **Use tract-level vulnerability** (CDC/ATSDR SVI) instead of county averages, to see *who* within a county is most exposed.
+* **Measure upstream drainage** (flow accumulation, HAND) rather than point-and-buffer proximity.
+* **Validate with local partners** in Buncombe and neighboring counties, and turn the interactive explorer into a planning tool.
+
+::: {.callout-note appearance="minimal"}
+**Carolina HighGround** · Carolina Data Challenge 2026 · Kent Lee, Matthew Martin, Aaron Chen, Minh Nguyen. Built with public data from NOAA, USGS, NCDOT, USDA, FEMA, and the U.S. Census Bureau. Not an operational flood warning.
+:::

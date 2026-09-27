@@ -1,0 +1,12 @@
+feature,mean_abs_shap,standardized_coefficient,trees_using_feature,direction_in_logistic_model
+event_month,0.1394,0.3316,100,raises risk
+impervious_mean_250m,0.0698,-0.7241,100,lowers risk
+peak_hurricane_season,0.0562,0.5238,82,raises risk
+nearby_minor_flood_count_25km,0.035,-0.6477,99,lowers risk
+elevation_m,0.0316,-0.1525,98,lowers risk
+slope_degrees,0.0294,0.2666,98,raises risk
+local_relief_5km,0.0282,0.1487,96,raises risk
+population_density,0.0144,0.4418,95,raises risk
+SOVI_SCORE,0.0118,0.1614,94,raises risk
+distance_to_stream_m,0.0088,0.0719,95,raises risk
+nearby_severe_flood_count_25km,0.0034,0.0985,68,raises risk
