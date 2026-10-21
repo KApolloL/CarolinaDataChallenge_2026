@@ -21,6 +21,9 @@ source_vintage,context,,Source dataset vintages for this row,NOAA Storm Events,
 data_coverage_warning,context,,Coverage caveats for this row,NOAA Storm Events,
 huc12,context,,WBD HUC12 containing the event point,USGS WBD,
 huc12_name,context,,WBD HUC12 name,USGS WBD,
+impervious_vintage,context,year,"Annual NLCD year used for this row's imperviousness (event year, or nearest available)",USGS Annual NLCD,Year-matched through 2023; 2024+ events use the 2023 layer (see impervious_vintage)
+svi_vintage,context,year,SVI release year used for this row,CDC/ATSDR Social Vulnerability Index (tract),Percentiles are within-release ranks; latest release at or before the event year
+hydro_basin_crosses_state,context,0/1 flag,1 if the event's HUC8 extends beyond NC (drainage area truncated at the state line),DEM hydrology (WhiteboxTools on the 3DEP-derived DEM),
 event_type,predictor,,NOAA EVENT_TYPE,NOAA Storm Events,"Known at report time; fine for post-event triage models, not for pre-event forecasting"
 region,predictor,,NC region (mountains/central/coastal) from county or zone name,Derived from NOAA,
 event_month,predictor,,Month of event begin date,NOAA Storm Events,
@@ -46,9 +49,20 @@ slope_degrees,predictor,degrees,Slope at the event point,DEM (elevatr / AWS terr
 slope_mean_250m,predictor,degrees,Mean slope within 250m,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
 terrain_roughness,predictor,meters (elevation range),Terrain roughness (elevation range in 3x3 window) at the event point,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
 roughness_mean_250m,predictor,meters (elevation range),Mean terrain roughness within 250m,DEM (elevatr / AWS terrain tiles incl. USGS 3DEP),
-impervious_mean_event,predictor,percent (0-100),Annual NLCD fractional imperviousness (%) at the event point,USGS Annual NLCD,2023 static layer; post-dates most events (possible temporal leakage)
-impervious_mean_250m,predictor,percent (0-100),Mean Annual NLCD imperviousness (%) within 250m,USGS Annual NLCD,2023 static layer; post-dates most events (possible temporal leakage)
-impervious_mean_1km,predictor,percent (0-100),Mean Annual NLCD imperviousness (%) within 1km,USGS Annual NLCD,2023 static layer; post-dates most events (possible temporal leakage)
+impervious_mean_event,predictor,percent (0-100),Annual NLCD fractional imperviousness (%) at the event point,USGS Annual NLCD,Year-matched through 2023; 2024+ events use the 2023 layer (see impervious_vintage)
+impervious_mean_250m,predictor,percent (0-100),Mean Annual NLCD imperviousness (%) within 250m,USGS Annual NLCD,Year-matched through 2023; 2024+ events use the 2023 layer (see impervious_vintage)
+impervious_mean_1km,predictor,percent (0-100),Mean Annual NLCD imperviousness (%) within 1km,USGS Annual NLCD,Year-matched through 2023; 2024+ events use the 2023 layer (see impervious_vintage)
+hand_m,predictor,meters,Height above nearest drainage (DEM-derived streams) at the event point,DEM hydrology (WhiteboxTools on the 3DEP-derived DEM),
+drainage_area_km2_max_250m,predictor,km^2,Largest upstream drainage area (km^2) within 250m,DEM hydrology (WhiteboxTools on the 3DEP-derived DEM),
+log_drainage_area_km2,predictor,log10(1 + km^2),log10(1 + max upstream drainage area within the event buffer),DEM hydrology (WhiteboxTools on the 3DEP-derived DEM),
+svi_rpl_themes,predictor,percentile (0-1),CDC/ATSDR SVI overall percentile of the event's census tract (within-NC rank),CDC/ATSDR Social Vulnerability Index (tract),Percentiles are within-release ranks; latest release at or before the event year
+svi_rpl_theme1,predictor,percentile (0-1),SVI theme 1 percentile: socioeconomic status,CDC/ATSDR Social Vulnerability Index (tract),Percentiles are within-release ranks; latest release at or before the event year
+svi_rpl_theme2,predictor,percentile (0-1),SVI theme 2 percentile: household characteristics,CDC/ATSDR Social Vulnerability Index (tract),Percentiles are within-release ranks; latest release at or before the event year
+svi_rpl_theme3,predictor,percentile (0-1),SVI theme 3 percentile: racial and ethnic minority status,CDC/ATSDR Social Vulnerability Index (tract),Percentiles are within-release ranks; latest release at or before the event year
+svi_rpl_theme4,predictor,percentile (0-1),SVI theme 4 percentile: housing type and transportation,CDC/ATSDR Social Vulnerability Index (tract),Percentiles are within-release ranks; latest release at or before the event year
+rain_event_total_mm,predictor,mm,"gridMET precipitation summed over the event window (begin - 1 day to end, max 8 days)",gridMET daily precipitation (4 km),"Uses only the event window and the days before it; describes the storm, so not usable for forecasting before rain falls"
+rain_max_1day_mm,predictor,mm,Largest single-day gridMET precipitation in the event window,gridMET daily precipitation (4 km),"Uses only the event window and the days before it; describes the storm, so not usable for forecasting before rain falls"
+rain_antecedent_7d_mm,predictor,mm,gridMET precipitation in the 7 days before the event window,gridMET daily precipitation (4 km),"Uses only the event window and the days before it; describes the storm, so not usable for forecasting before rain falls"
 injuries_direct,outcome,count,NOAA direct injuries,NOAA Storm Events,Outcome: never use as a predictor
 injuries_indirect,outcome,count,NOAA indirect injuries,NOAA Storm Events,Outcome: never use as a predictor
 total_injuries,outcome,count,Direct + indirect injuries,NOAA Storm Events,Outcome: never use as a predictor

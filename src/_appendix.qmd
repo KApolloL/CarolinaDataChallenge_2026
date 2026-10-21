@@ -27,11 +27,11 @@ if (!is.null(ml_zip)) cat(download_link(ml_zip, "carolina_highground_ml_ready.zi
 
 ## Limitations
 
-* **Point and buffer features only.** No upstream contributing area, HAND, or flow accumulation is computed, and HUC12 membership is not a drainage-area measure.
+* **Hydrology from a 62 m DEM.** Drainage area and HAND come from the project's DEM, which stops at the state line (basins starting outside NC are undercounted and flagged) and blurs narrow valleys.
 * **Coordinates.** `r comma(sum(is.na(model_table$longitude)))` events (mostly forecast-zone records) have no usable NOAA coordinates. Their spatial features are missing; no centroids are substituted.
-* **Timing.** Imperviousness is a `r p$nlcd_vintage` layer, and NCDOT and NHD are current snapshots, not conditions in the year of each event.
+* **Timing.** Imperviousness is year-matched through 2023 (later events use 2023). NCDOT and NHD are current snapshots, not conditions in the year of each event.
 * **Damage** figures are NOAA estimates in nominal dollars. Blank damage fields are treated as 0 and flagged.
-* **Soils** are summarized from tabular SSURGO only. **Rainfall** is not included. `r if (isTRUE(p$modeling_section)) "**Community vulnerability** enters only at the modeling stage, as county-level FEMA NRI values." else "**Community vulnerability** is not yet included."`
+* **Soils** are summarized from tabular SSURGO only. **Rainfall** is daily (gridMET, 4 km), so short intense bursts are smoothed out. **Tract SVI** percentiles are ranks within each release.
 * **Partial year** `r paste(p$partial_years, collapse = ", ")` is incomplete.
 
 ## Configuration
@@ -73,7 +73,12 @@ dplyr::bind_rows(
   file_inventory_row(paths$soil_spatial, "SSURGO map-unit geometry", FALSE, "event soil features", project_dir),
   file_inventory_row(paths$county_boundaries, "County boundaries", FALSE, "maps", project_dir),
   file_inventory_row(paths$nc_boundary, "State boundary", FALSE, "maps", project_dir),
-  file_inventory_row(paths$rainfall, "Rainfall", FALSE, "rainfall features", project_dir),
+  file_inventory_row(paths$gridmet_dir, "gridMET precipitation", FALSE, "rainfall features", project_dir),
+  file_inventory_row(paths$rainfall, "Event rainfall (derived)", FALSE, "rainfall features", project_dir),
+  file_inventory_row(paths$hydro_dir, "Hydrology rasters (derived)", FALSE, "HAND, drainage area", project_dir),
+  file_inventory_row(paths$svi_dir, "CDC/ATSDR SVI tract CSVs", FALSE, "tract vulnerability", project_dir),
+  file_inventory_row(paths$tracts_2010, "Census tracts 2010", FALSE, "SVI 2016/2018 join", project_dir),
+  file_inventory_row(paths$tracts_2020, "Census tracts 2020", FALSE, "SVI 2020/2022 join", project_dir),
   file_inventory_row(paths$community, "Community vulnerability", FALSE, "community features", project_dir),
   file_inventory_row(paths$interview, "Interview video (original)", FALSE, "interview", project_dir),
   file_inventory_row(paths$interview_web, "Interview video (web copy)", FALSE, "embedded video", project_dir)

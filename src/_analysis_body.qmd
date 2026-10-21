@@ -35,7 +35,12 @@ paths <- list(
   interview_web     = rp(p$interview_web_path),
   interview_poster  = rp(p$interview_poster_path),
   transcript        = rp(p$interview_transcript_path),
-  highlights        = rp(p$interview_highlights_path)
+  highlights        = rp(p$interview_highlights_path),
+  gridmet_dir       = rp(p$gridmet_dir),
+  hydro_dir         = rp(p$hydro_dir),
+  svi_dir           = rp(p$svi_dir),
+  tracts_2010       = rp(p$tracts_2010_path),
+  tracts_2020       = rp(p$tracts_2020_path)
 )
 
 # Only output folders are created; raw-data folders are never written.
@@ -716,6 +721,9 @@ Each gap maps to a public dataset:
 | Were roads crossing water nearby? | **NCDOT bridges/structures and culverts** | distance to and count of nearby crossings |
 | Was the land paved or natural? | **USGS Annual NLCD imperviousness** | % impervious surface at and around the point |
 | Would the soil absorb water? | **USDA SSURGO** | statewide soil summary (not yet mappable to events) |
+| How much rain actually fell? | **gridMET daily precipitation** | event-window total, wettest day, and the prior 7 days |
+| How low is the ground relative to the stream, and how big is the stream? | **DEM hydrology (WhiteboxTools)** | height above nearest stream (HAND) and upstream drainage area |
+| Who lives there? | **CDC/ATSDR SVI (census tracts)** | tract social-vulnerability percentiles |
 
 # The Supporting Datasets {#sec-datasets}
 
@@ -920,10 +928,11 @@ if (nrow(ncdot) > 0 && !is.null(counties)) {
 nlcd_res <- if (file.exists(paths$nlcd)) round(terra::res(terra::rast(paths$nlcd))[1], 1) else NA
 dataset_card(
   Source = "USGS Annual National Land Cover Database (NLCD), Fractional Impervious Surface, via the USGS ImageServer",
-  Contents = sprintf("Percent impervious surface (0-100) for %s, North Carolina extent, %s m cells (EPSG:5070)", p$nlcd_vintage, nlcd_res),
+  Contents = sprintf("Percent impervious surface (0-100), one layer per year %s, North Carolina extent, %s m cells (EPSG:5070)",
+                     if (isTRUE(p$nlcd_year_matched)) "2016-2023" else p$nlcd_vintage, nlcd_res),
   "Why we use it" = "Pavement and rooftops shed water quickly, raising flood peaks in developed valleys",
-  "How we use it" = sprintf("Value at the event point and means within %s and %s", eb, ib),
-  Caveats = sprintf("A single <b>%s static contemporary exposure layer</b>, not historical land cover for each event year; export cap made cells coarser than native 30 m", p$nlcd_vintage)
+  "How we use it" = sprintf("Value at the event point and means within %s and %s, taken from the layer for the event's own year", eb, ib),
+  Caveats = "Events after 2023 use the 2023 layer (the latest available); the service export cap made cells coarser than native 30 m"
 )
 ```
 
@@ -998,7 +1007,114 @@ if (file.exists(soil_file)) {
 }
 ```
 
-## Datasets not yet included
+## Rainfall: gridMET daily precipitation
+
+```{r}
+#| label: rain-card
+#| echo: false
+#| results: asis
+dataset_card(
+  Source = "gridMET (University of California Merced / Climatology Lab), daily surface meteorology for the contiguous U.S., 4 km grid; yearly precipitation files 2016-2026",
+  Contents = "Daily precipitation (mm) for every 4 km cell",
+  "Why we use it" = "NOAA records the damage but not the storm's size. Rainfall lets the model separate a dangerous place from a place that simply got the most rain",
+  "How we use it" = "At each event point: total rain over the event window (begin day minus 1 through the end day, at most 8 days), the wettest single day, and rain in the 7 days before (saturated ground)",
+  Caveats = "4 km cells smooth out the most intense local bursts; the rainfall describes the storm, so this is an explanatory model, not a forecast"
+)
+```
+
+```{r}
+#| label: plot-rain-helene
+#| fig-height: 6
+rain_file <- if (!is.na(paths$gridmet_dir)) file.path(paths$gridmet_dir, "pr_2024.nc") else NA
+if (!is.na(rain_file) && file.exists(rain_file) && !is.null(study_counties_sf)) {
+  pr <- terra::rast(rain_file)
+  days <- as.Date(terra::time(pr))
+  keep <- which(days >= hl_window[1] & days <= hl_window[2])
+  area <- sf::st_transform(sf::st_buffer(sf::st_union(study_counties_sf), 20000), terra::crs(pr))
+  total <- terra::app(terra::crop(pr[[keep]], terra::vect(area)), sum)
+  df <- as.data.frame(total, xy = TRUE, na.rm = TRUE); names(df)[3] <- "value"
+  g <- ggplot(df, aes(x, y, fill = value / 25.4)) + geom_raster() +
+    geom_sf(data = sf::st_transform(study_counties_sf, terra::crs(pr)), inherit.aes = FALSE, fill = NA, color = "white", linewidth = 0.35) +
+    scale_fill_viridis_c(option = "mako", direction = -1, name = "Rain (inches)") +
+    coord_sf(crs = terra::crs(pr), datum = NA, expand = FALSE) +
+    labs(title = sprintf("Rain that fell during %s, %s to %s", p$highlight_event_name, format(hl_window[1], "%b %d"), format(hl_window[2], "%b %d, %Y")),
+         subtitle = "gridMET daily precipitation summed over the week; study counties outlined",
+         caption = "Source: gridMET") +
+    map_theme + theme(legend.key.width = unit(1.4, "cm"))
+  show_fig(g, "11b_helene_rainfall", 11, 6.5)
+}
+```
+
+## Flood physics: drainage area and height above stream
+
+```{r}
+#| label: hydro-card
+#| echo: false
+#| results: asis
+dataset_card(
+  Source = "Derived from the project's DEM with WhiteboxTools (breach depressions, D8 flow direction and accumulation, streams where at least 1 km^2 drains, elevation above stream)",
+  Contents = "Upstream drainage area (km^2) and height above the nearest stream (HAND, m) for every DEM cell in North Carolina",
+  "Why we use it" = "Two places equally close to a stream are not equally exposed: a cell 2 m above a large river floods far more often than one 30 m above a small creek",
+  "How we use it" = sprintf("HAND at the event point; the largest drainage area within %s (the biggest stream nearby), log-scaled", eb),
+  Caveats = "The DEM stops at the state line, so basins that start in VA, TN, GA or SC are undercounted (flagged per event); 62 m cells blur narrow valleys"
+)
+```
+
+```{r}
+#| label: plot-hand
+#| fig-height: 6
+hand_file <- if (!is.na(paths$hydro_dir)) file.path(paths$hydro_dir, "hand_m.tif") else NA
+if (!is.na(hand_file) && file.exists(hand_file) && !is.null(study_counties_sf)) {
+  hand <- raster_df(hand_file, fact = 2, crop_to = study_counties_sf)
+  g <- ggplot(hand$df, aes(x, y, fill = pmin(value, 60))) + geom_raster() +
+    geom_sf(data = sf::st_transform(study_counties_sf, hand$crs), inherit.aes = FALSE, fill = NA, color = "white", linewidth = 0.3) +
+    scale_fill_viridis_c(option = "cividis", direction = -1, name = "Height above stream (m)", labels = \(x) ifelse(x >= 60, "60+", x)) +
+    coord_sf(crs = hand$crs, datum = NA) +
+    labs(title = "How high above the nearest stream? (HAND)",
+         subtitle = "Dark valley floors sit only a few meters above their streams; these are the places water reaches first",
+         caption = "Derived from the DEM with WhiteboxTools") +
+    map_theme + theme(legend.key.width = unit(1.4, "cm"))
+  show_fig(g, "11c_hand_study_area", 11, 6.5)
+}
+```
+
+## Who lives there: tract-level social vulnerability (CDC/ATSDR SVI)
+
+```{r}
+#| label: svi-card
+#| echo: false
+#| results: asis
+dataset_card(
+  Source = "CDC/ATSDR Social Vulnerability Index, North Carolina census-tract files for 2016, 2018, 2020 and 2022; tract boundaries from the U.S. Census Bureau (2010 and 2020)",
+  Contents = "Percentile ranks (0-1, within NC) for overall vulnerability and 4 themes: socioeconomic status, household characteristics, racial and ethnic minority status, housing type and transportation",
+  "Why we use it" = "County averages hide the neighborhoods hit hardest. Tracts show who is exposed inside a county",
+  "How we use it" = "Each event takes the tract it falls in, using the latest SVI release at or before the event year",
+  Caveats = "Percentiles are ranks within one release, so the same value in 2016 and 2022 is not directly comparable; tract boundaries changed in 2020"
+)
+```
+
+```{r}
+#| label: plot-svi
+#| fig-height: 6
+svi22 <- if (!is.na(paths$svi_dir)) file.path(paths$svi_dir, "svi_2022_nc_tract.csv") else NA
+if (!is.na(svi22) && file.exists(svi22) && file.exists(paths$tracts_2020) && !is.null(study_counties_sf)) {
+  tr <- sf::st_read(paths$tracts_2020, quiet = TRUE) |> clean_spatial_layer(p$analysis_crs)
+  sv <- readr::read_csv(svi22, show_col_types = FALSE, col_types = readr::cols(FIPS = "c", .default = "c")) |>
+    dplyr::transmute(GEOID = sprintf("%011s", FIPS), rpl = suppressWarnings(as.numeric(RPL_THEMES))) |>
+    dplyr::mutate(rpl = dplyr::if_else(rpl < 0, NA_real_, rpl))
+  tr <- dplyr::left_join(tr, sv, by = "GEOID") |> sf::st_filter(sf::st_union(study_counties_sf))
+  g <- ggplot(tr) + geom_sf(aes(fill = rpl), color = "white", linewidth = 0.1) +
+    geom_sf(data = study_counties_sf, fill = NA, color = fw_colors$navy, linewidth = 0.5) +
+    scale_fill_viridis_c(option = "rocket", direction = -1, name = "SVI percentile (2022)", limits = c(0, 1)) +
+    labs(title = "Social vulnerability by census tract in the study counties",
+         subtitle = "Higher = more vulnerable relative to other NC tracts (CDC/ATSDR SVI 2022)",
+         caption = "Source: CDC/ATSDR SVI; U.S. Census Bureau tracts") +
+    map_theme + theme(legend.key.width = unit(1.4, "cm"))
+  show_fig(g, "11d_svi_study_area", 11, 6.5)
+}
+```
+
+## Datasets still missing
 
 ```{r}
 #| label: optional-sources
@@ -1007,12 +1123,17 @@ if (file.exists(soil_file)) {
 optional_features <- tibble::tibble(event_id = event_level$event_id)
 optional_feature_cols <- character()
 
+rain_script <- file.path(project_dir, "src", "R", "rainfall_features.R")
+if (isTRUE(p$include_rainfall_features) && !is.na(paths$gridmet_dir) && dir.exists(paths$gridmet_dir) && file.exists(rain_script)) {
+  source(rain_script)
+  invisible(compute_event_rainfall(event_level, paths$gridmet_dir, paths$rainfall))   # cached; recomputes only when inputs change
+}
 if (isTRUE(p$include_rainfall_features) &&
     check_input(paths$rainfall, "Rainfall", FALSE, "CSV with `event_id` + numeric columns", "rainfall features", project_dir)) {
   rain <- readr::read_csv(paths$rainfall, show_col_types = FALSE) |> janitor::clean_names()
   if ("event_id" %in% names(rain)) {
     rain <- rain |> dplyr::select(event_id, dplyr::where(is.numeric)) |> dplyr::distinct(event_id, .keep_all = TRUE) |>
-      dplyr::rename_with(\(x) paste0("rain_", x), -event_id)
+      dplyr::rename_with(\(x) ifelse(startsWith(x, "rain_"), x, paste0("rain_", x)), -event_id)
     optional_features <- dplyr::left_join(optional_features, rain, by = "event_id")
     optional_feature_cols <- c(optional_feature_cols, setdiff(names(rain), "event_id"))
   }
@@ -1030,11 +1151,14 @@ if (isTRUE(p$include_community_features) &&
   }
 }
 
-cat(sprintf("* **Rainfall** (e.g., event rainfall totals): %s\n", if (length(grep("^rain_", optional_feature_cols))) "included." else "not included yet. No other variable stands in for rainfall. Enable it with `include_rainfall_features` and `rainfall_path` (CSV keyed by `event_id`)."))
-cat(sprintf("* **Community vulnerability**: %s\n",
-            if (length(grep("^comm_", optional_feature_cols))) "included." else
-            if (isTRUE(p$modeling_section)) "not part of this spatial feature table, but county social vulnerability (SOVI) and population density from FEMA's National Risk Index are added at the modeling stage ([Section 7](#sec-model))." else
-            "not included yet. Enable it with `include_community_features` and `community_path` (county CSV keyed by `county_fips`). This is the natural next step for the social-good goal: identifying *who* is most exposed, not just *where*."))
+if (!length(grep("^rain_", optional_feature_cols))) {
+  cat("* **Rainfall**: not available in this render. No other variable stands in for rainfall. It needs the gridMET files in `gridmet_dir`.\n")
+}
+cat("* **Hourly rainfall intensity** (e.g., radar-based Stage IV): daily totals cannot show the short bursts that drive flash floods.\n")
+cat("* **Direct impact records** (USGS high-water marks, FEMA claims, NCDOT road closures): better outcomes than NOAA's reported damage.\n")
+if (!isTRUE(p$include_svi_features)) {
+  cat("* **Tract-level vulnerability**: switched off (`include_svi_features: false`).\n")
+}
 ```
 
 # Bringing the Data Together {#sec-integration}
@@ -1060,7 +1184,10 @@ tibble::tribble(
   "Watershed", "WBD", "huc12, huc12_area_km2", "Subwatershed polygon containing the point (membership only)",
   "Road crossings", "NCDOT", sprintf("distance_to_nearest_culvert_m / structure_m, culverts_/structures_within_%s and _%s", eb, ib), "Nearest-point distance; count within buffer",
   "Terrain", "3DEP-derived", sprintf("elevation_m, slope_degrees, terrain_roughness, *_mean_%s", eb), "Cell value at point; mean of cells in buffer",
-  "Imperviousness", "Annual NLCD", sprintf("impervious_mean_event, impervious_mean_%s, impervious_mean_%s", eb, ib), "Cell value at point; mean of cells in buffer (0-100 %)"
+  "Imperviousness", "Annual NLCD (year-matched)", sprintf("impervious_mean_event, impervious_mean_%s, impervious_mean_%s", eb, ib), "Cell value at point; mean of cells in buffer (0-100 %), from the event year's layer",
+  "Hydrology", "DEM + WhiteboxTools", sprintf("hand_m, drainage_area_km2_max_%s, log_drainage_area_km2", eb), "HAND at point; largest upstream drainage area in buffer",
+  "Tract vulnerability", "CDC/ATSDR SVI", "svi_rpl_themes, svi_rpl_theme1-4", "Tract containing the point; latest release at or before the event year",
+  "Rainfall", "gridMET", "rain_event_total_mm, rain_max_1day_mm, rain_antecedent_7d_mm", "Daily cell values summed or maxed over the event window"
 ) |>
   knitr::kable()
 ```
@@ -1083,12 +1210,16 @@ spatial_settings <- list(
   nhd_flowline_ftypes = unlist(p$nhd_flowline_ftypes), compute_stream_density = p$compute_stream_density,
   include_nhd_features = p$include_nhd_features, include_wbd_features = p$include_wbd_features,
   include_ncdot_features = p$include_ncdot_features, include_dem_features = p$include_dem_features,
-  include_nlcd_features = p$include_nlcd_features, nlcd_vintage = p$nlcd_vintage
+  include_nlcd_features = p$include_nlcd_features, nlcd_vintage = p$nlcd_vintage,
+  nlcd_year_matched = isTRUE(p$nlcd_year_matched),
+  include_hydro_features = isTRUE(p$include_hydro_features),
+  include_svi_features = isTRUE(p$include_svi_features)
 )
 
 spatial <- cached_spatial_features(
   events_in_scope,
-  inputs      = paths[c("nhd_zip", "nhd_dir", "ncdot_culverts", "ncdot_structures", "dem", "slope", "roughness", "nlcd")],
+  inputs      = paths[c("nhd_zip", "nhd_dir", "ncdot_culverts", "ncdot_structures", "dem", "slope", "roughness", "nlcd",
+                        "hydro_dir", "svi_dir", "tracts_2010", "tracts_2020")],
   settings    = spatial_settings,
   cache_dir   = paths$derived_dir,
   use_cache   = isTRUE(p$use_cached_features),
@@ -1148,27 +1279,37 @@ vintages <- list(
   nhd   = if (!is.na(nhd_date)) sprintf("NHD HR state extract (flowlines dated %s)", nhd_date) else "NHD HR state extract",
   ncdot = if (!is.na(ncdot_date)) sprintf("NCDOT Structures service (retrieved %s)", ncdot_date) else "NCDOT Structures service",
   dem   = "elevatr AWS terrain tiles (3DEP in US)",
-  nlcd  = paste("Annual NLCD", p$nlcd_vintage, "(static)")
+  nlcd  = if (isTRUE(p$nlcd_year_matched)) "Annual NLCD, year-matched 2016-2023 (later events use 2023)" else paste("Annual NLCD", p$nlcd_vintage, "(static)"),
+  rain  = "gridMET daily precipitation, 2016-2026 files",
+  svi   = "CDC/ATSDR SVI tract releases 2016/2018/2020/2022"
 )
 row_vintage <- paste(c(vintages$noaa, if (p$include_nhd_features) vintages$nhd, if (p$include_ncdot_features) vintages$ncdot,
-                       if (p$include_dem_features) vintages$dem, if (p$include_nlcd_features) vintages$nlcd), collapse = "; ")
+                       if (p$include_dem_features) vintages$dem, if (p$include_nlcd_features) vintages$nlcd,
+                       if (isTRUE(p$include_rainfall_features)) vintages$rain, if (isTRUE(p$include_svi_features)) vintages$svi), collapse = "; ")
 
 model_table <- event_level |>
   dplyr::left_join(spatial$features, by = "event_id") |>
-  dplyr::left_join(optional_features, by = "event_id") |>
+  dplyr::left_join(optional_features, by = "event_id")
+# Columns used by the coverage flags may be absent when their feature group is off.
+for (nm in c("impervious_vintage", "hydro_basin_crosses_state")) {
+  if (!nm %in% names(model_table)) model_table[[nm]] <- NA_integer_
+}
+model_table <- model_table |>
   dplyr::mutate(
     has_features = event_id %in% spatial$features$event_id,
     spatial_feature_method = dplyr::if_else(has_features, "point_buffer (no catchment/upstream area)", "none"),
     source_vintage = row_vintage,
     data_coverage_warning = purrr::pmap_chr(
-      list(has_features, event_coordinate_quality, is_partial_year, cz_type, event_id %in% events_in_scope$event_id),
-      function(has, quality, partial, cz, in_scope) {
+      list(has_features, event_coordinate_quality, is_partial_year, cz_type, event_id %in% events_in_scope$event_id,
+           impervious_vintage, event_year, hydro_basin_crosses_state),
+      function(has, quality, partial, cz, in_scope, imp_v, ev_year, crosses) {
         flags <- c(if (!in_scope) "outside_feature_scope",
                    if (in_scope && !has) paste0("no_usable_coordinates(", quality, ")"),
                    if (partial) "partial_year",
                    if (cz == "Z") "forecast_zone_record",
                    if (has && p$include_ncdot_features) "ncdot_inventory_may_be_incomplete",
-                   if (has && p$include_nlcd_features) paste0("nlcd_", p$nlcd_vintage, "_static_layer"))
+                   if (has && p$include_nlcd_features && !is.na(imp_v) && !is.na(ev_year) && imp_v != ev_year) paste0("nlcd_vintage_", imp_v),
+                   if (has && isTRUE(crosses == 1)) "drainage_area_truncated_at_state_line")
         if (length(flags) == 0) "none" else paste(flags, collapse = "; ")
       })
   ) |>
@@ -1429,7 +1570,8 @@ manifest <- list(
 # found), the export is skipped unless allow_degraded_export is TRUE.
 feature_groups <- feature_column_names(spatial_settings)
 enabled_groups <- c(nhd = p$include_nhd_features, wbd = p$include_wbd_features, ncdot = p$include_ncdot_features,
-                    dem = p$include_dem_features, nlcd = p$include_nlcd_features)
+                    dem = p$include_dem_features, nlcd = p$include_nlcd_features,
+                    hydro = isTRUE(p$include_hydro_features), svi = isTRUE(p$include_svi_features))
 located_rows <- !is.na(model_table$longitude)
 degraded_groups <- names(enabled_groups)[enabled_groups & vapply(names(enabled_groups), function(g) {
   cols <- intersect(feature_groups[[g]], names(model_table))

@@ -223,7 +223,7 @@ download_nlcd_impervious <- function(out_path, year, nc_boundary_gpkg, pixel_siz
     size <- paste(ceiling(w / scale), ceiling(h / scale), sep = ",")
     t0 <- as.numeric(as.POSIXct(sprintf("%d-01-01", year), tz = "UTC")) * 1000
     t1 <- as.numeric(as.POSIXct(sprintf("%d-12-31 23:59:59", year), tz = "UTC")) * 1000
-    raw_path <- sub("\\.tif$", "_raw.tif", out_path)
+    raw_path <- file.path(tempdir(), sub("\\.tif$", "_raw.tif", basename(out_path)))   # raw export stays out of data/raw
     httr2::request(paste0(nlcd_service_url, "/exportImage")) |>
       httr2::req_url_query(
         bbox = paste(bb, collapse = ","), bboxSR = 5070, imageSR = 5070, size = size,

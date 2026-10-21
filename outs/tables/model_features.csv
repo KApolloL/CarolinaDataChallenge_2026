@@ -3,10 +3,20 @@ slope_degrees,Terrain,DEM,Slope at the event point,98.9,1.48
 elevation_m,Terrain,DEM,Elevation at the event point,99.1,110.92
 local_relief_5km,Terrain,DEM (computed in R),Highest minus lowest elevation within 5 km,100,72.57
 distance_to_stream_m,Water,NHD HR,Distance to the nearest stream or river,100,176.2
-impervious_mean_250m,Development,Annual NLCD 2023,Mean % paved surface within 250 m,99.4,5.32
+impervious_mean_250m,Development,Annual NLCD 2023,Mean % paved surface within 250 m,99.4,5.21
 population_density,People,FEMA NRI,County population per sq. mile,100,138.43
 SOVI_SCORE,People,FEMA NRI,County social vulnerability score,100,61.01
 nearby_minor_flood_count_25km,History,NOAA (computed in Python),"Earlier non-severe floods within 25 km, past 3 years",100,9
 nearby_severe_flood_count_25km,History,NOAA (computed in Python),"Earlier high-consequence floods within 25 km, past 3 years",100,0
 event_month,Season,NOAA,Month the event began,100,8
 peak_hurricane_season,Season,NOAA (computed in Python),1 if August-October,100,1
+rain_event_total_mm,Rainfall,"gridMET daily, 4 km",Total rain over the event window (day before the event to at most 6 days after),100,102.1
+rain_max_1day_mm,Rainfall,"gridMET daily, 4 km",Wettest single day in the event window,100,82.55
+rain_antecedent_7d_mm,Rainfall,"gridMET daily, 4 km",Rain in the 7 days before the event window,100,29.85
+hand_m,Hydrology,DEM (WhiteboxTools),Height above the nearest drainage channel,96.8,7.28
+log_drainage_area_km2,Hydrology,DEM (WhiteboxTools),Log of the upslope drainage area at the event point,99.4,0.2
+svi_rpl_themes,Tract SVI,CDC/ATSDR SVI,Tract overall vulnerability percentile,98.9,0.54
+svi_rpl_theme1,Tract SVI,CDC/ATSDR SVI,Theme 1 percentile: socioeconomic status,98.9,0.54
+svi_rpl_theme2,Tract SVI,CDC/ATSDR SVI,Theme 2 percentile: household characteristics,98.9,0.54
+svi_rpl_theme3,Tract SVI,CDC/ATSDR SVI,Theme 3 percentile: racial and ethnic minority status,98.9,0.42
+svi_rpl_theme4,Tract SVI,CDC/ATSDR SVI,Theme 4 percentile: housing type and transportation,98.9,0.57

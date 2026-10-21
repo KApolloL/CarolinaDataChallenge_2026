@@ -1,0 +1,3 @@
+model,n_events,share_hurricane_lower,share_equal,mean_typical,mean_hurricane
+Random forest,535,0.27102803738317754,0.0,0.06820950991930787,0.07834100635790739
+Logistic regression,535,0.0,0.0,0.092341915712812,0.14164801721730816

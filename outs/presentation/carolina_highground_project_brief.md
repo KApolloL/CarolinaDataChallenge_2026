@@ -76,7 +76,17 @@ Pipeline (R for data, Python for models, combined in one Quarto document via `re
 | **FEMA National Risk Index** | NRI county table v1.20 (Dec 2025) | Social Vulnerability score (SOVI), population density | County-level (same value for every event in a county) |
 | **Census county boundaries** | 2023 cartographic file (tigris) | Maps only | |
 
-**Not included (roadmap):** rainfall totals (e.g., Stage IV / gridMET) and a tract-level vulnerability index.
+**Added Oct 2026:**
+
+| Dataset | Source | What it gives us |
+|---|---|---|
+| gridMET daily precipitation | 4 km grid, 2016-2026 | event-window rain, wettest day, prior 7 days |
+| DEM hydrology | WhiteboxTools on our DEM | HAND and upstream drainage area (checked against USGS gages: French Broad at Asheville within 0.1%) |
+| CDC/ATSDR SVI | NC tracts, 2016/2018/2020/2022 | tract vulnerability percentiles |
+
+Annual NLCD is now year-matched for 2016-2023.
+
+**Still missing (roadmap):** hourly rainfall (Stage IV), direct impact records (USGS high-water marks, FEMA claims, NCDOT closures).
 
 ---
 
@@ -95,98 +105,99 @@ Pipeline (R for data, Python for models, combined in one Quarto document via `re
 
 ---
 
-## 7. Modeling
+## 7. Modeling (updated Oct 21, 2026, after the judges' feedback)
 
-**Data:** flood-related events with coordinates.
-- Development: **1,957 events from 2016–2023** (153 high-consequence).
-- Holdout test: **697 events from 2024–2026** (47 high-consequence; includes Helene).
+> Judges' only written comment was "overstated model performance." The numbers below come from the rebuilt pipeline: a feature ladder with paired comparisons, bootstrap intervals, and a with/without-Helene check. Use these, not the hackathon numbers.
 
-**11 features:**
+**Data:** flood-related events with coordinates. Development is 1,957 events from 2016-2023 (153 high-consequence, base rate 7.8%). The holdout is 697 events from 2024-2026 (47 high-consequence).
+
+**21 features in 7 groups:**
 
 | Group | Features |
 |---|---|
-| Terrain | slope, elevation, 5 km local relief (max − min elevation, computed from the DEM) |
-| Water | distance to nearest stream |
-| Development | % impervious within 250 m |
-| People | county SOVI score, population density (FEMA NRI) |
-| History | earlier *minor* and *severe* floods within 25 km in the past 3 years (past events only) |
-| Season | event month, peak-hurricane-season flag (Aug–Oct) |
+| Season | event month, Aug-Oct flag |
+| Place | slope, elevation, 5 km relief, distance to stream, % impervious within 250 m (year-matched NLCD) |
+| People (county) | FEMA NRI SOVI, population density |
+| History | earlier minor / severe floods within 25 km, past 3 years |
+| Rainfall | gridMET event-window total, wettest day, prior 7 days |
+| Hydrology | height above nearest stream (HAND), upstream drainage area |
+| Tract SVI | CDC/ATSDR overall + 4 themes |
 
-**Three models:** logistic regression (fully explainable), random forest (captures feature combinations), histogram gradient boosting (comparison).
+### Headline: cross-validated PR-AUC (5 x 5 grouped folds)
 
-**Training recipe:** leakage-safe labels · class weighting (positives are rare) · grouped cross-validation by storm episode · imputation fit inside folds · Platt calibration fit on out-of-fold predictions.
-
-### Results: repeated grouped 5×5 cross-validation (the headline numbers)
-
-| Model | PR-AUC | ROC-AUC | Lift over chance (PR-AUC) |
-|---|---|---|---|
-| Logistic regression | 0.200 ± 0.061 | 0.731 ± 0.058 | 2.6× |
-| **Random forest** | **0.221 ± 0.089** | **0.740 ± 0.092** | **2.8×** |
-| Gradient boosting | 0.211 ± 0.082 | 0.712 ± 0.093 | 2.7× |
-| No-skill baseline | 0.078 | 0.500 | 1.0× |
-
-**Talking point:** PR-AUC is the metric that matters because high-consequence events are rare. A model can look fine on ROC-AUC while being poor at finding the few events that matter. Our best model is about **2.8× better than chance** at ranking them.
-
-### Holdout test, 2024–2026 (illustrative; small sample, dominated by Helene)
-
-| Model | PR-AUC | ROC-AUC |
+| Model | PR-AUC (mean +/- SD) | ROC-AUC |
 |---|---|---|
-| Logistic regression | 0.339 | 0.808 |
-| Random forest | 0.175 | 0.781 |
-| Gradient boosting | 0.204 | 0.752 |
+| **Logistic regression** | **0.299 +/- 0.126** | 0.769 |
+| Random forest | 0.243 +/- 0.113 | 0.749 |
+| Gradient boosting | 0.213 +/- 0.054 | 0.709 |
+| Season only (logistic) | 0.186 | 0.692 |
+| No-skill base rate | 0.078 | 0.500 |
 
-The simpler logistic model generalized best to the Helene-heavy test years; the random forest was strongest in cross-validation. **[confirm] which model to feature as "primary"** (Minh's explorer calls the random forest primary; the holdout favors logistic regression).
+**How to say it:** "Our best model scores 0.30 PR-AUC where random guessing scores 0.08 and a season-only model 0.19. That is modest: most events it flags are still not high-consequence."
 
-### Calibration (a real bug found and fixed)
+### What each group adds (gain over the previous group, logistic regression; approximate 95% interval)
 
-Platt scaling fit on the forest's own training ("in-bag") predictions made it underconfident. Fitting on out-of-fold predictions fixed it (test years):
-
-| Random forest calibration | Mean predicted risk | Highest predicted risk |
+| Group | Gain | Clear? |
 |---|---|---|
-| In-bag (buggy) | 2.5% | 48.9% |
-| Out-of-fold (used) | 4.8% | 33.8% |
-| Observed test rate | 6.7% | — |
+| Place | -0.002 (-0.025 to +0.022) | no |
+| People (county) | -0.007 (-0.015 to +0.001) | no |
+| History | +0.023 (+0.008 to +0.037) | yes |
+| **Rainfall** | **+0.092 (+0.056 to +0.128)** | **yes** |
+| Hydrology | +0.005 (-0.005 to +0.015) | no |
+| Tract SVI | +0.002 (-0.006 to +0.010) | no |
 
-### What drives predictions (SHAP on the random forest + logistic-regression signs)
+For the random forest, only Place clearly helps (+0.024, +0.008 to +0.039). **The honest finding: how much rain fell explains far more than where it fell.** With 153 severe events, the data cannot detect small effects from terrain, hydrology, or vulnerability. That is "not shown," not "irrelevant."
 
-| Rank | Feature | Direction | Trees using it (of 100) |
-|---|---|---|---|
-| 1 | event month | raises risk | 100 |
-| 2 | % impervious (250 m) | **lowers** risk | 100 |
-| 3 | peak hurricane season | raises risk | 82 |
-| 4 | earlier *minor* floods nearby | **lowers** risk | 99 |
-| 5 | elevation | lowers risk | 98 |
-| 6 | slope | raises risk | 98 |
-| 7 | 5 km local relief | raises risk | 96 |
-| 8 | population density | raises risk | 95 |
-| 9 | SOVI (social vulnerability) | raises risk | 94 |
-| 10 | distance to stream | raises risk (weak) | 95 |
-| 11 | earlier *severe* floods nearby | raises risk (weak) | 68 |
+### Holdout 2024-2026 (episode-cluster bootstrap, 2,000 resamples)
 
-**Story-worthy findings:**
-- **Paved places are *less* likely to see high-consequence floods.** Urban flood reports are often minor nuisance flooding, while the deadliest events hit rural, steep terrain. This is counterintuitive and good for a slide.
-- **Flood history cuts both ways:** earlier *minor* floods lower risk (adaptation/preparedness), while earlier *severe* floods raise it (compounding vulnerability).
-- **Season dominates**, which matches Helene: the hurricane-season flag is used by 82 of 100 trees.
-- **Vulnerability matters:** higher SOVI and population density raise predicted risk. This is the social-good link.
+| Model | PR-AUC [95% CI] | Top 10% catches [95% CI] |
+|---|---|---|
+| Logistic regression | 0.447 [0.062-0.570] | 66% [21%-86%] |
+| Random forest | 0.291 [0.063-0.525] | 55% [25%-85%] |
+| Gradient boosting | 0.370 [0.076-0.474] | 55% [25%-71%] |
 
-### Lessons from development (from Minh's testing; not recomputed in the report)
+**Helene caveat (say it):** 66% of test positives are from the Helene week. Excluding that week, logistic PR-AUC drops from 0.447 to 0.080 (base rate 2.6%). The holdout mostly measures recognizing one storm. The intervals overlap, so the holdout cannot pick a best model.
 
-- **Dead feature / mountain inversion:** an early `is_tropical_event` flag was used by 0 of 100 trees. In 82% of 90 tested mountain grid cells, a hurricane scenario scored as *less* risky than a typical storm. Adding `peak_hurricane_season` improved CV PR-AUC (0.208 → 0.220) but did not fully fix the inversion (85.6% still inverted), because there are only ~150 severe training examples. The logistic model cannot invert this way.
-- **Calibration bug:** in-bag calibration capped the most extreme scenario at 2.6% risk; out-of-fold calibration raised it to 7.9%.
+### Calibration (bug found and fixed, recomputed)
 
-### Interactive risk explorer (built by Minh; embedded in the final report)
+| Random forest Platt fit | Mean predicted risk (test) | Highest |
+|---|---|---|
+| In-bag (bug) | 2.6% | 53.3% |
+| Out-of-fold (used) | 5.6% | 37.5% |
+| Observed rate | 6.7% | |
 
-A browser app with three views: a historical event map (filter by region/year/high-consequence), a structural risk surface with storm-scenario buttons ("Mountain flash flood", "Urban Piedmont flash flood", "Extreme (Helene-like)"), and a scenario calculator with a plain-English "describe a scenario" box. It runs offline and is explicitly **not an operational flood warning**. Its embedded models come from an earlier training run, so its numbers can differ slightly from the tables above.
+### Top drivers (random forest mean SHAP; direction from logistic regression)
 
----
+1. Event month (raises).
+2. Wettest single day of rain (raises).
+3. Event-window rain total (raises).
+4. % impervious (lowers; may partly reflect how urban vs rural events get reported).
+5. Peak-season flag (raises).
+6. Rain in the prior 7 days (raises).
+7. Earlier minor floods nearby (lowers).
+
+The SVI theme coefficients are collinear (overall plus 4 themes), so their individual signs should not be interpreted.
+
+### Corrections to the hackathon story (all recomputed)
+
+- **"Dead feature":** `is_tropical_event` is 0 for every flood event, so it is constant; no tree can use a constant. It was never a model bug.
+- **Mountain inversion:** on 535 real mountain events the random forest scores a September storm below a July one 27% of the time; logistic regression 0%. The old 82% / 85.6% came from the explorer grid and an older model.
+- **Calibration:** in-bag calibration pulled mean risk to 2.6% vs 5.6% out-of-fold (observed 6.7%).
+
+### Interactive explorer
+
+The UI is Minh's. It is now regenerated from our own 11-feature logistic model every render, and its in-page text uses computed numbers. The original is archived in `src/legacy/minh/`.
 
 ## 8. Limitations (say these out loud; they read as rigor)
 
-- Point/buffer features only: no upstream drainage area, flow accumulation, or HAND.
+- **The outcome is a reporting record.** NOAA damage and deaths depend on who reports, where, and how carefully; the event point is where it was reported, not where the water was. Some patterns (e.g., "paved surface lowers risk") may partly reflect reporting differences.
+- **Modest skill.** PR-AUC 0.30 vs 0.19 for season alone. Most of what the model flags is still not high-consequence.
+- **Rainfall is the one clear gain; terrain, hydrology, tract SVI, and county vulnerability add nothing we can measure** with 153 severe events. "Not shown" is not "irrelevant."
+- **One storm dominates the holdout.** 66% of 2024-2026 test positives are Helene; without it, holdout PR-AUC is about 0.08.
+- **Explanatory, not predictive.** Rainfall describes the storm itself, so the model explains severity given a flood-related event; it does not forecast floods.
+- **Daily 4 km rainfall** smooths short intense bursts. A 62 m DEM blurs narrow valleys, and basins that start outside NC are truncated at the state line (flagged).
 - 4,279 events without coordinates are excluded from spatial features (never given a fake location).
-- Static layers (2023 imperviousness, current NCDOT/NHD) are applied to 2016–2026 events.
-- No rainfall data, so this explains *impact severity given an event*, not *whether* it floods. It is not a forecast.
-- Vulnerability is county-level; small number of severe events means wide CV spread; the holdout is dominated by one storm (Helene).
+- NCDOT and NHD are current snapshots applied to 2016-2026 events; imperviousness is year-matched through 2023 (later events use 2023).
 - 2026 is a partial year.
 
 ---
@@ -216,6 +227,10 @@ A browser app with three views: a historical event map (filter by region/year/hi
 | 19_model_pr_curve | Precision-recall, holdout | Results |
 | 20_model_calibration | Calibration raw vs. calibrated | Bug-fix slide |
 | 21_model_shap_summary | SHAP summary (random forest) | What drives risk |
+| 22_model_feature_ladder | PR-AUC by feature group vs season and base rate | **Honest-results slide** |
+| 11b_helene_rainfall | Rain that fell during Helene week, study counties | Hazard visual |
+| 11c_hand_study_area | Height above nearest stream, study counties | Flood physics |
+| 11d_svi_study_area | Tract SVI 2022, study counties | Who lives there |
 
 Also: the interview video (`data/derived/media/interview_web.mp4`, 34 MB web copy; poster frame `interview_poster.jpg`), and interactive tables in the report.
 
@@ -244,18 +259,18 @@ Adapted from Minh's technical outline plus the interview. **[confirm] time limit
 3. **Question:** which storms become deadly, and why there?
 4. **Data:** NOAA + 6 supporting datasets; "why NOAA alone isn't enough."
 5. **Pipeline rigor:** one-row-per-event, region matching, leakage-safe labels, grouped CV.
-6. **Models and results:** three models; PR-AUC 0.221 (2.8× chance); why PR-AUC.
-7. **What drives risk:** SHAP, with the counterintuitive impervious finding, flood history both ways, and vulnerability.
-8. **We found and fixed real bugs:** calibration + dead feature.
+6. **Models and results:** three models; PR-AUC 0.30 vs 0.08 chance and 0.19 season-only; why PR-AUC; the feature ladder (rainfall is the big gain).
+7. **What drives risk:** rainfall and season first; the impervious finding with its reporting caveat; local flood history.
+8. **We checked our own claims:** calibration fix, the constant "dead feature", the Helene-excluded holdout.
 9. **Explorer demo:** Helene-like scenario in the mountains.
-10. **Limitations and roadmap:** rainfall, tract-level vulnerability, upstream drainage.
+10. **Limitations and roadmap:** hourly rainfall, direct impact records (USGS high-water marks, FEMA claims, NCDOT closures), a partner to validate with.
 11. **Social-good close:** tie back to the interview: prepare places and people before the next storm.
 
 ---
 
 ## 12. Open questions for the presentation chat
 
-- Which model is the "headline" model: random forest (best CV) or logistic regression (best holdout, fully explainable, used in the explorer)?
+- Which model is the "headline" model? Logistic regression now leads both cross-validation and holdout, is fully explainable, and is what the explorer runs.
 - Live explorer demo or screenshots (demo risk)?
 - Which 1–2 interview clips, and do the interviewees approve being shown by name on a slide?
 - Minh's outline cites a "published Texas flash-flood benchmark (PR-AUC 0.127)". We have **no source for it**, so it is left out of the report. Include it only if we can cite the paper.

@@ -20,6 +20,22 @@ Change any setting without editing files:
 quarto render src/final_analysis_deliverable.qmd -P cv_repeats:10 -P relief_radius_m:3000
 ```
 
+### Run the ML without rendering
+
+```bash
+conda run -n highground python src/python/highground_ml.py --project-dir .
+```
+
+This reads `data/ml_ready/`, prints the feature ladder, holdout confidence intervals, Helene sensitivity, and diagnostics, and writes them to `outs/tables/model_*.csv`. The report imports the same module, so results match.
+
+### One-time hydrology step
+
+`src/R/hydrology.R` builds `data/derived/hydro/` (about 8 minutes, 300 MB). The report reuses it:
+
+```r
+source("src/R/hydrology.R"); build_hydro_rasters("data/raw/dem_3dep/3dep_dem_north_carolina_epsg32119.tif")
+```
+
 ### Python setup (final report only)
 
 The modeling section runs Python inside the Quarto document through the R package `reticulate`, using a dedicated conda environment:
@@ -40,18 +56,25 @@ src/                              code
   analysis_quick.qmd              subset preview: same code, subset settings
   _analysis_body.qmd              sections 1-6 (story, NOAA, datasets, integration, figures, ML data): edit here
   _modeling.qmd                   section 7 for the final report: R -> Python modeling via reticulate
+  _conclusion.qmd                 section 8 for the final report: key findings, who could use this, next steps
   _model_placeholder.qmd          section 7 placeholder used by analysis.qmd
   _appendix.qmd                   appendix used by all reports
   _quarto.yml                     sends rendered HTML to outs/report/
   styles.css                      report styling
   content/interview_highlights.csv  curated interview quotes with timestamps
-  content/highground_explorer.html  interactive risk explorer (built by Minh), embedded in the final report
+  content/highground_explorer.html  interactive risk explorer (UI by Minh), regenerated from this project's model each render
   R/
     utils.R                       paths, package checks, input validation, run log, geometry cleaning
     prepare_noaa.R                NOAA loading, one row per EVENT_ID, region assignment
     create_spatial_features.R     NHD / WBD / NCDOT / DEM / NLCD event features (+ cache)
     export_ml_tables.R            targets, split, column roles, feature dictionary, exports
     download_data.R               optional downloads (only when download_data: true)
+    rainfall_features.R           gridMET event rainfall (window total, wettest day, prior 7 days), cached
+    hydrology.R                   WhiteboxTools drainage area and HAND rasters from the DEM (run once, cached)
+    explorer_grid.R               real terrain values on the explorer's map grid
+  python/
+    highground_ml.py              all ML: features, grouped CV, feature ladder, calibration, holdout + bootstrap CIs, diagnostics
+    export_explorer.py            rebuilds the explorer's model and data from this run
   legacy/                         earlier notebooks and scripts (superseded, kept for reference)
     minh/                         Minh's original model scripts and slide outline
 data/
@@ -61,6 +84,9 @@ data/
     ncdot/  dem_3dep/  nlcd/  usda_soils/
     reference/nc_counties.gpkg    county boundaries (maps only)
     nri/NRI_Table_Counties.csv    FEMA National Risk Index v1.20 (SOVI, population), used by the models
+    gridmet/pr_YYYY.nc            gridMET daily precipitation 2016-2026
+    svi/svi_YYYY_nc_tract.csv     CDC/ATSDR SVI tract files 2016, 2018, 2020, 2022
+    reference/nc_tracts_YYYY.gpkg census tracts 2010 and 2020 (SVI joins)
     media/Interview.mp4           original interview recording
   derived/                        pipeline caches (spatial features, web video, transcript)
   ml_ready/                       Python handoff files
@@ -141,3 +167,7 @@ We used **Claude** (Anthropic's AI assistant, via claude.ai) and **Claude Code**
 | USDA SSURGO | Soil Data Access via `soilDB` (tabular) |
 | County boundaries | U.S. Census cartographic boundary file 2023 via `tigris` |
 | FEMA National Risk Index (county table v1.20, Dec 2025) | https://www.fema.gov/about/reports-and-data/openfema/nri/v120/NRI_Table_Counties.zip |
+| gridMET daily precipitation | https://www.northwestknowledge.net/metdata/data/pr_YYYY.nc |
+| CDC/ATSDR SVI (NC tracts) | https://svi.cdc.gov/Documents/Data/YYYY/csv/states/NorthCarolina.csv |
+| Census tracts 2010, 2020 | U.S. Census cartographic boundary files via `tigris` |
+| Hydrology (HAND, drainage area) | Derived from the DEM with WhiteboxTools (`whitebox` R package) |

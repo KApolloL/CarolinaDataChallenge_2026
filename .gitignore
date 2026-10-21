@@ -19,3 +19,6 @@ data/raw/nhd/
 data/raw/dem_3dep/
 data/raw/media/
 data/raw/nri/
+data/raw/gridmet/
+data/raw/nlcd/annual_nlcd_fractional_impervious_20[12][0-9]_NC.tif
+!data/raw/nlcd/annual_nlcd_fractional_impervious_2023_NC.tif

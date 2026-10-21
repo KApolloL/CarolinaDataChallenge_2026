@@ -105,12 +105,13 @@ column_roles <- function(feature_cols, optional_feature_cols = character()) {
       "cz_name", "cz_type", "cz_fips", "wfo", "matched_county", "matched_county_fips",
       "region_assignment_method", "in_study_area", "flood_cause",
       "event_coordinate_quality", "spatial_feature_method", "source_vintage",
-      "data_coverage_warning", "huc12", "huc12_name"
+      "data_coverage_warning", "huc12", "huc12_name",
+      "impervious_vintage", "svi_vintage", "hydro_basin_crosses_state"
     ),
     predictor = c(
       "event_type", "region", "event_month", "event_day_of_year",
       "longitude", "latitude", "is_flood_event", "is_tropical_event",
-      setdiff(feature_cols, c("huc12", "huc12_name")),
+      setdiff(feature_cols, c("huc12", "huc12_name", "impervious_vintage", "svi_vintage", "hydro_basin_crosses_state")),
       optional_feature_cols
     ),
     outcome = c(
@@ -192,6 +193,19 @@ describe_column <- function(col, settings) {
     huc12_name = "WBD HUC12 name",
     huc12_area_km2 = "Area of the containing HUC12 (not upstream contributing area)",
     spatial_feature_method = "Methods used to compute this row's spatial features",
+    impervious_vintage = "Annual NLCD year used for this row's imperviousness (event year, or nearest available)",
+    hand_m = "Height above nearest drainage (DEM-derived streams) at the event point",
+    log_drainage_area_km2 = "log10(1 + max upstream drainage area within the event buffer)",
+    hydro_basin_crosses_state = "1 if the event's HUC8 extends beyond NC (drainage area truncated at the state line)",
+    svi_rpl_themes = "CDC/ATSDR SVI overall percentile of the event's census tract (within-NC rank)",
+    svi_rpl_theme1 = "SVI theme 1 percentile: socioeconomic status",
+    svi_rpl_theme2 = "SVI theme 2 percentile: household characteristics",
+    svi_rpl_theme3 = "SVI theme 3 percentile: racial and ethnic minority status",
+    svi_rpl_theme4 = "SVI theme 4 percentile: housing type and transportation",
+    svi_vintage = "SVI release year used for this row",
+    rain_event_total_mm = "gridMET precipitation summed over the event window (begin - 1 day to end, max 8 days)",
+    rain_max_1day_mm = "Largest single-day gridMET precipitation in the event window",
+    rain_antecedent_7d_mm = "gridMET precipitation in the 7 days before the event window",
     source_vintage = "Source dataset vintages for this row",
     data_coverage_warning = "Coverage caveats for this row"
   )
@@ -207,6 +221,7 @@ describe_column <- function(col, settings) {
     stringr::str_detect(col, "^slope_mean_")        ~ paste("Mean slope within", radius),
     stringr::str_detect(col, "^roughness_mean_")    ~ paste("Mean terrain roughness within", radius),
     stringr::str_detect(col, "^impervious_mean_")   ~ paste("Mean Annual NLCD imperviousness (%) within", radius),
+    stringr::str_detect(col, "^drainage_area_km2_max_") ~ paste("Largest upstream drainage area (km^2) within", radius),
     TRUE ~ NA_character_
   )
 }
@@ -219,6 +234,13 @@ build_feature_dictionary <- function(model_table, roles, settings, vintages) {
     data_type   = vapply(model_table, \(x) class(x)[1], character(1)),
     description = vapply(cols, describe_column, character(1), settings = settings),
     units = dplyr::case_when(
+      cols %in% c("impervious_vintage", "svi_vintage") ~ "year",
+      cols == "hydro_basin_crosses_state"             ~ "0/1 flag",
+      cols == "hand_m"                                ~ "meters",
+      stringr::str_detect(cols, "^drainage_area")     ~ "km^2",
+      cols == "log_drainage_area_km2"                 ~ "log10(1 + km^2)",
+      stringr::str_detect(cols, "^rain_")             ~ "mm",
+      stringr::str_detect(cols, "^svi_rpl")           ~ "percentile (0-1)",
       stringr::str_detect(cols, "distance|elevation") ~ "meters",
       stringr::str_detect(cols, "slope")              ~ "degrees",
       stringr::str_detect(cols, "roughness")          ~ "meters (elevation range)",
@@ -231,6 +253,10 @@ build_feature_dictionary <- function(model_table, roles, settings, vintages) {
       TRUE ~ NA_character_
     ),
     source_dataset = dplyr::case_when(
+      stringr::str_detect(cols, "^rain_")                      ~ "gridMET daily precipitation (4 km)",
+      stringr::str_detect(cols, "^svi_")                       ~ "CDC/ATSDR Social Vulnerability Index (tract)",
+      cols %in% c("hand_m", "log_drainage_area_km2", "hydro_basin_crosses_state") |
+        stringr::str_detect(cols, "^drainage_area")            ~ "DEM hydrology (WhiteboxTools on the 3DEP-derived DEM)",
       stringr::str_detect(cols, "stream")                      ~ "USGS NHD High Resolution",
       stringr::str_detect(cols, "^huc12")                      ~ "USGS WBD",
       stringr::str_detect(cols, "culvert|structure")           ~ "NCDOT Structures service",
@@ -242,6 +268,10 @@ build_feature_dictionary <- function(model_table, roles, settings, vintages) {
       TRUE ~ "NOAA Storm Events"
     ),
     source_vintage = dplyr::case_when(
+      stringr::str_detect(cols, "^rain_")                    ~ vintages$rain %||% "gridMET",
+      stringr::str_detect(cols, "^svi_")                     ~ vintages$svi %||% "CDC/ATSDR SVI",
+      cols %in% c("hand_m", "log_drainage_area_km2", "hydro_basin_crosses_state") |
+        stringr::str_detect(cols, "^drainage_area")          ~ vintages$dem,
       stringr::str_detect(cols, "stream")                    ~ vintages$nhd,
       stringr::str_detect(cols, "^huc12")                    ~ vintages$nhd,
       stringr::str_detect(cols, "culvert|structure")         ~ vintages$ncdot,
@@ -269,7 +299,9 @@ build_feature_dictionary <- function(model_table, roles, settings, vintages) {
     leakage_warning = dplyr::case_when(
       role == "outcome"  ~ "Outcome: never use as a predictor",
       role == "target"   ~ "Target: recompute damage threshold on training rows before final evaluation",
-      stringr::str_detect(cols, "impervious") ~ "2023 static layer; post-dates most events (possible temporal leakage)",
+      stringr::str_detect(cols, "impervious") ~ "Year-matched through 2023; 2024+ events use the 2023 layer (see impervious_vintage)",
+      stringr::str_detect(cols, "^rain_") ~ "Uses only the event window and the days before it; describes the storm, so not usable for forecasting before rain falls",
+      stringr::str_detect(cols, "^svi_") ~ "Percentiles are within-release ranks; latest release at or before the event year",
       cols == "event_type" ~ "Known at report time; fine for post-event triage models, not for pre-event forecasting",
       cols == "flood_cause" ~ "Recorded after the event; excluded from predictors",
       TRUE ~ NA_character_

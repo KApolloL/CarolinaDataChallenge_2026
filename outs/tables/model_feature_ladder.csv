@@ -1,0 +1,17 @@
+Feature set,Model,Features added,Status,N features,PR-AUC,ROC-AUC,Gain vs season (95% interval),Folds beating season,Gain vs previous row (95% interval)
+Season only,Random forest,"event_month, peak_hurricane_season",evaluated,2,0.191 +/- 0.085,0.674 +/- 0.133,,,
+Season only,Logistic regression,"event_month, peak_hurricane_season",evaluated,2,0.186 +/- 0.081,0.692 +/- 0.135,,,
+Region only,Random forest,"region_is_central, region_is_coastal, region_is_mountains",evaluated,3,0.085 +/- 0.025,0.486 +/- 0.101,-0.105 (-0.132 to -0.079),0%,
+Region only,Logistic regression,"region_is_central, region_is_coastal, region_is_mountains",evaluated,3,0.086 +/- 0.026,0.493 +/- 0.106,-0.100 (-0.125 to -0.075),8%,
++ Place,Random forest,"slope_degrees, elevation_m, impervious_mean_250m, distance_to_stream_m, local_relief_5km",evaluated,7,0.214 +/- 0.087,0.738 +/- 0.100,+0.024 (+0.008 to +0.039),72%,+0.024 (+0.008 to +0.039)
++ Place,Logistic regression,"slope_degrees, elevation_m, impervious_mean_250m, distance_to_stream_m, local_relief_5km",evaluated,7,0.184 +/- 0.057,0.713 +/- 0.063,-0.002 (-0.025 to +0.022),56%,-0.002 (-0.025 to +0.022)
++ People,Random forest,"population_density, SOVI_SCORE",evaluated,9,0.221 +/- 0.093,0.748 +/- 0.089,+0.031 (+0.011 to +0.051),68%,+0.007 (-0.004 to +0.017)
++ People,Logistic regression,"population_density, SOVI_SCORE",evaluated,9,0.177 +/- 0.058,0.711 +/- 0.062,-0.009 (-0.034 to +0.017),48%,-0.007 (-0.015 to +0.001)
++ History,Random forest,"nearby_minor_flood_count_25km, nearby_severe_flood_count_25km",evaluated,11,0.228 +/- 0.096,0.741 +/- 0.094,+0.037 (+0.014 to +0.060),80%,+0.007 (-0.004 to +0.018)
++ History,Logistic regression,"nearby_minor_flood_count_25km, nearby_severe_flood_count_25km",evaluated,11,0.200 +/- 0.061,0.732 +/- 0.058,+0.014 (-0.019 to +0.048),52%,+0.023 (+0.008 to +0.037)
++ Rainfall,Random forest,"rain_event_total_mm, rain_max_1day_mm, rain_antecedent_7d_mm",evaluated,14,0.242 +/- 0.119,0.747 +/- 0.077,+0.051 (+0.020 to +0.082),80%,+0.014 (-0.008 to +0.036)
++ Rainfall,Logistic regression,"rain_event_total_mm, rain_max_1day_mm, rain_antecedent_7d_mm",evaluated,14,0.292 +/- 0.122,0.766 +/- 0.056,+0.106 (+0.057 to +0.155),80%,+0.092 (+0.056 to +0.128)
++ Hydrology,Random forest,"hand_m, log_drainage_area_km2",evaluated,16,0.241 +/- 0.117,0.746 +/- 0.078,+0.050 (+0.020 to +0.081),80%,-0.001 (-0.008 to +0.007)
++ Hydrology,Logistic regression,"hand_m, log_drainage_area_km2",evaluated,16,0.297 +/- 0.136,0.768 +/- 0.057,+0.111 (+0.058 to +0.164),84%,+0.005 (-0.005 to +0.015)
++ Tract SVI,Random forest,"svi_rpl_themes, svi_rpl_theme1, svi_rpl_theme2, svi_rpl_theme3, svi_rpl_theme4",evaluated,21,0.243 +/- 0.113,0.749 +/- 0.078,+0.053 (+0.026 to +0.080),80%,+0.002 (-0.010 to +0.015)
++ Tract SVI,Logistic regression,"svi_rpl_themes, svi_rpl_theme1, svi_rpl_theme2, svi_rpl_theme3, svi_rpl_theme4",evaluated,21,0.299 +/- 0.126,0.769 +/- 0.053,+0.113 (+0.063 to +0.163),88%,+0.002 (-0.006 to +0.010)

@@ -65,7 +65,12 @@ params:
   soil_spatial_path: null
   state_boundary_path: "data/raw/nlcd/north_carolina_boundary.gpkg"
   county_boundaries_path: "data/raw/reference/nc_counties.gpkg"
-  rainfall_path: null
+  rainfall_path: "data/derived/event_rainfall.csv"
+  gridmet_dir: "data/raw/gridmet"
+  hydro_dir: "data/derived/hydro"
+  svi_dir: "data/raw/svi"
+  tracts_2010_path: "data/raw/reference/nc_tracts_2010.gpkg"
+  tracts_2020_path: "data/raw/reference/nc_tracts_2020.gpkg"
   community_path: null
 
   # Data processing
@@ -161,7 +166,10 @@ params:
   include_nlcd_features: true
   include_ncdot_features: true
   include_soil_features: false
-  include_rainfall_features: false
+  include_rainfall_features: true
+  include_hydro_features: true
+  include_svi_features: true
+  nlcd_year_matched: true
   include_community_features: false
 
   # Visualization controls

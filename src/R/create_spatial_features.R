@@ -138,7 +138,7 @@ stream_length_density <- function(points, flowlines, radius_m) {
 # Point values and buffer means from one raster. Points and buffers are
 # built in the analysis CRS and projected to the raster CRS.
 extract_raster_features <- function(points, raster_path, point_name, buffer_names, buffer_radii,
-                                    valid_range = c(-Inf, Inf)) {
+                                    valid_range = c(-Inf, Inf), fun = mean) {
   r <- terra::rast(raster_path)[[1]]
   raster_crs <- terra::crs(r)
 
@@ -153,7 +153,8 @@ extract_raster_features <- function(points, raster_path, point_name, buffer_name
 
   for (i in seq_along(buffer_names)) {
     buf <- terra::project(terra::vect(sf::st_buffer(points, dist = buffer_radii[[i]])), raster_crs)
-    vals <- terra::extract(r, buf, fun = mean, na.rm = TRUE, ID = FALSE)[[1]]
+    vals <- terra::extract(r, buf, fun = fun, na.rm = TRUE, ID = FALSE)[[1]]
+    vals[is.infinite(vals)] <- NA_real_
     vals[is.nan(vals)] <- NA_real_
     out[[buffer_names[[i]]]] <- clamp(vals)
   }
@@ -171,6 +172,71 @@ extract_raster_features <- function(points, raster_path, point_name, buffer_name
 #   analysis_crs, geographic_crs, event_buffer_m, stream_buffer_m,
 #   infrastructure_buffer_m, nhd_flowline_ftypes, include_* flags,
 #   compute_stream_density
+
+# Year-matched raster extraction: each event uses the raster for its own
+# year when one exists, otherwise the nearest available year (earlier years
+# fall back to the first file, later years to the last). Returns the
+# features plus the vintage actually used per event.
+year_matched_raster_features <- function(points, event_years, year_paths, point_name,
+                                         buffer_names, buffer_radii, valid_range = c(-Inf, Inf)) {
+  avail <- sort(as.integer(names(year_paths)))
+  vintage <- vapply(event_years, function(y) {
+    if (is.na(y)) return(max(avail))
+    earlier <- avail[avail <= y]
+    if (length(earlier) > 0) max(earlier) else min(avail)
+  }, integer(1))
+  out <- NULL
+  for (v in sort(unique(vintage))) {
+    idx <- which(vintage == v)
+    vals <- extract_raster_features(points[idx, ], year_paths[[as.character(v)]], point_name,
+                                    buffer_names, buffer_radii, valid_range)
+    vals$.row <- idx
+    out <- dplyr::bind_rows(out, vals)
+  }
+  out <- out[order(out$.row), setdiff(names(out), ".row")]
+  out$vintage <- vintage
+  out
+}
+
+# CDC/ATSDR tract SVI for each event point. Each event takes the latest SVI
+# release at or before its year (earlier events use the first release), on
+# that release's tract geography (2016/2018 releases use 2010 tracts,
+# 2020/2022 use 2020 tracts). Percentiles are ranks within one release.
+svi_tract_features <- function(points, event_years, svi_files, tract_files, analysis_crs) {
+  releases <- sort(as.integer(names(svi_files)))
+  release <- vapply(event_years, function(y) {
+    if (is.na(y)) return(max(releases))
+    earlier <- releases[releases <= y]
+    if (length(earlier) > 0) max(earlier) else min(releases)
+  }, integer(1))
+  geog_of <- function(r) if (r < 2020) "2010" else "2020"
+  tract_ids <- list()
+  for (g in unique(vapply(release, geog_of, character(1)))) {
+    tr <- sf::st_read(tract_files[[g]], quiet = TRUE) |> clean_spatial_layer(analysis_crs)
+    tr$fips <- if ("GEOID" %in% names(tr)) as.character(tr$GEOID) else substr(as.character(tr$GEO_ID), 10, 20)
+    j <- sf::st_join(points["event_id"], tr["fips"], join = sf::st_within, left = TRUE)
+    tract_ids[[g]] <- j$fips[match(points$event_id, j$event_id)]
+  }
+  cols <- c("RPL_THEMES", "RPL_THEME1", "RPL_THEME2", "RPL_THEME3", "RPL_THEME4")
+  out <- matrix(NA_real_, nrow(points), length(cols), dimnames = list(NULL, cols))
+  for (r in unique(release)) {
+    svi <- readr::read_csv(svi_files[[as.character(r)]], show_col_types = FALSE,
+                           col_types = readr::cols(FIPS = "c", .default = "c"))
+    svi$FIPS <- sprintf("%011s", svi$FIPS)
+    idx <- which(release == r)
+    m <- match(tract_ids[[geog_of(r)]][idx], svi$FIPS)
+    for (cn in cols) {
+      v <- suppressWarnings(as.numeric(svi[[cn]][m]))
+      v[!is.na(v) & v < 0] <- NA_real_          # CDC codes missing as -999
+      out[idx, cn] <- v
+    }
+  }
+  tibble::tibble(
+    svi_rpl_themes = out[, "RPL_THEMES"], svi_rpl_theme1 = out[, "RPL_THEME1"],
+    svi_rpl_theme2 = out[, "RPL_THEME2"], svi_rpl_theme3 = out[, "RPL_THEME3"],
+    svi_rpl_theme4 = out[, "RPL_THEME4"], svi_vintage = release
+  )
+}
 
 feature_column_names <- function(settings) {
   eb <- buffer_label(settings$event_buffer_m)
@@ -198,7 +264,9 @@ feature_column_names <- function(settings) {
     nlcd = unique(c(
       "impervious_mean_event",
       paste0("impervious_mean_", c(eb, ib))
-    ))
+    )),
+    hydro = c("hand_m", paste0("drainage_area_km2_max_", eb), "log_drainage_area_km2"),
+    svi = c("svi_rpl_themes", "svi_rpl_theme1", "svi_rpl_theme2", "svi_rpl_theme3", "svi_rpl_theme4")
   )
 }
 
@@ -226,7 +294,7 @@ build_spatial_features <- function(events, inputs, settings, project_dir) {
   }
 
   points <- sf::st_as_sf(
-    located |> dplyr::select(event_id, longitude, latitude),
+    located |> dplyr::select(event_id, longitude, latitude, event_year),
     coords = c("longitude", "latitude"),
     crs = settings$geographic_crs,
     remove = FALSE
@@ -358,20 +426,34 @@ build_spatial_features <- function(events, inputs, settings, project_dir) {
                       how_to_obtain = "render with download_data: true (USGS Annual NLCD ImageServer)",
                       affects = "imperviousness features (set to NA)", project_dir = project_dir)
     if (ok) {
-      vals <- extract_raster_features(
-        points, inputs$nlcd, "impervious_mean_event",
+      # Yearly rasters sit next to the configured one: annual_nlcd_fractional_impervious_<YYYY>_NC.tif
+      year_files <- list.files(dirname(inputs$nlcd), pattern = "^annual_nlcd_fractional_impervious_\\d{4}_NC\\.tif$", full.names = TRUE)
+      year_paths <- stats::setNames(as.list(year_files), stringr::str_extract(basename(year_files), "\\d{4}"))
+      if (!isTRUE(settings$nlcd_year_matched) || length(year_paths) == 0) {
+        year_paths <- stats::setNames(list(inputs$nlcd), settings$nlcd_vintage)
+      }
+      vals <- year_matched_raster_features(
+        points, points$event_year, year_paths, "impervious_mean_event",
         buffer_names = paste0("impervious_mean_", c(eb, ib)),
         buffer_radii = c(settings$event_buffer_m, settings$infrastructure_buffer_m),
         valid_range  = c(0, 100)
       )
-      for (nm in names(vals)) out[[nm]] <- vals[[nm]]
+      for (nm in setdiff(names(vals), "vintage")) out[[nm]] <- vals[[nm]]
+      out$impervious_vintage <- vals$vintage
       res_m <- round(terra::res(terra::rast(inputs$nlcd))[1], 1)
-      methods <- c(methods, sprintf(
-        "Annual NLCD fractional imperviousness %s (%.1f m cells; 2023 static contemporary exposure layer): point value and means within %s/%s",
-        settings$nlcd_vintage, res_m, eb, ib
-      ))
-      coverage <- c(coverage, paste0("NLCD imperviousness is a ", settings$nlcd_vintage,
-                                     " static contemporary exposure layer, not historical land cover for the event year"))
+      yrs <- range(as.integer(names(year_paths)))
+      if (length(year_paths) > 1) {
+        methods <- c(methods, sprintf(
+          "Annual NLCD fractional imperviousness, year-matched %d-%d (%.1f m cells; events after %d use %d): point value and means within %s/%s",
+          yrs[1], yrs[2], res_m, yrs[2], yrs[2], eb, ib))
+        coverage <- c(coverage, sprintf("NLCD imperviousness is year-matched for %d-%d; later events use the %d layer", yrs[1], yrs[2], yrs[2]))
+      } else {
+        methods <- c(methods, sprintf(
+          "Annual NLCD fractional imperviousness %s (%.1f m cells; single static layer): point value and means within %s/%s",
+          names(year_paths), res_m, eb, ib))
+        coverage <- c(coverage, paste0("NLCD imperviousness is a single ", names(year_paths),
+                                       " layer, not land cover for the event year"))
+      }
     } else {
       fill_na(cols$nlcd)
       coverage <- c(coverage, "NLCD imperviousness unavailable: features are NA")
@@ -379,6 +461,62 @@ build_spatial_features <- function(events, inputs, settings, project_dir) {
   } else {
     fill_na(cols$nlcd)
     coverage <- c(coverage, "NLCD features disabled by configuration")
+  }
+
+  # --- Hydrology (WhiteboxTools rasters from src/R/hydrology.R) -------------
+  if (isTRUE(settings$include_hydro_features)) {
+    hand_path <- file.path(inputs$hydro_dir, "hand_m.tif")
+    acc_path  <- file.path(inputs$hydro_dir, "flow_acc_km2.tif")
+    if (!is.na(inputs$hydro_dir) && file.exists(hand_path) && file.exists(acc_path)) {
+      hand <- extract_raster_features(points, hand_path, "hand_m", character(), numeric(), valid_range = c(-5, 5000))
+      acc  <- extract_raster_features(points, acc_path, "drainage_at_point", paste0("drainage_area_km2_max_", eb),
+                                      settings$event_buffer_m, valid_range = c(0, 1e6), fun = max)
+      out$hand_m <- pmax(hand$hand_m, 0)
+      out[[paste0("drainage_area_km2_max_", eb)]] <- acc[[paste0("drainage_area_km2_max_", eb)]]
+      out$log_drainage_area_km2 <- log10(1 + out[[paste0("drainage_area_km2_max_", eb)]])
+      # Basins that extend beyond NC are truncated at the state line by the DEM.
+      hu8_paths <- locate_nhd_layer("WBDHU8", inputs$nhd_dir, inputs$nhd_zip)
+      if (length(hu8_paths) > 0) {
+        hu8 <- sf::st_read(hu8_paths[[1]], quiet = TRUE) |> dplyr::select(states) |> clean_spatial_layer(settings$analysis_crs)
+        j <- sf::st_join(points["event_id"], hu8, join = sf::st_within, left = TRUE) |> sf::st_drop_geometry() |>
+          dplyr::distinct(event_id, .keep_all = TRUE)
+        out$hydro_basin_crosses_state <- as.integer(!is.na(j$states[match(out$event_id, j$event_id)]) &
+                                                      j$states[match(out$event_id, j$event_id)] != "NC")
+      }
+      methods <- c(methods, sprintf(
+        "DEM hydrology (WhiteboxTools: breached DEM, D8 flow accumulation, streams >= %s km2, elevation above stream): HAND at point, max drainage area within %s",
+        settings$stream_threshold_km2 %||% 1, eb))
+      coverage <- c(coverage, "Drainage area is underestimated where a basin extends beyond NC (flag hydro_basin_crosses_state)")
+    } else {
+      fw_log("warning", input = "Hydrology rasters",
+             message = paste("Not found in", inputs$hydro_dir, "- run build_hydro_rasters() in src/R/hydrology.R."),
+             affects = "hydrology features (set to NA)")
+      fill_na(cols$hydro)
+      coverage <- c(coverage, "Hydrology rasters unavailable: features are NA")
+    }
+  } else {
+    fill_na(cols$hydro)
+  }
+
+  # --- Tract-level social vulnerability (CDC/ATSDR SVI) -------------------
+  if (isTRUE(settings$include_svi_features)) {
+    svi_files <- list.files(inputs$svi_dir, pattern = "^svi_\\d{4}_nc_tract\\.csv$", full.names = TRUE)
+    svi_files <- stats::setNames(as.list(svi_files), stringr::str_extract(basename(svi_files), "\\d{4}"))
+    tract_files <- list(`2010` = inputs$tracts_2010, `2020` = inputs$tracts_2020)
+    if (length(svi_files) > 0 && all(file.exists(unlist(tract_files)))) {
+      svi <- svi_tract_features(points, points$event_year, svi_files, tract_files, settings$analysis_crs)
+      for (nm in names(svi)) out[[nm]] <- svi[[nm]]
+      methods <- c(methods, sprintf("CDC/ATSDR SVI (tract, releases %s): latest release at or before the event year",
+                                    paste(names(svi_files), collapse = "/")))
+      coverage <- c(coverage, "SVI percentiles are ranks within one release and one state; do not compare values across releases")
+    } else {
+      fw_log("warning", input = "CDC/ATSDR SVI", message = "SVI CSVs or tract boundaries missing.",
+             affects = "tract SVI features (set to NA)")
+      fill_na(cols$svi)
+      coverage <- c(coverage, "Tract SVI unavailable: features are NA")
+    }
+  } else {
+    fill_na(cols$svi)
   }
 
   list(
@@ -400,7 +538,10 @@ spatial_feature_signature <- function(events, inputs, settings) {
   list(
     settings   = settings,
     inputs     = file_signature(unlist(inputs)),
-    nhd_files  = file_signature(list.files(inputs$nhd_dir, pattern = "^(NHDFlowline|WBDHU12)", recursive = TRUE, full.names = TRUE)),
+    nhd_files  = file_signature(list.files(inputs$nhd_dir, pattern = "^(NHDFlowline|WBDHU12|WBDHU8)", recursive = TRUE, full.names = TRUE)),
+    nlcd_years = file_signature(list.files(dirname(inputs$nlcd), pattern = "^annual_nlcd_fractional_impervious_\\d{4}_NC\\.tif$", full.names = TRUE)),
+    svi_files  = if (!is.null(inputs$svi_dir)) file_signature(list.files(inputs$svi_dir, full.names = TRUE)) else NULL,
+    hydro      = if (!is.null(inputs$hydro_dir)) file_signature(list.files(inputs$hydro_dir, pattern = "^(hand_m|flow_acc_km2)\\.tif$", full.names = TRUE)) else NULL,
     event_ids  = digest::digest(sort(events$event_id[!is.na(events$longitude)])),
     coords     = digest::digest(events[!is.na(events$longitude), c("event_id", "longitude", "latitude")])
   )
