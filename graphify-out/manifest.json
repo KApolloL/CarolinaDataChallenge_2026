@@ -1,0 +1,152 @@
+{
+  "data/ml_ready/run_manifest.json": {
+    "mtime": 1792593905.5969753,
+    "seen": 1792594530.681185,
+    "ast_hash": "18b3f0eba894da7a00c3ad710414e792",
+    "semantic_hash": "18b3f0eba894da7a00c3ad710414e792"
+  },
+  "data/ml_ready/target_config.json": {
+    "mtime": 1792593905.2522259,
+    "seen": 1792594530.681186,
+    "ast_hash": "3ee57e7de4db2ad72e92b68700f5b18a",
+    "semantic_hash": "3ee57e7de4db2ad72e92b68700f5b18a"
+  },
+  "src/R/create_spatial_features.R": {
+    "mtime": 1792591004.1394386,
+    "seen": 1792594530.6811872,
+    "ast_hash": "eb6b5d5020d574ae0aa4013593e96b75",
+    "semantic_hash": "eb6b5d5020d574ae0aa4013593e96b75"
+  },
+  "src/R/download_data.R": {
+    "mtime": 1792590815.2146258,
+    "seen": 1792594530.681188,
+    "ast_hash": "cbe4f6d56886b15b09242ba4ebfa5388",
+    "semantic_hash": "cbe4f6d56886b15b09242ba4ebfa5388"
+  },
+  "src/R/export_ml_tables.R": {
+    "mtime": 1792592187.647113,
+    "seen": 1792594530.681189,
+    "ast_hash": "1afbf455aa1081e8155c55ae02b2225e",
+    "semantic_hash": "1afbf455aa1081e8155c55ae02b2225e"
+  },
+  "src/R/prepare_noaa.R": {
+    "mtime": 1790519374.011734,
+    "seen": 1792590058.289752,
+    "ast_hash": "aa8d38888fc6463ecbf3a580fc5e8673",
+    "semantic_hash": "aa8d38888fc6463ecbf3a580fc5e8673"
+  },
+  "src/R/utils.R": {
+    "mtime": 1790519374.0119407,
+    "seen": 1792590058.2897532,
+    "ast_hash": "b079a97d21bf2b2ea5517132964afeca",
+    "semantic_hash": "b079a97d21bf2b2ea5517132964afeca"
+  },
+  "README.md": {
+    "mtime": 1792592203.202044,
+    "seen": 1792594530.681196,
+    "ast_hash": "a526cd31bcbf134b130e244da6e89896",
+    "semantic_hash": "a526cd31bcbf134b130e244da6e89896"
+  },
+  "outs/presentation/carolina_highground_project_brief.md": {
+    "mtime": 1792594266.356526,
+    "seen": 1792594530.6811972,
+    "ast_hash": "22916f84ea6d22bc2c799d5db4c8c105",
+    "semantic_hash": "22916f84ea6d22bc2c799d5db4c8c105"
+  },
+  "src/_analysis_body.qmd": {
+    "mtime": 1792592968.0364046,
+    "seen": 1792594530.6811981,
+    "ast_hash": "6b12439427fe79ce6c8be1ba08b64bc9",
+    "semantic_hash": "6b12439427fe79ce6c8be1ba08b64bc9"
+  },
+  "src/_appendix.qmd": {
+    "mtime": 1792591185.7056677,
+    "seen": 1792594530.681199,
+    "ast_hash": "90d29f6489060088b5ad6e932e91fae1",
+    "semantic_hash": "90d29f6489060088b5ad6e932e91fae1"
+  },
+  "src/_conclusion.qmd": {
+    "mtime": 1792593367.4891062,
+    "seen": 1792594530.6812,
+    "ast_hash": "51a5b03901e1ab2ba062066470deb077",
+    "semantic_hash": "51a5b03901e1ab2ba062066470deb077"
+  },
+  "src/_model_placeholder.qmd": {
+    "mtime": 1790519374.0126238,
+    "seen": 1792590058.2897558,
+    "ast_hash": "b2ba92d51f37995dc436fcc29127ddc9",
+    "semantic_hash": "b2ba92d51f37995dc436fcc29127ddc9"
+  },
+  "src/_modeling.qmd": {
+    "mtime": 1792593367.489799,
+    "seen": 1792594530.681202,
+    "ast_hash": "90eb4975a556711c487c9d96adc818be",
+    "semantic_hash": "90eb4975a556711c487c9d96adc818be"
+  },
+  "src/_quarto.yml": {
+    "mtime": 1790519374.0129569,
+    "seen": 1792590058.289758,
+    "ast_hash": "c5846779087fc08bc25d11e99d29affb",
+    "semantic_hash": "c5846779087fc08bc25d11e99d29affb"
+  },
+  "src/analysis.qmd": {
+    "mtime": 1792591099.7891476,
+    "seen": 1792594530.681203,
+    "ast_hash": "093622d3855e5334610617ef0aad40c8",
+    "semantic_hash": "093622d3855e5334610617ef0aad40c8"
+  },
+  "src/analysis_quick.qmd": {
+    "mtime": 1792591099.8389587,
+    "seen": 1792594530.681204,
+    "ast_hash": "fa5cb36f13e880d06896e44d2457fcb7",
+    "semantic_hash": "fa5cb36f13e880d06896e44d2457fcb7"
+  },
+  "src/final_analysis_deliverable.qmd": {
+    "mtime": 1792591099.814697,
+    "seen": 1792594530.681205,
+    "ast_hash": "17e785c86134da6fd23d1a15696283b3",
+    "semantic_hash": "17e785c86134da6fd23d1a15696283b3"
+  },
+  "data/ml_ready/quick/run_manifest.json": {
+    "mtime": 1792592163.9279888,
+    "seen": 1792594530.6811788,
+    "ast_hash": "6ae00104e28eeee22e6decce3417bf07",
+    "semantic_hash": "6ae00104e28eeee22e6decce3417bf07"
+  },
+  "data/ml_ready/quick/target_config.json": {
+    "mtime": 1792592163.896357,
+    "seen": 1792594530.681182,
+    "ast_hash": "b524f9a4f9da683844c71f13163fb301",
+    "semantic_hash": "b524f9a4f9da683844c71f13163fb301"
+  },
+  "src/R/explorer_grid.R": {
+    "mtime": 1792591839.853409,
+    "seen": 1792594530.681188,
+    "ast_hash": "24d4342055dbfb360978da8678410297",
+    "semantic_hash": "24d4342055dbfb360978da8678410297"
+  },
+  "src/R/hydrology.R": {
+    "mtime": 1792590975.5670228,
+    "seen": 1792594530.6811898,
+    "ast_hash": "85a2118eff97b67a01a213458010b249",
+    "semantic_hash": "85a2118eff97b67a01a213458010b249"
+  },
+  "src/R/rainfall_features.R": {
+    "mtime": 1792590958.8559954,
+    "seen": 1792594530.6811929,
+    "ast_hash": "4969ee0ec1ba5aeadd2e2d4940631e17",
+    "semantic_hash": "4969ee0ec1ba5aeadd2e2d4940631e17"
+  },
+  "src/python/export_explorer.py": {
+    "mtime": 1792594202.5906596,
+    "seen": 1792594530.681195,
+    "ast_hash": "94f66eb4d643826d93962f30650d13e4",
+    "semantic_hash": "94f66eb4d643826d93962f30650d13e4"
+  },
+  "src/python/highground_ml.py": {
+    "mtime": 1792591421.020365,
+    "seen": 1792594530.681196,
+    "ast_hash": "6618809439af808c1dc052b0881503c4",
+    "semantic_hash": "6618809439af808c1dc052b0881503c4"
+  }
+}

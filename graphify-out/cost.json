@@ -1,0 +1,20 @@
+{
+  "runs": [
+    {
+      "date": "2026-10-21T13:40:58.290812+00:00",
+      "input_tokens": 261362,
+      "output_tokens": 0,
+      "files": 18,
+      "note": "subagent total tokens (in+out combined); chunk 2 unrecorded (agent hit spend limit after writing)"
+    },
+    {
+      "date": "2026-10-21T14:55:30.682928+00:00",
+      "input_tokens": 268184,
+      "output_tokens": 0,
+      "files": 25,
+      "note": "--update rebuild: 2 sonnet agents (docs) + AST with R parser; images excluded"
+    }
+  ],
+  "total_input_tokens": 529546,
+  "total_output_tokens": 0
+}
