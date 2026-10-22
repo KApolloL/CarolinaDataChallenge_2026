@@ -1,0 +1,435 @@
+{
+ "ladder": [
+  {
+   "group": "Place",
+   "model": "Random forest",
+   "gain": 0.023751006568570383,
+   "lo": 0.008454808183662791,
+   "hi": 0.03904720495347798
+  },
+  {
+   "group": "Place",
+   "model": "Logistic regression",
+   "gain": -0.0017139463653656982,
+   "lo": -0.025446362643461725,
+   "hi": 0.02201846991273033
+  },
+  {
+   "group": "People",
+   "model": "Random forest",
+   "gain": 0.006925748125457403,
+   "lo": -0.0036461669551926127,
+   "hi": 0.01749766320610742
+  },
+  {
+   "group": "People",
+   "model": "Logistic regression",
+   "gain": -0.006995434011832996,
+   "lo": -0.01541632906164653,
+   "hi": 0.0014254610379805365
+  },
+  {
+   "group": "History",
+   "model": "Random forest",
+   "gain": 0.0066414869148999555,
+   "lo": -0.004481573365971871,
+   "hi": 0.017764547195771783
+  },
+  {
+   "group": "History",
+   "model": "Logistic regression",
+   "gain": 0.02295482142965333,
+   "lo": 0.008431376276862019,
+   "hi": 0.037478266582444644
+  },
+  {
+   "group": "Rainfall",
+   "model": "Random forest",
+   "gain": 0.013792243356703718,
+   "lo": -0.008438118597710688,
+   "hi": 0.036022605311118124
+  },
+  {
+   "group": "Rainfall",
+   "model": "Logistic regression",
+   "gain": 0.09179723005921929,
+   "lo": 0.056047778980898716,
+   "hi": 0.12754668113753986
+  },
+  {
+   "group": "Hydrology",
+   "model": "Random forest",
+   "gain": -0.0006193897800530646,
+   "lo": -0.00801154258064144,
+   "hi": 0.006772763020535311
+  },
+  {
+   "group": "Hydrology",
+   "model": "Logistic regression",
+   "gain": 0.0050262213595158416,
+   "lo": -0.005150714869181349,
+   "hi": 0.015203157588213032
+  },
+  {
+   "group": "Tract SVI",
+   "model": "Random forest",
+   "gain": 0.002302125157194942,
+   "lo": -0.009922499497513148,
+   "hi": 0.014526749811903031
+  },
+  {
+   "group": "Tract SVI",
+   "model": "Logistic regression",
+   "gain": 0.001930483237020113,
+   "lo": -0.006086720384156798,
+   "hi": 0.009947686858197025
+  }
+ ],
+ "spatial": [
+  {
+   "scheme": "Episode-grouped CV",
+   "model": "Logistic regression",
+   "held_out": "5 folds of storm episodes x 5 repeats",
+   "pr_auc": 0.2990266886058383,
+   "pr_sd": 0.1262447976233852,
+   "roc_auc": 0.7694233677542237
+  },
+  {
+   "scheme": "County-blocked CV",
+   "model": "Logistic regression",
+   "held_out": "10 folds of counties x 5 repeats",
+   "pr_auc": 0.35079854853246945,
+   "pr_sd": 0.09869430012189966,
+   "roc_auc": 0.7967715658975983
+  },
+  {
+   "scheme": "County-blocked CV, storm-purged",
+   "model": "Logistic regression",
+   "held_out": "10 folds of counties x 5 repeats",
+   "pr_auc": 0.2662777050859847,
+   "pr_sd": 0.09953695675969744,
+   "roc_auc": 0.7351302075071058
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Logistic regression",
+   "held_out": "central",
+   "pr_auc": 0.11287536678335747,
+   "pr_sd": null,
+   "roc_auc": 0.660011340913839
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Logistic regression",
+   "held_out": "coastal",
+   "pr_auc": 0.3366882230850939,
+   "pr_sd": null,
+   "roc_auc": 0.8108073318916691
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Logistic regression",
+   "held_out": "mountains",
+   "pr_auc": 0.15663536661409394,
+   "pr_sd": null,
+   "roc_auc": 0.7084375
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Logistic regression",
+   "held_out": "Mean of regions",
+   "pr_auc": 0.2020663188275151,
+   "pr_sd": 0.09685393547588055,
+   "roc_auc": 0.7264187242685027
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Logistic regression",
+   "held_out": "central",
+   "pr_auc": 0.12128222507938159,
+   "pr_sd": null,
+   "roc_auc": 0.6847822842988033
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Logistic regression",
+   "held_out": "coastal",
+   "pr_auc": 0.2933751416287744,
+   "pr_sd": null,
+   "roc_auc": 0.7510125973981395
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Logistic regression",
+   "held_out": "mountains",
+   "pr_auc": 0.13564419018689228,
+   "pr_sd": null,
+   "roc_auc": 0.691875
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Logistic regression",
+   "held_out": "Mean of regions",
+   "pr_auc": 0.1834338522983494,
+   "pr_sd": 0.07796102374547811,
+   "roc_auc": 0.709223293898981
+  },
+  {
+   "scheme": "Episode-grouped CV",
+   "model": "Random forest",
+   "held_out": "5 folds of storm episodes x 5 repeats",
+   "pr_auc": 0.2434588015656578,
+   "pr_sd": 0.1134349004944568,
+   "roc_auc": 0.7490568820397465
+  },
+  {
+   "scheme": "County-blocked CV",
+   "model": "Random forest",
+   "held_out": "10 folds of counties x 5 repeats",
+   "pr_auc": 0.36622124676675144,
+   "pr_sd": 0.12333497524071779,
+   "roc_auc": 0.8008928290001698
+  },
+  {
+   "scheme": "County-blocked CV, storm-purged",
+   "model": "Random forest",
+   "held_out": "10 folds of counties x 5 repeats",
+   "pr_auc": 0.24363200013516584,
+   "pr_sd": 0.10827253902868697,
+   "roc_auc": 0.7133096536948021
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Random forest",
+   "held_out": "central",
+   "pr_auc": 0.32395410154909066,
+   "pr_sd": null,
+   "roc_auc": 0.7553645506909005
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Random forest",
+   "held_out": "coastal",
+   "pr_auc": 0.2701839057758615,
+   "pr_sd": null,
+   "roc_auc": 0.7585126832114785
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Random forest",
+   "held_out": "mountains",
+   "pr_auc": 0.06581701286656877,
+   "pr_sd": null,
+   "roc_auc": 0.575
+  },
+  {
+   "scheme": "Region held out",
+   "model": "Random forest",
+   "held_out": "Mean of regions",
+   "pr_auc": 0.219985006730507,
+   "pr_sd": 0.11120142756096947,
+   "roc_auc": 0.696292411300793
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Random forest",
+   "held_out": "central",
+   "pr_auc": 0.24614306248605639,
+   "pr_sd": null,
+   "roc_auc": 0.7596920046557436
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Random forest",
+   "held_out": "coastal",
+   "pr_auc": 0.1830369916957656,
+   "pr_sd": null,
+   "roc_auc": 0.6173497408437167
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Random forest",
+   "held_out": "mountains",
+   "pr_auc": 0.06807108489340842,
+   "pr_sd": null,
+   "roc_auc": 0.5604166666666666
+  },
+  {
+   "scheme": "Region held out, storm-purged",
+   "model": "Random forest",
+   "held_out": "Mean of regions",
+   "pr_auc": 0.16575037969174347,
+   "pr_sd": 0.07371805530475481,
+   "roc_auc": 0.6458194707220423
+  }
+ ],
+ "temporal": [
+  {
+   "year": 2019.0,
+   "model": "Logistic regression",
+   "n": 145,
+   "positives": 4,
+   "base_rate": 0.027586206896551724,
+   "pr_auc": 0.02937064805456776,
+   "roc_auc": 0.42907801418439717,
+   "few_positives": true
+  },
+  {
+   "year": 2020.0,
+   "model": "Logistic regression",
+   "n": 573,
+   "positives": 22,
+   "base_rate": 0.038394415357766144,
+   "pr_auc": 0.07120365766238693,
+   "roc_auc": 0.5437634053786504,
+   "few_positives": false
+  },
+  {
+   "year": 2021.0,
+   "model": "Logistic regression",
+   "n": 126,
+   "positives": 9,
+   "base_rate": 0.07142857142857142,
+   "pr_auc": 0.3929359539482658,
+   "roc_auc": 0.8779677113010447,
+   "few_positives": false
+  },
+  {
+   "year": 2022.0,
+   "model": "Logistic regression",
+   "n": 99,
+   "positives": 1,
+   "base_rate": 0.010101010101010102,
+   "pr_auc": 0.5,
+   "roc_auc": 0.9948979591836734,
+   "few_positives": true
+  },
+  {
+   "year": 2023.0,
+   "model": "Logistic regression",
+   "n": 185,
+   "positives": 1,
+   "base_rate": 0.005405405405405406,
+   "pr_auc": 0.018867924528301886,
+   "roc_auc": 0.7173913043478262,
+   "few_positives": true
+  },
+  {
+   "year": 2024.0,
+   "model": "Logistic regression",
+   "n": 462,
+   "positives": 35,
+   "base_rate": 0.07575757575757576,
+   "pr_auc": 0.5314503286504939,
+   "roc_auc": 0.9498159919705587,
+   "few_positives": false
+  },
+  {
+   "year": 2025.0,
+   "model": "Logistic regression",
+   "n": 227,
+   "positives": 12,
+   "base_rate": 0.05286343612334802,
+   "pr_auc": 0.24301087486044912,
+   "roc_auc": 0.7294573643410852,
+   "few_positives": false
+  },
+  {
+   "year": null,
+   "model": "Logistic regression",
+   "n": 1817,
+   "positives": 84,
+   "base_rate": 0.04623004953219593,
+   "pr_auc": 0.3063438481244464,
+   "roc_auc": 0.7704331877009315,
+   "few_positives": false
+  },
+  {
+   "year": 2019.0,
+   "model": "Random forest",
+   "n": 145,
+   "positives": 4,
+   "base_rate": 0.027586206896551724,
+   "pr_auc": 0.019770312944354915,
+   "roc_auc": 0.16312056737588654,
+   "few_positives": true
+  },
+  {
+   "year": 2020.0,
+   "model": "Random forest",
+   "n": 573,
+   "positives": 22,
+   "base_rate": 0.038394415357766144,
+   "pr_auc": 0.06380168993926703,
+   "roc_auc": 0.6468817026893252,
+   "few_positives": false
+  },
+  {
+   "year": 2021.0,
+   "model": "Random forest",
+   "n": 126,
+   "positives": 9,
+   "base_rate": 0.07142857142857142,
+   "pr_auc": 0.0806161298252466,
+   "roc_auc": 0.51329534662868,
+   "few_positives": false
+  },
+  {
+   "year": 2022.0,
+   "model": "Random forest",
+   "n": 99,
+   "positives": 1,
+   "base_rate": 0.010101010101010102,
+   "pr_auc": 0.5,
+   "roc_auc": 0.9948979591836734,
+   "few_positives": true
+  },
+  {
+   "year": 2023.0,
+   "model": "Random forest",
+   "n": 185,
+   "positives": 1,
+   "base_rate": 0.005405405405405406,
+   "pr_auc": 0.024390243902439025,
+   "roc_auc": 0.782608695652174,
+   "few_positives": true
+  },
+  {
+   "year": 2024.0,
+   "model": "Random forest",
+   "n": 462,
+   "positives": 35,
+   "base_rate": 0.07575757575757576,
+   "pr_auc": 0.3264071892849288,
+   "roc_auc": 0.913616594178655,
+   "few_positives": false
+  },
+  {
+   "year": 2025.0,
+   "model": "Random forest",
+   "n": 227,
+   "positives": 12,
+   "base_rate": 0.05286343612334802,
+   "pr_auc": 0.16397672322640022,
+   "roc_auc": 0.7680232558139535,
+   "few_positives": false
+  },
+  {
+   "year": null,
+   "model": "Random forest",
+   "n": 1817,
+   "positives": 84,
+   "base_rate": 0.04623004953219593,
+   "pr_auc": 0.15938135785484586,
+   "roc_auc": 0.7309372681559639,
+   "few_positives": false
+  }
+ ],
+ "permutation": {
+  "observed": 0.2542168289914102,
+  "null_mean": 0.09098619052907136,
+  "null_p95": 0.11125057425299542,
+  "p_value": 0.001996007984031936,
+  "n_perm": 500
+ }
+}

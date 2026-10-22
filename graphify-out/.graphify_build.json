@@ -1,1 +1,16 @@
-{"excludes": ["docs/**", "src/legacy/**", "outs/legacy/**", "outs/figures/**", "outs/floodwatch_*.png", "graphify-out/**", "data/raw/**", "src/content/highground_explorer.html", "CLAUDE.md"]}
+{
+ "excludes": [
+  "docs/**",
+  "src/legacy/**",
+  "outs/legacy/**",
+  "outs/figures/**",
+  "outs/floodwatch_*.png",
+  "graphify-out/**",
+  "data/raw/**",
+  "src/content/highground_explorer.html",
+  "CLAUDE.md",
+  "src/content/explorer_template.html",
+  "data/**",
+  "outs/quick/**"
+ ]
+}

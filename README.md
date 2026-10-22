@@ -62,7 +62,7 @@ src/                              code
   _quarto.yml                     sends rendered HTML to outs/report/
   styles.css                      report styling
   content/interview_highlights.csv  curated interview quotes with timestamps
-  content/highground_explorer.html  interactive risk explorer (UI by Minh), regenerated from this project's model each render
+  content/explorer_template.html    explorer UI (rainfall what-if, Helene replay, place card, county ranking); highground_explorer.html is the built page
   R/
     utils.R                       paths, package checks, input validation, run log, geometry cleaning
     prepare_noaa.R                NOAA loading, one row per EVENT_ID, region assignment
@@ -71,7 +71,7 @@ src/                              code
     download_data.R               optional downloads (only when download_data: true)
     rainfall_features.R           gridMET event rainfall (window total, wettest day, prior 7 days), cached
     hydrology.R                   WhiteboxTools drainage area and HAND rasters from the DEM (run once, cached)
-    explorer_grid.R               real terrain values on the explorer's map grid
+    explorer_data.R               map grid, hillshade and county data for the explorer
   python/
     highground_ml.py              all ML: features, grouped CV, feature ladder, calibration, holdout + bootstrap CIs, diagnostics
     export_explorer.py            rebuilds the explorer's model and data from this run

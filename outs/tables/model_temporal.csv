@@ -1,0 +1,17 @@
+label,year,model,n_train,train_positives,n,positives,base_rate,pr_auc,roc_auc,few_positives
+2019,2019,Logistic regression,829,116,145,4,0.028,0.029,0.429,TRUE
+2020,2020,Logistic regression,974,120,573,22,0.038,0.071,0.544,FALSE
+2021,2021,Logistic regression,1547,142,126,9,0.071,0.393,0.878,FALSE
+2022,2022,Logistic regression,1673,151,99,1,0.01,0.5,0.995,TRUE
+2023,2023,Logistic regression,1772,152,185,1,0.005,0.019,0.717,TRUE
+2024,2024,Logistic regression,1957,153,462,35,0.076,0.531,0.95,FALSE
+2025,2025,Logistic regression,2419,188,227,12,0.053,0.243,0.729,FALSE
+Pooled 2019-2025,,Logistic regression,,,1817,84,0.046,0.306,0.77,FALSE
+2019,2019,Random forest,829,116,145,4,0.028,0.02,0.163,TRUE
+2020,2020,Random forest,974,120,573,22,0.038,0.064,0.647,FALSE
+2021,2021,Random forest,1547,142,126,9,0.071,0.081,0.513,FALSE
+2022,2022,Random forest,1673,151,99,1,0.01,0.5,0.995,TRUE
+2023,2023,Random forest,1772,152,185,1,0.005,0.024,0.783,TRUE
+2024,2024,Random forest,1957,153,462,35,0.076,0.326,0.914,FALSE
+2025,2025,Random forest,2419,188,227,12,0.053,0.164,0.768,FALSE
+Pooled 2019-2025,,Random forest,,,1817,84,0.046,0.159,0.731,FALSE

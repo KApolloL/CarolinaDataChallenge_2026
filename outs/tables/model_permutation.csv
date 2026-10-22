@@ -1,0 +1,2 @@
+model,observed,null_mean,null_sd,null_p95,null_max,n_null_ge_observed,p_value,n_perm,n_folds
+Logistic regression,0.2542,0.091,0.0106,0.1113,0.1279,0,0.002,500,5

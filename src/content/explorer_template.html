@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carolina HighGround explorer</title>
+<style>
+:root {
+  --navy: #12344d; --teal: #1b7a8c; --river: #4a9cc9; --alert: #b2182b; --sand: #f5f1e8;
+  --ink: #1f2a33; --muted: #5b6770; --line: #e3e9ee; --bg: #f4f6f8; --head: #eef3f6;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink); background: var(--bg); font-size: 15px; line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+a { color: var(--teal); }
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* header */
+header.hg { background: var(--navy); color: #fff; padding: 18px 0 16px; }
+header.hg h1 { margin: 0; font-size: 1.5rem; line-height: 1.2; font-weight: 700; }
+header.hg .sub { margin: 4px 0 10px; color: #c9dbe6; font-size: .98rem; }
+header.hg .lead {
+  margin: 0; max-width: 78ch; font-size: .95rem; color: #fff; background: rgba(255,255,255,.07);
+  border-left: 4px solid var(--river); padding: 8px 12px; border-radius: 0 8px 8px 0;
+}
+header.hg .lead strong { color: #fff; }
+@media (max-width: 560px) {
+  header.hg { padding: 14px 0 12px; }
+  header.hg h1 { font-size: 1.25rem; }
+  header.hg .sub { font-size: .88rem; }
+  header.hg .lead { font-size: .86rem; }
+  .stat-value { font-size: 1.25rem; }
+  .tab { padding: 5px 12px; font-size: .86rem; }
+}
+
+/* stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0 4px; }
+.stat-card {
+  background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--teal); border-radius: 10px;
+  padding: 10px 14px; box-shadow: 0 1px 3px rgba(18,52,77,.06); min-width: 0;
+}
+.stat-card.alert { border-top-color: var(--alert); }
+.stat-card.river { border-top-color: var(--river); }
+.stat-card.navy { border-top-color: var(--navy); }
+.stat-value { font-size: 1.5rem; font-weight: 700; color: var(--navy); line-height: 1.15; overflow-wrap: anywhere; }
+.stat-card.alert .stat-value { color: var(--alert); }
+.stat-label { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+.stat-caption { font-size: .82rem; color: var(--muted); margin: 6px 0 0; }
+
+/* pills and tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 14px; padding: 0; }
+.pill, .tab {
+  font: inherit; font-size: .86rem; line-height: 1.3; padding: 4px 12px; border: 1px solid var(--teal);
+  border-radius: 14px; background: #fff; color: var(--teal); cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.tab { font-size: .92rem; padding: 6px 16px; font-weight: 600; }
+.pill:hover, .tab:hover { background: #e8f3f5; }
+.tab[aria-selected="true"], .pill[aria-pressed="true"], .pill[aria-checked="true"], .pill.on { background: var(--teal); color: #fff; }
+.pill[disabled] { opacity: .45; cursor: not-allowed; }
+.pill .chk { width: 10px; height: 10px; border: 1.5px solid currentColor; border-radius: 2px; display: inline-block; }
+.pill[aria-pressed="true"] .chk { background: #fff; }
+.pillrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pillrow .lbl { font-size: .8rem; color: var(--muted); margin-right: 2px; }
+
+/* cards */
+.card {
+  background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--teal); border-radius: 10px;
+  padding: 14px 16px; box-shadow: 0 1px 3px rgba(18,52,77,.06); min-width: 0;
+}
+.card.navy { border-top-color: var(--navy); }
+.card.river { border-top-color: var(--river); }
+.card.alert { border-top-color: var(--alert); }
+.card h2 { margin: 0 0 8px; font-size: 1.05rem; color: var(--navy); }
+.card h3 { margin: 14px 0 6px; font-size: .92rem; color: var(--teal); }
+.note { background: var(--sand); border-left: 5px solid var(--teal); border-radius: 8px; padding: 8px 12px; font-size: .88rem; margin: 8px 0; }
+.note.warn { border-left-color: var(--alert); }
+.hint { font-size: .8rem; color: var(--muted); margin: 4px 0 0; }
+.meaning { font-size: .86rem; color: var(--ink); background: #f4f8fb; border-left: 4px solid var(--river); border-radius: 0 8px 8px 0; padding: 6px 10px; margin: 0 0 10px; }
+
+/* map tab layout */
+.map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; grid-template-areas: "map side" "place side"; gap: 14px; align-items: start; }
+.map-col { grid-area: map; min-width: 0; }
+.side { grid-area: side; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.place-col { grid-area: place; min-width: 0; }
+@media (max-width: 820px) {
+  .map-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "map" "side" "place"; }
+}
+.map-wrap {
+  position: relative; width: 100%; aspect-ratio: 16 / 10; min-height: 280px; max-height: 540px;
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #e9eef2; margin-top: 8px;
+}
+.map-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.map-wrap canvas:focus-visible { outline: 3px solid var(--teal); outline-offset: -3px; }
+.map-ctl { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.map-ctl .row { display: flex; gap: 4px; }
+.map-ctl button {
+  font: inherit; font-size: .8rem; background: rgba(255,255,255,.94); border: 1px solid #c9d6de; color: var(--navy);
+  border-radius: 14px; padding: 3px 10px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+.map-ctl button.sq { width: 30px; height: 30px; padding: 0; font-size: 1.05rem; font-weight: 700; border-radius: 8px; }
+.map-ctl button:hover { background: #fff; border-color: var(--teal); }
+.map-tip {
+  position: absolute; pointer-events: none; display: none; background: rgba(255,255,255,.97); border: 1px solid #c9d6de;
+  border-radius: 8px; padding: 6px 9px; font-size: .8rem; line-height: 1.35; box-shadow: 0 2px 8px rgba(18,52,77,.15);
+  max-width: 230px; z-index: 5; color: var(--ink);
+}
+.map-tip b { color: var(--navy); }
+.map-help { position: absolute; left: 8px; bottom: 6px; font-size: .72rem; color: var(--muted); background: rgba(255,255,255,.8); border-radius: 6px; padding: 1px 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: flex-start; margin-top: 8px; font-size: .8rem; color: var(--muted); }
+.legend .lg { min-width: 200px; flex: 1 1 220px; max-width: 360px; }
+.legend .lg-title { font-weight: 600; color: var(--ink); font-size: .8rem; margin-bottom: 3px; }
+.legend .ramp { height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,.08); }
+.legend .ticks { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.legend .dots { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.legend .dot { display: inline-block; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+.scale-toggle { margin-top: 5px; }
+.scale-toggle .pill { font-size: .76rem; padding: 2px 9px; }
+
+/* scenario panel */
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.ctl { margin-top: 12px; }
+.ctl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ctl label, .ctl .lab { font-size: .88rem; font-weight: 600; color: var(--navy); }
+.ctl output { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); font-size: .9rem; }
+input[type="range"] { width: 100%; accent-color: var(--teal); margin: 4px 0 0; }
+select, input[type="search"] {
+  font: inherit; font-size: .88rem; padding: 4px 8px; border: 1px solid #c9d6de; border-radius: 8px; background: #fff; color: var(--ink);
+}
+details.adv { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+details.adv summary { cursor: pointer; color: var(--teal); font-size: .86rem; font-weight: 600; }
+.seg { border: 0; padding: 0; margin: 12px 0 0; }
+.seg legend { font-size: .88rem; font-weight: 600; color: var(--navy); padding: 0; margin-bottom: 4px; }
+.badge { display: inline-block; font-size: .72rem; padding: 1px 8px; border-radius: 10px; background: #fdebd2; color: #7a4a00; font-weight: 600; }
+.badge.study { background: #dcecf0; color: var(--navy); }
+
+/* place card */
+.place-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.place-head h2 { margin: 0; }
+.place-sub { font-size: .84rem; color: var(--muted); }
+.risk-big { font-size: 1.9rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.riskbar { position: relative; height: 12px; border-radius: 6px; background: #eef2f4; margin: 6px 0 2px; overflow: hidden; }
+.riskbar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+.riskbar .base { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--navy); }
+.riskbar-scale { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); }
+.place-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 22px; }
+@media (max-width: 560px) { .place-grid { grid-template-columns: minmax(0, 1fr); } }
+.drv { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(70px, 1fr); gap: 3px 8px; align-items: center; font-size: .8rem; }
+.drv .nm { overflow: hidden; text-overflow: ellipsis; }
+.drv .nm small { color: var(--muted); }
+.drv .trk { position: relative; height: 10px; }
+.drv .trk::before { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: #b8c4cc; }
+.drv .bar { position: absolute; top: 1px; height: 8px; border-radius: 2px; }
+.drv .bar.up { left: 50%; background: var(--alert); }
+.drv .bar.dn { right: 50%; background: var(--teal); }
+.facts { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.facts td { padding: 2px 0; border-bottom: 1px solid #f0f3f5; vertical-align: top; }
+.facts td:last-child { text-align: right; font-variant-numeric: tabular-nums; padding-left: 8px; white-space: nowrap; }
+.evlist { list-style: none; padding: 0; margin: 0; font-size: .8rem; }
+.evlist li { padding: 3px 0; border-bottom: 1px solid #f0f3f5; }
+.evlist .hc { color: var(--alert); font-weight: 600; }
+.copyrow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.copyrow .status { font-size: .8rem; color: var(--teal); }
+
+/* tables */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; }
+.toolbar label { font-size: .86rem; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+table.data { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
+table.data th { background: var(--head); color: var(--navy); text-align: left; font-weight: 600; padding: 0; white-space: nowrap; position: sticky; top: 0; }
+table.data th button { font: inherit; background: none; border: 0; color: inherit; padding: 7px 8px; cursor: pointer; width: 100%; text-align: inherit; }
+table.data th.num, table.data td.num { text-align: right; }
+table.data th .arr { color: var(--teal); font-size: .75em; margin-left: 2px; }
+table.data td { padding: 5px 8px; border-top: 1px solid #edf1f4; white-space: nowrap; }
+table.data tbody tr.click { cursor: pointer; }
+table.data tbody tr.click:hover { background: #f4f8fb; }
+table.data tbody tr.study td:first-child { font-weight: 600; color: var(--navy); }
+.ibar { display: inline-block; width: 60px; height: 8px; background: #eef2f4; border-radius: 4px; vertical-align: middle; margin-left: 6px; position: relative; overflow: hidden; }
+.ibar > span { position: absolute; left: 0; top: 0; bottom: 0; }
+.scroll-y { max-height: 560px; overflow: auto; }
+
+/* helene */
+.hel-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; align-items: start; }
+@media (max-width: 820px) { .hel-layout { grid-template-columns: minmax(0, 1fr); } }
+.kv { display: grid; grid-template-columns: auto auto; gap: 2px 12px; font-size: .86rem; justify-content: start; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rho { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; font-size: .86rem; align-items: center; }
+.rho .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* about */
+.about-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 820px) { .about-grid { grid-template-columns: minmax(0, 1fr); } }
+.about-grid .wide { grid-column: 1 / -1; }
+.coef { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(90px, 1fr) minmax(0, 1.2fr); gap: 3px 10px; align-items: center; font-size: .82rem; }
+.coef .grp { grid-column: 1 / -1; font-weight: 700; color: var(--teal); margin-top: 8px; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+.coef .trk { position: relative; height: 12px; }
+.coef .trk::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: #9fb0bb; }
+.coef .bar { position: absolute; top: 2px; height: 8px; border-radius: 2px; }
+.coef .bar.up { left: 50%; background: var(--alert); }
+.coef .bar.dn { right: 50%; background: var(--teal); }
+.coef .dir { color: var(--muted); font-size: .76rem; }
+.hbar { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(100px, 2fr) auto; gap: 5px 10px; align-items: center; font-size: .84rem; }
+.hbar .trk { position: relative; height: 14px; background: #f0f3f5; border-radius: 3px; }
+.hbar .trk > span { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; }
+.hbar .trk > i { position: absolute; top: 6px; height: 2px; background: var(--ink); }
+.hbar .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ci .trk { background: none; }
+.ci .trk::before { content: ""; position: absolute; top: -3px; bottom: -3px; width: 1px; background: #9fb0bb; left: var(--zero, 50%); }
+.ci .trk > b { position: absolute; top: 3px; width: 8px; height: 8px; border-radius: 50%; margin-left: -4px; background: var(--navy); }
+.ci .trk > i { top: 6px; background: var(--navy); }
+ul.plain { margin: 4px 0; padding-left: 18px; font-size: .88rem; }
+ul.plain li { margin: 3px 0; }
+footer.foot { color: var(--muted); font-size: .78rem; margin: 22px 0 26px; }
+.empty { color: var(--muted); font-size: .88rem; font-style: italic; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="hg">
+  <div class="wrap">
+    <h1 id="title">Carolina HighGround explorer</h1>
+    <p class="sub" id="subtitle"></p>
+    <p class="lead" id="lead"></p>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div class="stat-grid" id="stats" aria-live="polite">
+    <div class="stat-card"><div class="stat-value" id="st-state">-</div><div class="stat-label">Statewide mean modeled risk</div></div>
+    <div class="stat-card navy"><div class="stat-value" id="st-study">-</div><div class="stat-label" id="st-study-lab">Study-area mean (Western NC)</div></div>
+    <div class="stat-card river"><div class="stat-value" id="st-share">-</div><div class="stat-label">Share of grid cells above 10%</div></div>
+    <div class="stat-card alert"><div class="stat-value" id="st-top">-</div><div class="stat-label" id="st-top-lab">Highest-risk county</div></div>
+  </div>
+  <p class="stat-caption" id="stat-caption"></p>
+
+  <div class="tabs" role="tablist" aria-label="Explorer sections">
+    <button class="tab" role="tab" id="tabbtn-map" aria-controls="tab-map" aria-selected="true">Map</button>
+    <button class="tab" role="tab" id="tabbtn-counties" aria-controls="tab-counties" aria-selected="false" tabindex="-1">Counties</button>
+    <button class="tab" role="tab" id="tabbtn-helene" aria-controls="tab-helene" aria-selected="false" tabindex="-1">Helene replay</button>
+    <button class="tab" role="tab" id="tabbtn-about" aria-controls="tab-about" aria-selected="false" tabindex="-1">About the model</button>
+  </div>
+
+  <!-- MAP -->
+  <section id="tab-map" role="tabpanel" aria-labelledby="tabbtn-map">
+    <div class="map-layout">
+      <div class="map-col">
+        <div class="pillrow" role="group" aria-label="Map layers" id="layers-map">
+          <span class="lbl">Color by:</span>
+          <button class="pill" data-layer="risk" aria-pressed="true">Modeled risk</button>
+          <button class="pill" data-layer="hrain" aria-pressed="false">Helene rainfall</button>
+          <button class="pill" data-layer="svi" aria-pressed="false">Social vulnerability (SVI)</button>
+          <button class="pill" data-layer="hand" aria-pressed="false">Height above stream (HAND)</button>
+          <span class="pillrow"><span class="lbl" style="margin-left:6px">Show:</span>
+          <button class="pill" data-toggle="events" aria-pressed="false"><span class="chk" aria-hidden="true"></span>Past events</button></span>
+        </div>
+        <div class="map-wrap" id="map-main">
+          <canvas tabindex="0" role="img" aria-label="Map of North Carolina. Drag or use arrow keys to pan, mouse wheel or plus and minus keys to zoom, click or press Enter to inspect a place."></canvas>
+          <div class="map-ctl">
+            <div class="row"><button class="sq" data-act="in" aria-label="Zoom in">+</button><button class="sq" data-act="out" aria-label="Zoom out">&minus;</button></div>
+            <button data-act="study">Western NC</button>
+            <button data-act="state">Statewide</button>
+          </div>
+          <div class="map-tip" aria-hidden="true"></div>
+          <div class="map-help">Click a place for details</div>
+        </div>
+        <div class="legend" id="legend-map"></div>
+      </div>
+
+      <aside class="side">
+        <div class="card" id="scenario">
+          <h2>Storm scenario</h2>
+          <p class="meaning" id="meaning"></p>
+          <div class="lab" style="font-size:.84rem;font-weight:600;color:var(--navy);margin-bottom:4px">Start from a preset</div>
+          <div class="presets" id="presets" role="group" aria-label="Scenario presets"></div>
+          <p class="hint" id="preset-desc"></p>
+
+          <div class="ctl">
+            <div class="ctl-head"><label for="rain-basic">Storm rainfall</label><output id="rain-basic-out" for="rain-basic"></output></div>
+            <input type="range" id="rain-basic">
+            <p class="hint" id="rain-basic-hint"></p>
+          </div>
+
+          <div class="ctl">
+            <div class="ctl-head"><label for="month">Month</label><span class="badge" id="peak-badge" hidden>Peak hurricane season</span></div>
+            <select id="month" style="margin-top:4px;width:100%"></select>
+          </div>
+
+          <details class="adv" id="adv">
+            <summary>Advanced rain inputs</summary>
+            <div class="ctl"><div class="ctl-head"><label for="rain-total">Storm total</label><output id="rain-total-out"></output></div><input type="range" id="rain-total"></div>
+            <div class="ctl"><div class="ctl-head"><label for="rain-max1">Wettest single day</label><output id="rain-max1-out"></output></div><input type="range" id="rain-max1"></div>
+            <div class="ctl"><div class="ctl-head"><label for="rain-ante">Rain in the prior 7 days</label><output id="rain-ante-out"></output></div><input type="range" id="rain-ante"></div>
+            <p class="hint">The wettest day cannot exceed the storm total; the sliders keep them consistent.</p>
+          </details>
+
+          <fieldset class="seg">
+            <legend>Local flood history</legend>
+            <div class="pillrow" role="radiogroup" aria-label="Local flood history">
+              <button class="pill" role="radio" data-hist="on" aria-checked="true">Recorded local flood history</button>
+              <button class="pill" role="radio" data-hist="off" aria-checked="false">Ignore history</button>
+            </div>
+            <p class="hint" id="hist-hint"></p>
+          </fieldset>
+        </div>
+      </aside>
+
+      <div class="place-col">
+        <div class="card river" id="place" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COUNTIES -->
+  <section id="tab-counties" role="tabpanel" aria-labelledby="tabbtn-counties" hidden>
+    <p class="meaning" id="counties-meaning"></p>
+    <div class="toolbar">
+      <label>Search <input type="search" id="cty-search" placeholder="County name" aria-label="Search counties"></label>
+      <label><input type="checkbox" id="cty-study"> Study area only</label>
+      <button class="pill" id="cty-csv">Download CSV</button>
+      <span class="hint" id="cty-count"></span>
+    </div>
+    <div class="tablewrap scroll-y"><table class="data" id="cty-table"><thead></thead><tbody></tbody></table></div>
+    <p class="hint">Modeled values use the scenario set on the Map tab. Event counts, deaths and damage are NOAA flood-related records for the whole data period. Click a row to see the county on the map.</p>
+  </section>
+
+  <!-- HELENE -->
+  <section id="tab-helene" role="tabpanel" aria-labelledby="tabbtn-helene" hidden>
+    <p class="meaning" id="hel-meaning"></p>
+    <div class="hel-layout">
+      <div style="min-width:0">
+        <div class="pillrow" role="group" aria-label="Helene map layers" id="layers-hel">
+          <span class="lbl">Color by:</span>
+          <button class="pill" data-layer="risk" aria-pressed="true">Modeled risk with Helene's rain</button>
+          <button class="pill" data-layer="hrain" aria-pressed="false">Helene rainfall</button>
+          <span class="pillrow"><span class="lbl" style="margin-left:6px">Show:</span>
+          <button class="pill" data-toggle="events" aria-pressed="true"><span class="chk" aria-hidden="true"></span>Helene-week events</button></span>
+        </div>
+        <div class="map-wrap" id="map-hel">
+          <canvas tabindex="0" role="img" aria-label="Map of the Helene replay. Drag or use arrow keys to pan, mouse wheel or plus and minus keys to zoom, click or press Enter to inspect a place."></canvas>
+          <div class="map-ctl">
+            <div class="row"><button class="sq" data-act="in" aria-label="Zoom in">+</button><button class="sq" data-act="out" aria-label="Zoom out">&minus;</button></div>
+            <button data-act="study">Western NC</button>
+            <button data-act="state">Statewide</button>
+          </div>
+          <div class="map-tip" aria-hidden="true"></div>
+          <div class="map-help">Click a place for details</div>
+        </div>
+        <div class="legend" id="legend-hel"></div>
+        <fieldset class="seg">
+          <legend>Local flood history in this replay</legend>
+          <div class="pillrow" role="radiogroup" aria-label="Local flood history in the Helene replay">
+            <button class="pill" role="radio" data-hhist="on" aria-checked="true">Recorded local flood history</button>
+            <button class="pill" role="radio" data-hhist="off" aria-checked="false">Ignore history</button>
+          </div>
+          <p class="hint" id="hel-hist-hint"></p>
+        </fieldset>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div class="card navy" id="hel-summary"></div>
+        <div class="card alert" id="hel-compare"></div>
+      </div>
+    </div>
+    <div class="card river" id="hel-place" style="margin-top:14px" aria-live="polite"></div>
+    <h3 style="color:var(--teal);margin:18px 0 6px;font-size:1rem">Counties: modeled risk vs. what NOAA recorded</h3>
+    <div class="toolbar">
+      <label><input type="checkbox" id="hel-study"> Study area only</label>
+      <label>NOAA rank by
+        <select id="hel-rankby">
+          <option value="helene_deaths">deaths</option>
+          <option value="helene_damage">damage</option>
+          <option value="helene_hc_events">high-consequence events</option>
+        </select>
+      </label>
+    </div>
+    <div class="tablewrap scroll-y"><table class="data" id="hel-table"><thead></thead><tbody></tbody></table></div>
+    <div class="note warn" id="hel-caveat" style="margin-top:12px"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="tab-about" role="tabpanel" aria-labelledby="tabbtn-about" hidden>
+    <div class="about-grid" id="about"></div>
+  </section>
+
+  <footer class="foot" id="foot"></footer>
+</main>
+
+<script>
+/*__EXPLORER_DATA__*/
+</script>
+<script>
+'use strict';
+/* Carolina HighGround explorer. Vanilla JS, no network. All numbers come from DATA. */
+
+// ---------------------------------------------------------------- data access + model
+var HAS_DATA = (typeof DATA !== 'undefined') && DATA && DATA.model && DATA.grid;
+const M = HAS_DATA ? DATA.model : { features: [], coef: {}, mean: {}, std: {}, median: {}, intercept: 0 };
+const FEAT_KEYS = M.features || [];
+const FEAT_META = {};
+((HAS_DATA && DATA.features) || []).forEach(function (f) { FEAT_META[f.key] = f; });
+const GROUP_LABEL = {};
+((HAS_DATA && DATA.groups) || []).forEach(function (g) { GROUP_LABEL[g.key] = g.label; });
+const GROUP_ORDER = ((HAS_DATA && DATA.groups) || []).map(function (g) { return g.key; });
+
+function isMissing(v) { return v === null || v === undefined || (typeof v === 'number' && isNaN(v)); }
+function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+function fillValue(key, v) { return isMissing(v) ? M.median[key] : v; }
+/** Standardized contribution of one feature: coef * (x - mean) / std (std of 0 or missing counts as 1). */
+function featureTerm(key, x) {
+  const sd = M.std[key];
+  const s = (typeof sd === 'number' && isFinite(sd) && sd !== 0) ? sd : 1;
+  return (M.coef[key] || 0) * (x - (M.mean[key] || 0)) / s;
+}
+/**
+ * The model, exactly as in the contract:
+ * p = sigmoid(intercept + sum_j coef_j * (x_j - mean_j) / std_j), missing x_j -> median_j, no clipping.
+ * values: { featureKey: value in model units (mm, m, ...) }.
+ */
+function scoreRisk(values) {
+  let z = M.intercept;
+  for (let i = 0; i < FEAT_KEYS.length; i++) {
+    const k = FEAT_KEYS[i];
+    z += featureTerm(k, fillValue(k, values[k]));
+  }
+  return sigmoid(z);
+}
+/** Per-feature contributions on the log-odds scale, from the same inputs as scoreRisk. */
+function contributions(values) {
+  return FEAT_KEYS.map(function (k) {
+    const raw = values[k];
+    const x = fillValue(k, raw);
+    return { key: k, value: x, filled: isMissing(raw), c: featureTerm(k, x) };
+  });
+}
+
+const SCEN_KEYS = ['rain_event_total_mm', 'rain_max_1day_mm', 'rain_antecedent_7d_mm', 'event_month', 'peak_hurricane_season'];
+function isPeakMonth(m) { return m >= 8 && m <= 10; }
+function groupOf(key) { const f = FEAT_META[key]; return f ? f.group : null; }
+function isHistoryKey(key) {
+  const g = String(groupOf(key) || '').toLowerCase();
+  const gl = String(GROUP_LABEL[groupOf(key)] || '').toLowerCase();
+  return g.indexOf('hist') >= 0 || gl.indexOf('hist') >= 0 || key.indexOf('nearby_') === 0;
+}
+/** scenario inputs -> model-unit values for the season and rainfall features */
+function scenarioValues(sc) {
+  return {
+    rain_event_total_mm: sc.total, rain_max_1day_mm: sc.max1, rain_antecedent_7d_mm: sc.ante,
+    event_month: sc.month, peak_hurricane_season: isPeakMonth(sc.month) ? 1 : 0
+  };
+}
+
+// ---------------------------------------------------------------- grid
+const G = HAS_DATA ? DATA.grid : { lon: [], lat: [], county: [] };
+const N = (G.lon || []).length;
+const GRID_META = (HAS_DATA && DATA.meta && DATA.meta.grid) || {};
+function inferStep(arr) {
+  const u = Array.from(new Set(arr.filter(function (v) { return !isMissing(v); }))).sort(function (a, b) { return a - b; });
+  let best = Infinity;
+  for (let i = 1; i < u.length; i++) { const d = u[i] - u[i - 1]; if (d > 1e-6 && d < best) best = d; }
+  return isFinite(best) ? best : 0.04;
+}
+const DLON = GRID_META.dlon || (N ? inferStep(G.lon) : 0.04);
+const DLAT = GRID_META.dlat || (N ? inferStep(G.lat) : 0.04);
+const COL = {};   // key -> Float64Array (NaN for missing) or null
+function gridCol(key) {
+  if (key in COL) return COL[key];
+  const src = G[key];
+  if (!Array.isArray(src) || src.length !== N) { COL[key] = null; return null; }
+  const a = new Float64Array(N);
+  for (let k = 0; k < N; k++) a[k] = isMissing(src[k]) ? NaN : +src[k];
+  COL[key] = a;
+  return a;
+}
+function gridVal(key, k) { const c = gridCol(key); return c ? c[k] : NaN; }
+const CELL_COUNTY = new Int32Array(N);
+for (let k = 0; k < N; k++) CELL_COUNTY[k] = isMissing(G.county[k]) ? -1 : G.county[k];
+
+let MIN_LON = Infinity, MAX_LAT = -Infinity, NX = 0, NY = 0;
+for (let k = 0; k < N; k++) { if (G.lon[k] < MIN_LON) MIN_LON = G.lon[k]; if (G.lat[k] > MAX_LAT) MAX_LAT = G.lat[k]; }
+const CELL_CR = new Int32Array(N * 2);
+for (let k = 0; k < N; k++) {
+  const c = Math.round((G.lon[k] - MIN_LON) / DLON), r = Math.round((MAX_LAT - G.lat[k]) / DLAT);
+  CELL_CR[2 * k] = c; CELL_CR[2 * k + 1] = r;
+  if (c + 1 > NX) NX = c + 1;
+  if (r + 1 > NY) NY = r + 1;
+}
+const CELL_AT = new Int32Array(Math.max(1, NX * NY)).fill(-1);
+for (let k = 0; k < N; k++) CELL_AT[CELL_CR[2 * k + 1] * NX + CELL_CR[2 * k]] = k;
+function cellAtLonLat(lon, lat) {
+  const c = Math.round((lon - MIN_LON) / DLON), r = Math.round((MAX_LAT - lat) / DLAT);
+  if (c < 0 || r < 0 || c >= NX || r >= NY) return -1;
+  return CELL_AT[r * NX + c];
+}
+
+/** Model-unit feature values for cell k under a scenario (sc) and history choice. */
+function cellValues(k, sc, historyOn) {
+  const s = scenarioValues(sc);
+  const v = {};
+  for (let i = 0; i < FEAT_KEYS.length; i++) {
+    const key = FEAT_KEYS[i];
+    if (key in s) v[key] = s[key];
+    else if (!historyOn && isHistoryKey(key)) v[key] = M.mean[key];   // "ignore history": contribution 0
+    else { const x = gridVal(key, k); v[key] = isNaN(x) ? null : x; }
+  }
+  return v;
+}
+
+// Precomputed static parts of the logit for every cell (fast path; must equal scoreRisk(cellValues)).
+const STATIC_KEYS = FEAT_KEYS.filter(function (k) { return SCEN_KEYS.indexOf(k) < 0 && !isHistoryKey(k); });
+const HIST_KEYS = FEAT_KEYS.filter(function (k) { return SCEN_KEYS.indexOf(k) < 0 && isHistoryKey(k); });
+const BASE = new Float64Array(N), HIST = new Float64Array(N), HISTH = new Float64Array(N);
+const PRE_HEL = !!(DATA.grid && DATA.grid.pre_helene_minor_25km && DATA.grid.pre_helene_severe_25km);
+for (let k = 0; k < N; k++) {
+  let z = M.intercept;
+  for (let i = 0; i < STATIC_KEYS.length; i++) { const key = STATIC_KEYS[i]; const x = gridVal(key, k); z += featureTerm(key, fillValue(key, isNaN(x) ? null : x)); }
+  BASE[k] = z;
+  let h = 0;
+  for (let i = 0; i < HIST_KEYS.length; i++) { const key = HIST_KEYS[i]; const x = gridVal(key, k); h += featureTerm(key, fillValue(key, isNaN(x) ? null : x)); }
+  HIST[k] = h;
+  if (PRE_HEL) {
+    let hh = 0;
+    for (let i = 0; i < HIST_KEYS.length; i++) { const key = HIST_KEYS[i]; const col = key.indexOf('severe') >= 0 ? DATA.grid.pre_helene_severe_25km : DATA.grid.pre_helene_minor_25km; const x = col[k]; hh += featureTerm(key, fillValue(key, x == null ? null : x)); }
+    HISTH[k] = hh;
+  } else HISTH[k] = h;
+}
+function scenarioTerm(sc) {
+  const s = scenarioValues(sc);
+  let z = 0;
+  for (let i = 0; i < FEAT_KEYS.length; i++) { const k = FEAT_KEYS[i]; if (k in s) z += featureTerm(k, fillValue(k, s[k])); }
+  return z;
+}
+/** Fill out[] with the probability for every cell under scenario sc. */
+function scenarioRisk(out, sc, historyOn) {
+  const s = scenarioTerm(sc);
+  for (let k = 0; k < N; k++) out[k] = sigmoid(BASE[k] + (historyOn ? HIST[k] : 0) + s);
+  return out;
+}
+
+// Helene: each cell gets its own Helene-week rain, month 9.
+const HEL_KEYS = ['helene_rain_total_mm', 'helene_rain_max_1day_mm', 'helene_rain_antecedent_7d_mm'];
+const HAS_HELENE = HEL_KEYS.every(function (k) { return gridCol(k) !== null; });
+const HELENE_MONTH = 9;
+function heleneScenario(k) {
+  return { total: gridVal('helene_rain_total_mm', k), max1: gridVal('helene_rain_max_1day_mm', k),
+           ante: gridVal('helene_rain_antecedent_7d_mm', k), month: HELENE_MONTH };
+}
+function heleneOk(k) { return HAS_HELENE && !isNaN(gridVal('helene_rain_total_mm', k)) && !isNaN(gridVal('helene_rain_max_1day_mm', k)) && !isNaN(gridVal('helene_rain_antecedent_7d_mm', k)); }
+function heleneRisk(out, historyOn) {
+  for (let k = 0; k < N; k++) {
+    out[k] = heleneOk(k) ? sigmoid(BASE[k] + (historyOn ? HISTH[k] : 0) + scenarioTerm(heleneScenario(k))) : NaN;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- formatting
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function num(v) { return typeof v === 'number' && isFinite(v); }
+function fmtPct(p, d) {
+  if (!num(p)) return 'n/a';
+  if (d !== undefined) return (p * 100).toFixed(d) + '%';
+  if (p > 0 && p < 0.001) return '<0.1%';
+  if (p > 0.995 && p < 1) return '>99%';
+  return (p * 100).toFixed(p < 0.1 ? 1 : 0) + '%';
+}
+function fmtNum(v, d) { if (!num(v)) return 'n/a'; return v.toLocaleString('en-US', { maximumFractionDigits: d === undefined ? 0 : d, minimumFractionDigits: d === undefined ? 0 : d }); }
+function fmt3(v) { return num(v) ? v.toFixed(3) : 'n/a'; }
+function fmtMoney(v) {
+  if (!num(v)) return 'n/a';
+  const a = Math.abs(v);
+  if (a >= 1e9) return '$' + (v / 1e9).toFixed(a >= 1e10 ? 0 : 1) + 'B';
+  if (a >= 1e6) return '$' + (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+  if (a >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'K';
+  return '$' + v.toFixed(0);
+}
+function mmToIn(mm) { return mm / 25.4; }
+function fmtIn(mm) { return num(mm) ? mmToIn(mm).toFixed(1) + ' in' : 'n/a'; }
+function oneIn(p) { if (!num(p) || p <= 0) return ''; const n = Math.round(1 / p); return n <= 1 ? 'nearly every' : 'about 1 in ' + n; }
+function dispScale(f) { return (f && num(+f.display_scale) && +f.display_scale !== 0) ? +f.display_scale : 1; }
+function featLabel(key) { const f = FEAT_META[key]; return f ? f.label : key; }
+function fmtFeature(key, x) {
+  const f = FEAT_META[key];
+  if (!num(x)) return 'n/a';
+  if (key === 'event_month') return MONTHS[Math.round(x) - 1] || String(x);
+  if (key === 'peak_hurricane_season') return x >= 0.5 ? 'yes' : 'no';
+  const v = x * dispScale(f);
+  const u = f ? (f.display_unit || '') : '';
+  const d = Math.abs(v) >= 100 ? 0 : (Math.abs(v) >= 10 ? 1 : (u === 'in' ? 1 : 2));
+  return fmtNum(v, d) + (u ? (u === '%' ? '%' : ' ' + u) : '');
+}
+function yearsOf(filter) {
+  let lo = Infinity, hi = -Infinity;
+  ((HAS_DATA && DATA.events) || []).forEach(function (e) {
+    if (!e.date || !filter(e)) return;
+    const y = +String(e.date).slice(0, 4);
+    if (y < lo) lo = y; if (y > hi) hi = y;
+  });
+  return isFinite(lo) ? (lo === hi ? String(lo) : lo + '-' + hi) : null;
+}
+const TRAIN_YEARS = yearsOf(function (e) { return e.split !== 'test'; });
+const TEST_YEARS = yearsOf(function (e) { return e.split === 'test'; });
+function thresholdText() {
+  const d = HAS_DATA && DATA.meta && DATA.meta.hc_definition;
+  const m = d ? String(d).match(/\$[\d,.]+(\s?(million|thousand|[MK]))?/i) : null;
+  return m ? m[0] : null;
+}
+function meaningText() {
+  const t = thresholdText();
+  return 'Estimated chance that a flood-related event here is high-consequence (a death or damage above ' +
+    (t || 'the damage threshold') + '), if one occurs.';
+}
+
+// ---------------------------------------------------------------- colors
+function hexRgb(h) { h = h.replace('#', ''); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
+function makeLut(stops) {
+  const lut = new Uint8Array(256 * 3);
+  const s = stops.map(function (x) { return [x[0], hexRgb(x[1])]; });
+  for (let i = 0; i < 256; i++) {
+    const t = i / 255;
+    let j = 0;
+    while (j < s.length - 2 && t > s[j + 1][0]) j++;
+    const a = s[j], b = s[j + 1], u = Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0])));
+    for (let c = 0; c < 3; c++) lut[i * 3 + c] = Math.round(a[1][c] + (b[1][c] - a[1][c]) * u);
+  }
+  return lut;
+}
+const RAMPS = {
+  risk: [[0, '#f7f2df'], [0.22, '#fde49b'], [0.45, '#f9b25a'], [0.72, '#e2622f'], [1, '#b2182b']],
+  rain: [[0, '#f2f7fb'], [0.25, '#c6dcef'], [0.5, '#7fb6dc'], [0.75, '#3a86bf'], [1, '#12344d']],
+  svi: [[0, '#f4f2f8'], [0.33, '#cbc8e2'], [0.66, '#9690c4'], [1, '#54278f']],
+  hand: [[0, '#0b3c6e'], [0.25, '#2f78b4'], [0.55, '#8dbfdf'], [1, '#f4f8fb']]
+};
+const LUT = {}; Object.keys(RAMPS).forEach(function (k) { LUT[k] = makeLut(RAMPS[k]); });
+function rampCss(name) { return 'linear-gradient(90deg,' + RAMPS[name].map(function (s) { return s[1] + ' ' + (s[0] * 100) + '%'; }).join(',') + ')'; }
+function lutCss(name, t) { const i = Math.max(0, Math.min(255, Math.round(t * 255))) * 3, l = LUT[name]; return 'rgb(' + l[i] + ',' + l[i + 1] + ',' + l[i + 2] + ')'; }
+const RISK_ABS_MAX = 0.5;
+
+// ---------------------------------------------------------------- geography
+const KX = Math.cos(35.5 * Math.PI / 180);
+const COUNTY_STATS = (HAS_DATA && DATA.countyStats) || [];
+const CS_BY_IDX = {}; COUNTY_STATS.forEach(function (c) { CS_BY_IDX[c.idx] = c; });
+const COUNTY_GEO = {};    // idx -> { path: Path2D (world), bbox, study }
+let NC_PATH = null, STATE_BOUNDS = null, STUDY_BOUNDS = null;
+function extend(b, lon, lat) { if (lon < b.west) b.west = lon; if (lon > b.east) b.east = lon; if (lat < b.south) b.south = lat; if (lat > b.north) b.north = lat; }
+function newBounds() { return { west: Infinity, east: -Infinity, south: Infinity, north: -Infinity }; }
+function buildGeo() {
+  if (typeof Path2D === 'undefined') return;
+  NC_PATH = new Path2D();
+  STATE_BOUNDS = newBounds(); STUDY_BOUNDS = newBounds();
+  const feats = (DATA.counties && DATA.counties.features) || [];
+  feats.forEach(function (f, i) {
+    const p = f.properties || {};
+    const idx = (p.idx !== undefined && p.idx !== null) ? p.idx : i;
+    const g = f.geometry; if (!g) return;
+    const polys = g.type === 'Polygon' ? [g.coordinates] : (g.type === 'MultiPolygon' ? g.coordinates : []);
+    const path = new Path2D(), bb = newBounds();
+    polys.forEach(function (poly) {
+      poly.forEach(function (ring) {
+        ring.forEach(function (pt, j) {
+          const X = pt[0] * KX, Y = -pt[1];
+          if (j === 0) { path.moveTo(X, Y); NC_PATH.moveTo(X, Y); } else { path.lineTo(X, Y); NC_PATH.lineTo(X, Y); }
+          extend(bb, pt[0], pt[1]);
+        });
+        path.closePath(); NC_PATH.closePath();
+      });
+    });
+    const study = !!(p.study || (CS_BY_IDX[idx] && CS_BY_IDX[idx].study));
+    COUNTY_GEO[idx] = { path: path, bbox: bb, study: study, name: p.name || (CS_BY_IDX[idx] && CS_BY_IDX[idx].name) };
+    extend(STATE_BOUNDS, bb.west, bb.south); extend(STATE_BOUNDS, bb.east, bb.north);
+    if (study) { extend(STUDY_BOUNDS, bb.west, bb.south); extend(STUDY_BOUNDS, bb.east, bb.north); }
+  });
+  if (!isFinite(STATE_BOUNDS.west) && N) {
+    for (let k = 0; k < N; k++) extend(STATE_BOUNDS, G.lon[k], G.lat[k]);
+  }
+  if (!isFinite(STUDY_BOUNDS.west)) STUDY_BOUNDS = null;
+}
+// label point and cell list per county
+const COUNTY_CELLS = {};
+for (let k = 0; k < N; k++) { const c = CELL_COUNTY[k]; if (c < 0) continue; (COUNTY_CELLS[c] = COUNTY_CELLS[c] || []).push(k); }
+function countyLabelPoint(idx) {
+  const cells = COUNTY_CELLS[idx]; if (!cells || !cells.length) return null;
+  let x = 0, y = 0; cells.forEach(function (k) { x += G.lon[k]; y += G.lat[k]; });
+  x /= cells.length; y /= cells.length;
+  let best = cells[0], bd = Infinity;
+  cells.forEach(function (k) { const d = (G.lon[k] - x) * (G.lon[k] - x) * KX * KX + (G.lat[k] - y) * (G.lat[k] - y); if (d < bd) { bd = d; best = k; } });
+  return best;
+}
+const COUNTY_LABEL_CELL = {};
+Object.keys(COUNTY_CELLS).forEach(function (c) { COUNTY_LABEL_CELL[c] = countyLabelPoint(+c); });
+function isStudyCounty(idx) { const c = CS_BY_IDX[idx]; return !!(c && c.study) || !!(COUNTY_GEO[idx] && COUNTY_GEO[idx].study); }
+function countyName(idx) { const c = CS_BY_IDX[idx]; return c ? c.name : (COUNTY_GEO[idx] ? COUNTY_GEO[idx].name : 'Outside county data'); }
+function countyRegion(idx) { const c = CS_BY_IDX[idx]; return c && c.region ? c.region : null; }
+
+// events with coordinates
+const EVENTS = ((HAS_DATA && DATA.events) || []).filter(function (e) { return num(e.lat) && num(e.lon); });
+function evRadius(e) { const d = num(e.damage) ? e.damage : 0; const r = 1.6 + 0.75 * Math.log10(1 + d / 1e4); return Math.min(e.hc ? r + 1.4 : r, 8); }
+EVENTS.sort(function (a, b) { return (a.hc - b.hc) || ((a.damage || 0) - (b.damage || 0)); });
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function eventsNear(lat, lon, km, filter) {
+  const out = [];
+  for (let i = 0; i < EVENTS.length; i++) {
+    const e = EVENTS[i];
+    if (Math.abs(e.lat - lat) > km / 100 || (filter && !filter(e))) continue;
+    const d = haversineKm(lat, lon, e.lat, e.lon);
+    if (d <= km) out.push(e);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- aggregation
+function countyAgg(P) {
+  const sum = {}, cnt = {}, hi = {};
+  for (let k = 0; k < N; k++) {
+    const c = CELL_COUNTY[k], p = P[k];
+    if (c < 0 || isNaN(p)) continue;
+    sum[c] = (sum[c] || 0) + p; cnt[c] = (cnt[c] || 0) + 1; if (p > 0.1) hi[c] = (hi[c] || 0) + 1;
+  }
+  const out = {};
+  Object.keys(cnt).forEach(function (c) { out[c] = { mean: sum[c] / cnt[c], share10: (hi[c] || 0) / cnt[c], n: cnt[c] }; });
+  return out;
+}
+function summaryStats(P) {
+  let s = 0, n = 0, ss = 0, sn = 0, above = 0;
+  for (let k = 0; k < N; k++) {
+    const p = P[k]; if (isNaN(p)) continue;
+    s += p; n++; if (p > 0.1) above++;
+    if (CELL_COUNTY[k] >= 0 && isStudyCounty(CELL_COUNTY[k])) { ss += p; sn++; }
+  }
+  const agg = countyAgg(P);
+  let top = null;
+  Object.keys(agg).forEach(function (c) { if (!top || agg[c].mean > agg[top].mean) top = c; });
+  return { state: n ? s / n : NaN, study: sn ? ss / sn : NaN, share10: n ? above / n : NaN, top: top === null ? null : +top, topMean: top === null ? NaN : agg[top].mean, agg: agg };
+}
+function rankAvg(vals) {      // average ranks, 1 = smallest
+  const idx = vals.map(function (v, i) { return i; }).sort(function (a, b) { return vals[a] - vals[b]; });
+  const r = new Array(vals.length);
+  let i = 0;
+  while (i < idx.length) {
+    let j = i; while (j + 1 < idx.length && vals[idx[j + 1]] === vals[idx[i]]) j++;
+    const avg = (i + j) / 2 + 1; for (let t = i; t <= j; t++) r[idx[t]] = avg; i = j + 1;
+  }
+  return r;
+}
+function spearman(x, y) {
+  const n = x.length; if (n < 3) return NaN;
+  const rx = rankAvg(x), ry = rankAvg(y);
+  let mx = 0, my = 0; for (let i = 0; i < n; i++) { mx += rx[i]; my += ry[i]; } mx /= n; my /= n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) { const a = rx[i] - mx, b = ry[i] - my; sxy += a * b; sxx += a * a; syy += b * b; }
+  return (sxx > 0 && syy > 0) ? sxy / Math.sqrt(sxx * syy) : NaN;
+}
+
+// ---------------------------------------------------------------- state
+function featRange(key, fallback) {
+  const f = FEAT_META[key] || {};
+  return { min: num(f.min) ? f.min : fallback[0], max: num(f.max) ? f.max : fallback[1], step: num(f.step) ? f.step : fallback[2], scale: dispScale(f) };
+}
+const SC = (HAS_DATA && DATA.scenario) || {};
+const RATIO = num(SC.ratio_max1day_to_total) ? SC.ratio_max1day_to_total : null;
+const ANTE_DEFAULT = num(SC.antecedent_default_mm) ? SC.antecedent_default_mm : (num(M.median.rain_antecedent_7d_mm) ? M.median.rain_antecedent_7d_mm : 0);
+const PRESETS = (SC.presets || []).filter(function (p) { return p && p.values; });
+const state = {
+  sc: { total: 0, max1: 0, ante: 0, month: 7 },
+  history: true, preset: null, layer: 'risk', events: false, relative: false,
+  selected: -1, helSelected: -1, helLayer: 'risk', helEvents: true, helHistory: true, helRelative: false,
+  tab: 'map'
+};
+function applyPreset(p) {
+  const v = p.values;
+  state.sc.total = num(v.rain_event_total_mm) ? v.rain_event_total_mm : state.sc.total;
+  state.sc.max1 = num(v.rain_max_1day_mm) ? v.rain_max_1day_mm : (RATIO !== null ? RATIO * state.sc.total : state.sc.max1);
+  state.sc.ante = num(v.rain_antecedent_7d_mm) ? v.rain_antecedent_7d_mm : ANTE_DEFAULT;
+  state.sc.month = num(v.event_month) ? Math.round(v.event_month) : state.sc.month;
+  state.preset = p.id;
+}
+(function initScenario() {
+  const start = PRESETS.filter(function (p) { return p.id === 'typical'; })[0] || PRESETS[0];
+  if (start) applyPreset(start);
+  else {
+    state.sc.total = M.median.rain_event_total_mm || 25;
+    state.sc.max1 = M.median.rain_max_1day_mm || state.sc.total * (RATIO || 0.6);
+    state.sc.ante = ANTE_DEFAULT;
+    state.sc.month = Math.round(M.median.event_month || 7);
+  }
+})();
+const P_SCEN = new Float32Array(N);
+const P_HEL = new Float32Array(N);
+let STATS_SCEN = null, STATS_HEL = null;
+function scenarioSummary(sc, historyOn) {
+  return fmtIn(sc.total) + ' storm (wettest day ' + fmtIn(sc.max1) + ', ' + fmtIn(sc.ante) + ' in the prior week), ' +
+    MONTHS[sc.month - 1] + ', ' + (historyOn ? 'recorded local flood history' : 'local flood history ignored');
+}
+
+// ---------------------------------------------------------------- map view
+let HILL_IMG = null;
+function MapView(root, opts) {
+  this.root = root; this.opts = opts;
+  this.canvas = root.querySelector('canvas');
+  this.ctx = this.canvas.getContext('2d');
+  this.tip = root.querySelector('.map-tip');
+  this.s = 1; this.tx = 0; this.ty = 0; this.w = 0; this.h = 0; this.dpr = 1; this.fitted = false; this.raf = 0;
+  this.cellCanvas = document.createElement('canvas'); this.cellCanvas.width = Math.max(1, NX); this.cellCanvas.height = Math.max(1, NY);
+  this.cellCtx = this.cellCanvas.getContext('2d');
+  this.cellImg = this.cellCtx.createImageData(Math.max(1, NX), Math.max(1, NY));
+  this.highlight = -1; this.selected = -1; this.pending = null;
+  this.pointers = new Map(); this.drag = null; this.pinch = null;
+  this.bind();
+  const self = this;
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(function () { self.resize(); }).observe(this.canvas);
+  window.addEventListener('resize', function () { self.resize(); });
+}
+MapView.prototype.resize = function () {
+  const r = this.canvas.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  let center = null;
+  if (this.fitted && this.w) center = this.toLonLat(this.w / 2, this.h / 2);
+  const oldW = this.w;
+  this.dpr = dpr; this.w = r.width; this.h = r.height;
+  this.canvas.width = Math.round(r.width * dpr); this.canvas.height = Math.round(r.height * dpr);
+  if (!this.fitted) { this.fit(this.pending || this.opts.initial()); this.pending = null; }
+  else if (center) {
+    if (oldW) this.s *= this.w / oldW;
+    this.tx = this.w / 2 - center[0] * KX * this.s; this.ty = this.h / 2 + center[1] * this.s;
+  }
+  this.draw();
+};
+MapView.prototype.scaleFor = function (b) {
+  const pad = 14;
+  return Math.min((this.w - 2 * pad) / Math.max(1e-6, (b.east - b.west) * KX), (this.h - 2 * pad) / Math.max(1e-6, b.north - b.south));
+};
+MapView.prototype.fit = function (b) {
+  if (!b) return;
+  if (!this.w) { this.pending = b; return; }
+  this.s = this.scaleFor(b);
+  this.tx = this.w / 2 - this.s * (b.west + b.east) / 2 * KX;
+  this.ty = this.h / 2 + this.s * (b.south + b.north) / 2;
+  this.fitted = true; this.request();
+};
+MapView.prototype.limits = function () { const s0 = STATE_BOUNDS ? this.scaleFor(STATE_BOUNDS) : 50; return [s0 * 0.6, s0 * 40]; };
+MapView.prototype.toScreen = function (lon, lat) { return [lon * KX * this.s + this.tx, -lat * this.s + this.ty]; };
+MapView.prototype.toLonLat = function (x, y) { return [(x - this.tx) / this.s / KX, -(y - this.ty) / this.s]; };
+MapView.prototype.zoomAt = function (f, x, y) {
+  const lim = this.limits(); const ns = Math.max(lim[0], Math.min(lim[1], this.s * f)); f = ns / this.s;
+  this.tx = x - (x - this.tx) * f; this.ty = y - (y - this.ty) * f; this.s = ns; this.request();
+};
+MapView.prototype.pan = function (dx, dy) { this.tx += dx; this.ty += dy; this.request(); };
+MapView.prototype.request = function () {
+  const self = this;
+  if (this.raf) return;
+  this.raf = requestAnimationFrame(function () { self.raf = 0; self.draw(); });
+};
+/** colorFn(k) -> [r,g,b,a] packed into the cell image; called only when inputs change. */
+MapView.prototype.setCells = function (colorFn) {
+  const d = this.cellImg.data;
+  d.fill(0);
+  if (colorFn) {
+    const rgba = [0, 0, 0, 0];
+    for (let k = 0; k < N; k++) {
+      if (!colorFn(k, rgba)) continue;
+      const o = (CELL_CR[2 * k + 1] * NX + CELL_CR[2 * k]) * 4;
+      d[o] = rgba[0]; d[o + 1] = rgba[1]; d[o + 2] = rgba[2]; d[o + 3] = rgba[3];
+    }
+  }
+  this.cellCtx.putImageData(this.cellImg, 0, 0);
+  this.request();
+};
+MapView.prototype.draw = function () {
+  const ctx = this.ctx, dpr = this.dpr, s = this.s;
+  if (!this.w) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, this.w, this.h);
+  ctx.fillStyle = '#e9eef2'; ctx.fillRect(0, 0, this.w, this.h);
+  // world layer
+  ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * this.tx, dpr * this.ty);
+  ctx.save();
+  if (NC_PATH) ctx.clip(NC_PATH);
+  ctx.fillStyle = '#f3efe4';
+  if (STATE_BOUNDS) ctx.fillRect((STATE_BOUNDS.west - 1) * KX, -(STATE_BOUNDS.north + 1), (STATE_BOUNDS.east - STATE_BOUNDS.west + 2) * KX, STATE_BOUNDS.north - STATE_BOUNDS.south + 2);
+  const hs = HAS_DATA && DATA.hillshade;
+  if (HILL_IMG && hs) {
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.85;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(HILL_IMG, hs.west * KX, -hs.north, (hs.east - hs.west) * KX, hs.north - hs.south);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+  if (N) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.cellCanvas, (MIN_LON - DLON / 2) * KX, -(MAX_LAT + DLAT / 2), NX * DLON * KX, NY * DLAT);
+  }
+  ctx.restore();
+  // county outlines
+  const lw = 1 / s;
+  const self = this;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(31,42,51,0.32)'; ctx.lineWidth = 0.7 * lw;
+  Object.keys(COUNTY_GEO).forEach(function (c) { if (!COUNTY_GEO[c].study) ctx.stroke(COUNTY_GEO[c].path); });
+  ctx.strokeStyle = '#12344d'; ctx.lineWidth = 1.7 * lw;
+  Object.keys(COUNTY_GEO).forEach(function (c) { if (COUNTY_GEO[c].study) ctx.stroke(COUNTY_GEO[c].path); });
+  if (this.highlight >= 0 && COUNTY_GEO[this.highlight]) {
+    ctx.strokeStyle = '#1b7a8c'; ctx.lineWidth = 3.2 * lw; ctx.stroke(COUNTY_GEO[this.highlight].path);
+  }
+  // screen layer
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (this.opts.showEvents()) this.drawEvents(ctx);
+  if (this.selected >= 0) {
+    const k = this.selected;
+    const a = this.toScreen(G.lon[k] - DLON / 2, G.lat[k] + DLAT / 2), b = this.toScreen(G.lon[k] + DLON / 2, G.lat[k] - DLAT / 2);
+    const cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2;
+    ctx.lineWidth = 2.5; ctx.strokeStyle = '#fff';
+    ctx.strokeRect(a[0], a[1], b[0] - a[0], b[1] - a[1]);
+    ctx.beginPath(); ctx.arc(cx, cy, Math.max(7, (b[0] - a[0]) * 0.9), 0, 2 * Math.PI);
+    ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = '#12344d'; ctx.stroke();
+  }
+  this.drawLabels(ctx);
+};
+MapView.prototype.visibleEvents = function () { const f = this.opts.eventFilter; return f ? EVENTS.filter(f) : EVENTS; };
+MapView.prototype.drawEvents = function (ctx) {
+  const evs = this.evCache || (this.evCache = this.visibleEvents());
+  const zoomBoost = Math.min(1.25, Math.max(0.75, Math.pow(this.s / (this.limits()[0] / 0.6), 0.25)));
+  for (let i = 0; i < evs.length; i++) {
+    const e = evs[i], p = this.toScreen(e.lon, e.lat);
+    if (p[0] < -12 || p[1] < -12 || p[0] > this.w + 12 || p[1] > this.h + 12) continue;
+    const r = evRadius(e) * zoomBoost;
+    ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, 2 * Math.PI);
+    if (e.hc) { ctx.fillStyle = 'rgba(178,24,43,0.82)'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#fff'; ctx.stroke(); }
+    else { ctx.fillStyle = 'rgba(70,84,94,0.45)'; ctx.fill(); }
+  }
+};
+MapView.prototype.drawLabels = function (ctx) {
+  const s0 = this.limits()[0] / 0.6, z = this.s / s0;
+  ctx.textBaseline = 'middle';
+  const self = this;
+  function halo(text, x, y, font, color) {
+    ctx.font = font; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineJoin = 'round';
+    ctx.strokeText(text, x, y); ctx.fillStyle = color; ctx.fillText(text, x, y);
+  }
+  // study county names when zoomed in
+  if (z > 2.2) {
+    ctx.textAlign = 'center';
+    Object.keys(COUNTY_LABEL_CELL).forEach(function (c) {
+      if (!isStudyCounty(+c) && z < 5) return;
+      const k = COUNTY_LABEL_CELL[c]; const p = self.toScreen(G.lon[k], G.lat[k]);
+      if (p[0] < 0 || p[1] < 0 || p[0] > self.w || p[1] > self.h) return;
+      halo(countyName(+c), p[0], p[1], (isStudyCounty(+c) ? '600 ' : '') + '11px -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', isStudyCounty(+c) ? '#12344d' : '#5b6770');
+    });
+  }
+  ((HAS_DATA && DATA.cities) || []).forEach(function (c) {
+    if (!num(c.lat) || !num(c.lon)) return;
+    const size = c.size || 3;
+    if ((size === 2 && z < 1.5) || (size >= 3 && z < 2.5)) return;
+    const p = self.toScreen(c.lon, c.lat);
+    if (p[0] < 0 || p[1] < 0 || p[0] > self.w || p[1] > self.h) return;
+    ctx.beginPath(); ctx.arc(p[0], p[1], size === 1 ? 3 : 2.3, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1f2a33'; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = '#fff'; ctx.stroke();
+    ctx.textAlign = p[0] > self.w - 90 ? 'right' : 'left';
+    halo(c.name, p[0] + (ctx.textAlign === 'right' ? -5 : 5), p[1], (size === 1 ? '600 12px' : '11px') + ' -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', '#1f2a33');
+  });
+  ctx.textAlign = 'left';
+};
+MapView.prototype.eventAt = function (x, y) {
+  if (!this.opts.showEvents()) return null;
+  const evs = this.evCache || (this.evCache = this.visibleEvents());
+  let best = null, bd = Infinity;
+  for (let i = 0; i < evs.length; i++) {
+    const p = this.toScreen(evs[i].lon, evs[i].lat);
+    const d = Math.hypot(p[0] - x, p[1] - y);
+    if (d < evRadius(evs[i]) + 3 && d < bd) { bd = d; best = evs[i]; }
+  }
+  return best;
+};
+MapView.prototype.cellAt = function (x, y) { const ll = this.toLonLat(x, y); return cellAtLonLat(ll[0], ll[1]); };
+MapView.prototype.local = function (e) { const r = this.canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+MapView.prototype.showTip = function (x, y) {
+  const ev = this.eventAt(x, y);
+  let html = null;
+  if (ev) {
+    html = '<b>' + esc(ev.type || 'Event') + '</b>, ' + esc(ev.date || '') + '<br>' + esc(ev.county !== null && ev.county !== undefined ? countyName(ev.county) : '') +
+      '<br>Deaths: ' + (ev.deaths || 0) + ', damage: ' + fmtMoney(ev.damage || 0) + (ev.hc ? '<br><span style="color:#b2182b;font-weight:600">High-consequence</span>' : '');
+  } else {
+    const k = this.cellAt(x, y);
+    if (k >= 0) html = this.opts.tipHtml(k);
+  }
+  if (!html) { this.tip.style.display = 'none'; return; }
+  this.tip.innerHTML = html;
+  this.tip.style.display = 'block';
+  const tw = this.tip.offsetWidth, th = this.tip.offsetHeight;
+  let left = x + 14, top = y + 14;
+  if (left + tw > this.w - 4) left = x - tw - 14;
+  if (top + th > this.h - 4) top = y - th - 14;
+  this.tip.style.left = Math.max(4, left) + 'px'; this.tip.style.top = Math.max(4, top) + 'px';
+};
+MapView.prototype.select = function (k) {
+  this.selected = k; this.request();
+  if (this.opts.onSelect) this.opts.onSelect(k);
+};
+MapView.prototype.bind = function () {
+  const self = this, cv = this.canvas;
+  cv.addEventListener('wheel', function (e) {
+    // Let the page scroll past the map unless the map is in use (focused) or Ctrl/Cmd is held.
+    if (document.activeElement !== cv && !e.ctrlKey && !e.metaKey) {
+      const help = self.root.querySelector('.map-help');
+      if (help) {
+        help.textContent = 'Click the map first (or hold Ctrl) to zoom with the wheel';
+        clearTimeout(self.helpT);
+        self.helpT = setTimeout(function () { help.textContent = 'Click a place for details'; }, 1800);
+      }
+      return;
+    }
+    e.preventDefault();
+    const p = self.local(e);
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    self.zoomAt(Math.exp(-dy * 0.0016), p[0], p[1]);
+  }, { passive: false });
+  cv.addEventListener('pointerdown', function (e) {
+    const p = self.local(e);
+    if (document.activeElement !== cv) cv.focus({ preventScroll: true });
+    try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    self.pointers.set(e.pointerId, p);
+    if (self.pointers.size === 1) self.drag = { x: p[0], y: p[1], lx: p[0], ly: p[1], moved: false };
+    else if (self.pointers.size === 2) {
+      const a = Array.from(self.pointers.values());
+      self.pinch = { d: Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]) };
+      if (self.drag) self.drag.moved = true;
+    }
+  });
+  cv.addEventListener('pointermove', function (e) {
+    const p = self.local(e);
+    if (self.pointers.has(e.pointerId)) {
+      self.pointers.set(e.pointerId, p);
+      if (self.pointers.size === 2 && self.pinch) {
+        const a = Array.from(self.pointers.values());
+        const d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]);
+        if (self.pinch.d > 0) self.zoomAt(d / self.pinch.d, (a[0][0] + a[1][0]) / 2, (a[0][1] + a[1][1]) / 2);
+        self.pinch.d = d;
+      } else if (self.drag) {
+        const dx = p[0] - self.drag.lx, dy = p[1] - self.drag.ly;
+        if (Math.hypot(p[0] - self.drag.x, p[1] - self.drag.y) > 4) self.drag.moved = true;
+        if (self.drag.moved) { self.pan(dx, dy); cv.style.cursor = 'grabbing'; self.tip.style.display = 'none'; }
+        self.drag.lx = p[0]; self.drag.ly = p[1];
+      }
+      return;
+    }
+    self.showTip(p[0], p[1]);
+  });
+  function end(e) {
+    const p = self.local(e);
+    if (self.drag && !self.drag.moved && self.pointers.size === 1 && e.type === 'pointerup') {
+      const k = self.cellAt(p[0], p[1]);
+      if (k >= 0) self.select(k);
+    }
+    self.pointers.delete(e.pointerId);
+    if (self.pointers.size < 2) self.pinch = null;
+    if (self.pointers.size === 0) { self.drag = null; cv.style.cursor = ''; }
+  }
+  cv.addEventListener('pointerup', end);
+  cv.addEventListener('pointercancel', end);
+  cv.addEventListener('pointerleave', function () { self.tip.style.display = 'none'; });
+  cv.addEventListener('keydown', function (e) {
+    const step = 60;
+    if (e.key === 'ArrowLeft') self.pan(step, 0);
+    else if (e.key === 'ArrowRight') self.pan(-step, 0);
+    else if (e.key === 'ArrowUp') self.pan(0, step);
+    else if (e.key === 'ArrowDown') self.pan(0, -step);
+    else if (e.key === '+' || e.key === '=') self.zoomAt(1.4, self.w / 2, self.h / 2);
+    else if (e.key === '-' || e.key === '_') self.zoomAt(1 / 1.4, self.w / 2, self.h / 2);
+    else if (e.key === 'Enter' || e.key === ' ') { const k = self.cellAt(self.w / 2, self.h / 2); if (k >= 0) self.select(k); }
+    else return;
+    e.preventDefault();
+  });
+  this.root.querySelectorAll('.map-ctl button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      const a = b.getAttribute('data-act');
+      if (a === 'in') self.zoomAt(1.5, self.w / 2, self.h / 2);
+      else if (a === 'out') self.zoomAt(1 / 1.5, self.w / 2, self.h / 2);
+      else if (a === 'study') self.fit(STUDY_BOUNDS || STATE_BOUNDS);
+      else if (a === 'state') self.fit(STATE_BOUNDS);
+    });
+  });
+  if (!STUDY_BOUNDS) { const b = this.root.querySelector('[data-act="study"]'); if (b) b.hidden = true; }
+};
+
+// ---------------------------------------------------------------- layer coloring + legends
+function rangeOf(P) { let lo = Infinity, hi = -Infinity; for (let k = 0; k < N; k++) { const p = P[k]; if (isNaN(p)) continue; if (p < lo) lo = p; if (p > hi) hi = p; } return [lo, hi]; }
+function niceMax(v) { if (!(v > 0)) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))); const m = v / e; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * e; }
+const HEL_RAIN_MAX_IN = (function () {
+  if (!HAS_HELENE) return 1;
+  const c = gridCol('helene_rain_total_mm'); let mx = 0;
+  for (let k = 0; k < N; k++) if (!isNaN(c[k]) && c[k] > mx) mx = c[k];
+  const inch = mmToIn(mx); return inch > 10 ? Math.ceil(inch / 5) * 5 : niceMax(inch);
+})();
+const HAND_MAX = 30;   // display cap for the HAND color ramp (meters); values above are drawn as the lightest color
+function riskDomain(P, relative) {
+  if (!relative) return [0, RISK_ABS_MAX];
+  const r = rangeOf(P); return (isFinite(r[0]) && r[1] > r[0]) ? r : [0, RISK_ABS_MAX];
+}
+function colorizer(layer, P, relative) {
+  if (layer === 'risk') {
+    const dom = riskDomain(P, relative), lut = LUT.risk, span = dom[1] - dom[0];
+    return function (k, out) {
+      const p = P[k]; if (isNaN(p)) return false;
+      const i = Math.max(0, Math.min(255, Math.round((p - dom[0]) / span * 255))) * 3;
+      out[0] = lut[i]; out[1] = lut[i + 1]; out[2] = lut[i + 2]; out[3] = 205; return true;
+    };
+  }
+  let col, name, lo, hi, inv = false;
+  if (layer === 'hrain') { col = gridCol('helene_rain_total_mm'); name = 'rain'; lo = 0; hi = HEL_RAIN_MAX_IN * 25.4; }
+  else if (layer === 'svi') { col = gridCol('svi_rpl_themes'); name = 'svi'; lo = 0; hi = 1; }
+  else if (layer === 'hand') { col = gridCol('hand_m'); name = 'hand'; lo = 0; hi = HAND_MAX; }
+  if (!col) return null;
+  const lut = LUT[name];
+  return function (k, out) {
+    const v = col[k]; if (isNaN(v)) return false;
+    const i = Math.max(0, Math.min(255, Math.round((v - lo) / (hi - lo) * 255))) * 3;
+    out[0] = lut[i]; out[1] = lut[i + 1]; out[2] = lut[i + 2]; out[3] = 215; return true;
+  };
+}
+function legendHtml(layer, P, relative, toggleId, eventsOn, eventsLabel) {
+  let h = '';
+  if (layer === 'risk') {
+    const dom = riskDomain(P, relative);
+    const fr = relative ? [0, 0.25, 0.5, 0.75, 1] : [0, 0.2, 0.4, 0.6, 0.8, 1];
+    const t = fr.map(function (f) { return fmtPct(dom[0] + f * (dom[1] - dom[0]), dom[1] - dom[0] < 0.1 ? 1 : 0); });
+    h += '<div class="lg"><div class="lg-title">Modeled chance an event is high-consequence</div><div class="ramp" style="background:' + rampCss('risk') + '"></div>' +
+      '<div class="ticks"><span>' + t.join('</span><span>') + (relative ? '' : '+') + '</span></div>' +
+      '<div class="scale-toggle pillrow" role="radiogroup" aria-label="Color scale"><button class="pill" role="radio" data-scale="abs" id="' + toggleId + '-abs" aria-checked="' + !relative + '">Absolute 0-50%</button>' +
+      '<button class="pill" role="radio" data-scale="rel" id="' + toggleId + '-rel" aria-checked="' + relative + '">Relative to this map</button></div></div>';
+  } else if (layer === 'hrain') {
+    const mx = HEL_RAIN_MAX_IN;
+    h += '<div class="lg"><div class="lg-title">Helene-week rainfall (storm total, inches)</div><div class="ramp" style="background:' + rampCss('rain') + '"></div>' +
+      '<div class="ticks"><span>0</span><span>' + fmtNum(mx / 4, mx < 4 ? 1 : 0) + '</span><span>' + fmtNum(mx / 2, mx < 4 ? 1 : 0) + '</span><span>' + fmtNum(3 * mx / 4, mx < 4 ? 1 : 0) + '</span><span>' + fmtNum(mx, mx < 4 ? 1 : 0) + ' in</span></div></div>';
+  } else if (layer === 'svi') {
+    h += '<div class="lg"><div class="lg-title">Tract social vulnerability (CDC SVI percentile, context only)</div><div class="ramp" style="background:' + rampCss('svi') + '"></div>' +
+      '<div class="ticks"><span>0 (least)</span><span>50th</span><span>100th (most)</span></div></div>';
+  } else if (layer === 'hand') {
+    h += '<div class="lg"><div class="lg-title">Height above nearest stream (HAND, meters, context only)</div><div class="ramp" style="background:' + rampCss('hand') + '"></div>' +
+      '<div class="ticks"><span>0 m (stream level)</span><span>' + HAND_MAX / 2 + '</span><span>' + HAND_MAX + '+ m</span></div></div>';
+  }
+  if (eventsOn) {
+    h += '<div class="lg"><div class="lg-title">' + esc(eventsLabel) + '</div><div class="dots">' +
+      '<span><span class="dot" style="width:11px;height:11px;background:rgba(178,24,43,.85);border:1px solid #fff"></span>High-consequence</span>' +
+      '<span><span class="dot" style="width:6px;height:6px;background:rgba(70,84,94,.55)"></span>Other</span></div>' +
+      '<div class="hint" style="margin-top:2px">Larger dot = more reported damage.</div></div>';
+  }
+  return h;
+}
+
+// ---------------------------------------------------------------- DOM helpers
+function $(id) { return document.getElementById(id); }
+function setPressed(container, attr, value) {
+  container.querySelectorAll('[' + attr + ']').forEach(function (b) {
+    const on = b.getAttribute(attr) === value;
+    if (b.getAttribute('role') === 'radio') { b.setAttribute('aria-checked', on ? 'true' : 'false'); b.removeAttribute('aria-pressed'); }
+    else b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+function copyText(text, statusEl) {
+  function done(ok) { statusEl.textContent = ok ? 'Copied.' : 'Copy failed; select the text manually.'; setTimeout(function () { statusEl.textContent = ''; }, 2500); }
+  function fallback() {
+    const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta); done(ok);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+  else fallback();
+}
+
+// ---------------------------------------------------------------- place card
+const CONTEXT_FACTS = [
+  ['elevation_m'], ['slope_degrees'], ['local_relief_5km'], ['distance_to_stream_m'],
+  ['hand_m', 'Height above nearest stream (HAND)', function (v) { return fmtNum(v, 1) + ' m'; }],
+  ['drainage_area_km2_max_250m', 'Largest drainage area within 250 m', function (v) { return fmtNum(v, v < 10 ? 1 : 0) + ' sq km'; }],
+  ['impervious_mean_250m'],
+  ['svi_rpl_themes', 'Tract social vulnerability (CDC SVI)', function (v) { return Math.round(v * 100) + 'th percentile'; }],
+  ['SOVI_SCORE'], ['population_density']
+];
+function placeModel(k, mode) {
+  if (mode === 'helene') {
+    if (!heleneOk(k)) return null;
+    const v = cellValues(k, heleneScenario(k), state.helHistory);
+    return { values: v, p: scoreRisk(v) };
+  }
+  const v = cellValues(k, state.sc, state.history);
+  return { values: v, p: scoreRisk(v) };
+}
+function topDrivers(values, n) {
+  return contributions(values).sort(function (a, b) { return Math.abs(b.c) - Math.abs(a.c); }).slice(0, n);
+}
+function nearbyBig(k, mode) {
+  const filter = mode === 'helene' ? function (e) { return !!e.helene; } : null;
+  const near = eventsNear(G.lat[k], G.lon[k], 25, filter);
+  const top = near.slice().sort(function (a, b) { return ((b.deaths || 0) - (a.deaths || 0)) || ((b.damage || 0) - (a.damage || 0)); }).slice(0, 3);
+  return { all: near, top: top, hc: near.filter(function (e) { return e.hc; }).length };
+}
+function renderPlace(el, k, mode) {
+  if (k < 0) {
+    el.innerHTML = '<h2>Place details</h2><p class="empty">' + (mode === 'helene'
+      ? 'Click a place on the Helene map to see its rainfall, the modeled risk with that rain, and the events recorded nearby that week.'
+      : 'Click any place on the map (or focus the map and press Enter) to see its modeled risk, what drives it, local conditions, and the largest recorded events nearby.') + '</p>';
+    return;
+  }
+  const c = CELL_COUNTY[k];
+  const pm = placeModel(k, mode);
+  const region = countyRegion(c);
+  const study = c >= 0 && isStudyCounty(c);
+  const base = HAS_DATA && DATA.meta ? DATA.meta.base_rate_dev : null;
+  let h = '<div class="place-head"><div><h2>' + esc(c >= 0 ? countyName(c) + ' County' : 'Outside county data') + '</h2>' +
+    '<div class="place-sub">' + esc(region || '') + (region ? ' &middot; ' : '') + G.lat[k].toFixed(3) + '&deg;N, ' + Math.abs(G.lon[k]).toFixed(3) + '&deg;W' +
+    (study ? ' &middot; <span class="badge study">Study county</span>' : '') + '</div></div></div>';
+  if (!pm) {
+    h += '<p class="empty">No Helene rainfall value for this cell, so it is not scored in the replay.</p>';
+    el.innerHTML = h; return;
+  }
+  const p = pm.p;
+  const col = lutCss('risk', Math.min(1, p / RISK_ABS_MAX));
+  h += '<div class="place-grid"><div>';
+  h += '<h3>Modeled risk ' + (mode === 'helene' ? 'with Helene\'s rain here' : 'under this scenario') + '</h3>';
+  h += '<div class="risk-big" style="color:' + (p > 0.25 ? '#b2182b' : '#12344d') + '">' + fmtPct(p) + '</div>';
+  h += '<div class="riskbar" role="img" aria-label="Risk ' + fmtPct(p) + ' on a 0 to 50 percent scale"><span style="width:' + Math.min(100, p / RISK_ABS_MAX * 100) + '%;background:' + col + '"></span>' +
+    (num(base) ? '<i class="base" style="left:' + Math.min(100, base / RISK_ABS_MAX * 100) + '%" title="Training-years average"></i>' : '') + '</div>';
+  h += '<div class="riskbar-scale"><span>0%</span><span>50%+</span></div>';
+  h += '<p style="font-size:.86rem;margin:6px 0 0">If a flood-related event is reported here, ' + oneIn(p) + ' such events would be high-consequence' +
+    (mode === 'helene' ? ' given Helene\'s rainfall at this spot' : ' under this scenario') + '.' +
+    (num(base) ? ' Across all events in ' + esc(TRAIN_YEARS || 'the training years') + ', the share was ' + fmtPct(base) + ' (dark tick).' : '') + '</p>';
+
+  // drivers
+  const drv = topDrivers(pm.values, 6);
+  const maxAbs = Math.max(0.05, drv.reduce(function (m, d) { return Math.max(m, Math.abs(d.c)); }, 0));
+  h += '<h3>What drives this place</h3><div class="drv">';
+  drv.forEach(function (d) {
+    const w = Math.abs(d.c) / maxAbs * 50;
+    const g = GROUP_LABEL[groupOf(d.key)] || '';
+    h += '<div class="nm" title="' + esc(featLabel(d.key)) + ': ' + esc(fmtFeature(d.key, d.value)) + '">' + esc(featLabel(d.key)) + ' <small>' + esc(g) + (d.filled ? ', typical value used' : '') + '</small></div>' +
+      '<div class="trk" aria-label="' + (d.c >= 0 ? 'raises' : 'lowers') + ' risk"><span class="bar ' + (d.c >= 0 ? 'up' : 'dn') + '" style="width:' + w.toFixed(1) + '%"></span></div>';
+  });
+  h += '</div><p class="hint">Red raises the estimate, teal lowers it, compared with an average event in the training data (log-odds scale).</p>';
+  h += '</div><div>';
+
+  // context facts
+  h += '<h3>Local conditions</h3><table class="facts"><tbody>';
+  CONTEXT_FACTS.forEach(function (f) {
+    const v = gridVal(f[0], k);
+    if (isNaN(v)) return;
+    const label = f[1] || featLabel(f[0]);
+    const txt = f[2] ? f[2](v) : fmtFeature(f[0], v);
+    h += '<tr><td>' + esc(label) + '</td><td>' + esc(txt) + '</td></tr>';
+  });
+  h += '</tbody></table>';
+
+  // nearby events
+  const nb = nearbyBig(k, mode);
+  h += '<h3>' + (mode === 'helene' ? 'Largest Helene-week events within 25 km' : 'Largest recorded events within 25 km') + '</h3>';
+  if (!nb.top.length) h += '<p class="empty">No ' + (mode === 'helene' ? 'Helene-week ' : '') + 'flood-related events recorded within 25 km.</p>';
+  else {
+    h += '<p class="hint" style="margin-bottom:4px">' + nb.all.length + ' events within 25 km, ' + nb.hc + ' high-consequence. Ranked by deaths, then damage.</p><ul class="evlist">';
+    nb.top.forEach(function (e) {
+      h += '<li><span class="' + (e.hc ? 'hc' : '') + '">' + esc(e.date) + '</span> ' + esc(e.type || '') + ', ' + (e.deaths || 0) + ' death' + (e.deaths === 1 ? '' : 's') + ', ' + fmtMoney(e.damage || 0) + ' damage</li>';
+    });
+    h += '</ul>';
+  }
+  // helene
+  let helText = '';
+  if (HAS_HELENE && heleneOk(k)) {
+    const hv = cellValues(k, heleneScenario(k), mode === 'helene' ? state.helHistory : state.history);
+    const hp = scoreRisk(hv);
+    helText = 'Helene rainfall here: ' + fmtIn(gridVal('helene_rain_total_mm', k)) + ' (wettest day ' + fmtIn(gridVal('helene_rain_max_1day_mm', k)) + ', ' + fmtIn(gridVal('helene_rain_antecedent_7d_mm', k)) + ' in the prior week)';
+    h += '<h3>Helene</h3><p style="font-size:.86rem;margin:0"><b>' + esc(helText) + '</b><br>Model estimate with that rain in September: ' + fmtPct(hp) + '.</p>';
+    helText += '. Model estimate with that rain in September: ' + fmtPct(hp) + '.';
+  }
+  h += '</div></div>';
+  h += '<div class="copyrow"><button class="pill" data-copy>Copy summary</button><span class="status" role="status"></span></div>';
+  el.innerHTML = h;
+
+  const summary = [
+    (c >= 0 ? countyName(c) + ' County' : 'Location') + (region ? ' (' + region + ')' : '') + ', ' + G.lat[k].toFixed(3) + ' N, ' + Math.abs(G.lon[k]).toFixed(3) + ' W',
+    'Scenario: ' + (mode === 'helene' ? 'Helene replay (each cell\'s Helene-week rain, September, ' + (state.helHistory ? 'recorded local flood history' : 'local flood history ignored') + ')' : scenarioSummary(state.sc, state.history)),
+    'Modeled risk: ' + fmtPct(p) + ' chance that a flood-related event here is high-consequence, if one occurs' + (num(base) ? ' (training-years average ' + fmtPct(base) + ')' : '') + '.',
+    'Main drivers: ' + drv.map(function (d) { return featLabel(d.key) + ' (' + (d.c >= 0 ? 'raises' : 'lowers') + ')'; }).join('; ') + '.',
+    nb.all.length ? 'Recorded events within 25 km: ' + nb.all.length + ' (' + nb.hc + ' high-consequence).' : 'No recorded events within 25 km.',
+    helText,
+    'Explanatory model, not a forecast. Carolina HighGround explorer.'
+  ].filter(Boolean).join('\n');
+  el.querySelector('[data-copy]').addEventListener('click', function () { copyText(summary, el.querySelector('.status')); });
+}
+
+// ---------------------------------------------------------------- app wiring
+let MAP = null, HMAP = null;
+function tipHtmlFor(k, mode) {
+  const c = CELL_COUNTY[k];
+  let h = '<b>' + esc(c >= 0 ? countyName(c) : 'Outside county data') + '</b>';
+  const P = mode === 'helene' ? P_HEL : P_SCEN;
+  const layer = mode === 'helene' ? state.helLayer : state.layer;
+  h += '<br>Modeled risk: ' + (isNaN(P[k]) ? 'not scored' : fmtPct(P[k]));
+  if (layer === 'hrain' || mode === 'helene') { const v = gridVal('helene_rain_total_mm', k); if (!isNaN(v)) h += '<br>Helene rain: ' + fmtIn(v); }
+  if (layer === 'svi') { const v = gridVal('svi_rpl_themes', k); h += '<br>Tract SVI: ' + (isNaN(v) ? 'n/a' : Math.round(v * 100) + 'th pct'); }
+  if (layer === 'hand') { const v = gridVal('hand_m', k); h += '<br>HAND: ' + (isNaN(v) ? 'n/a' : fmtNum(v, 1) + ' m'); }
+  return h;
+}
+function updateStats() {
+  const helene = state.tab === 'helene' && STATS_HEL;
+  const st = helene ? STATS_HEL : STATS_SCEN;
+  if (!st) return;
+  $('st-state').textContent = fmtPct(st.state);
+  $('st-study').textContent = fmtPct(st.study);
+  $('st-share').textContent = fmtPct(st.share10, 0);
+  $('st-top').textContent = st.top === null ? 'n/a' : countyName(st.top);
+  $('st-top-lab').textContent = 'Highest-risk county' + (st.top === null ? '' : ' (mean ' + fmtPct(st.topMean) + ')');
+  $('stat-caption').textContent = helene
+    ? 'Helene replay: each cell scored with its own Helene-week rainfall, September, ' + (state.helHistory ? 'recorded local flood history.' : 'local flood history ignored.')
+    : 'Current scenario: ' + scenarioSummary(state.sc, state.history) + '.';
+}
+function refreshMapCells() {
+  if (!MAP) return;
+  const cz = colorizer(state.layer, P_SCEN, state.relative);
+  MAP.setCells(cz);
+  $('legend-map').innerHTML = legendHtml(state.layer, P_SCEN, state.relative, 'mscale', state.events, 'Flood-related NOAA events' + (yearsOf(function () { return true; }) ? ', ' + yearsOf(function () { return true; }) : ''));
+}
+function refreshHelCells() {
+  if (!HMAP) return;
+  HMAP.setCells(colorizer(state.helLayer, P_HEL, state.helRelative));
+  $('legend-hel').innerHTML = legendHtml(state.helLayer, P_HEL, state.helRelative, 'hscale', state.helEvents, 'NOAA events in the Helene week');
+}
+let updRaf = 0;
+function scheduleUpdate() {
+  if (updRaf) return;
+  updRaf = requestAnimationFrame(function () { updRaf = 0; updateScenario(); });
+}
+function updateScenario() {
+  scenarioRisk(P_SCEN, state.sc, state.history);
+  STATS_SCEN = summaryStats(P_SCEN);
+  refreshMapCells();
+  updateStats();
+  syncControls();
+  if (state.selected >= 0) renderPlace($('place'), state.selected, 'scenario');
+  if (state.tab === 'counties') renderCounties(); else countiesDirty = true;
+}
+function updateHelene() {
+  if (!HAS_HELENE) return;
+  heleneRisk(P_HEL, state.helHistory);
+  STATS_HEL = summaryStats(P_HEL);
+  refreshHelCells();
+  renderHeleneSide();
+  renderHeleneTable();
+  if (state.helSelected >= 0) renderPlace($('hel-place'), state.helSelected, 'helene');
+  updateStats();
+}
+
+// scenario controls
+const R_TOTAL = featRange('rain_event_total_mm', [0, 25, 0.25]);
+const R_MAX1 = featRange('rain_max_1day_mm', [0, 15, 0.25]);
+const R_ANTE = featRange('rain_antecedent_7d_mm', [0, 10, 0.25]);
+function setRange(el, r) { el.min = r.min; el.max = r.max; el.step = r.step; }
+function syncControls() {
+  const sc = state.sc;
+  const tIn = sc.total * R_TOTAL.scale, mIn = sc.max1 * R_MAX1.scale, aIn = sc.ante * R_ANTE.scale;
+  $('rain-basic').value = tIn; $('rain-total').value = tIn; $('rain-max1').value = mIn; $('rain-ante').value = aIn;
+  $('rain-basic-out').textContent = tIn.toFixed(2).replace(/0$/, '') + ' in';
+  $('rain-total-out').textContent = tIn.toFixed(2).replace(/0$/, '') + ' in';
+  $('rain-max1-out').textContent = mIn.toFixed(2).replace(/0$/, '') + ' in';
+  $('rain-ante-out').textContent = aIn.toFixed(2).replace(/0$/, '') + ' in';
+  if (tIn > R_TOTAL.max) $('rain-basic-out').textContent += ' (above slider range)';
+  $('month').value = String(sc.month);
+  $('peak-badge').hidden = !isPeakMonth(sc.month);
+  setPressed($('presets'), 'data-preset', state.preset || '__none__');
+  const p = PRESETS.filter(function (x) { return x.id === state.preset; })[0];
+  $('preset-desc').textContent = p ? (p.description || '') : 'Custom scenario.';
+  setPressed($('scenario'), 'data-hist', state.history ? 'on' : 'off');
+}
+function initControls() {
+  const pr = $('presets');
+  PRESETS.forEach(function (p) {
+    const b = document.createElement('button'); b.className = 'pill'; b.textContent = p.label; b.setAttribute('data-preset', p.id); b.setAttribute('aria-pressed', 'false');
+    if (p.description) b.title = p.description;
+    b.addEventListener('click', function () { applyPreset(p); scheduleUpdate(); });
+    pr.appendChild(b);
+  });
+  if (!PRESETS.length) pr.innerHTML = '<span class="empty">No presets in this build.</span>';
+  setRange($('rain-basic'), R_TOTAL); setRange($('rain-total'), R_TOTAL); setRange($('rain-max1'), R_MAX1); setRange($('rain-ante'), R_ANTE);
+  $('rain-basic-hint').textContent = RATIO !== null
+    ? 'Sets the wettest day to ' + Math.round(RATIO * 100) + '% of the storm total and prior-week rain to ' + fmtIn(ANTE_DEFAULT) + ' (typical values in the training data). Fine-tune under Advanced.'
+    : 'Prior-week rain is set to ' + fmtIn(ANTE_DEFAULT) + '. Fine-tune under Advanced.';
+  const ms = $('month');
+  MONTHS.forEach(function (m, i) { const o = document.createElement('option'); o.value = String(i + 1); o.textContent = m + (isPeakMonth(i + 1) ? ' (peak season)' : ''); ms.appendChild(o); });
+  function fromIn(v, r) { return (+v) / r.scale; }
+  $('rain-basic').addEventListener('input', function (e) {
+    state.sc.total = fromIn(e.target.value, R_TOTAL);
+    state.sc.max1 = RATIO !== null ? RATIO * state.sc.total : Math.min(state.sc.max1, state.sc.total);
+    state.sc.ante = ANTE_DEFAULT; state.preset = null; scheduleUpdate();
+  });
+  $('rain-total').addEventListener('input', function (e) {
+    state.sc.total = fromIn(e.target.value, R_TOTAL); if (state.sc.max1 > state.sc.total) state.sc.max1 = state.sc.total; state.preset = null; scheduleUpdate();
+  });
+  $('rain-max1').addEventListener('input', function (e) {
+    state.sc.max1 = fromIn(e.target.value, R_MAX1); if (state.sc.max1 > state.sc.total) state.sc.total = state.sc.max1; state.preset = null; scheduleUpdate();
+  });
+  $('rain-ante').addEventListener('input', function (e) { state.sc.ante = fromIn(e.target.value, R_ANTE); state.preset = null; scheduleUpdate(); });
+  ms.addEventListener('change', function () { state.sc.month = +ms.value; state.preset = null; scheduleUpdate(); });
+  $('scenario').querySelectorAll('[data-hist]').forEach(function (b) {
+    b.addEventListener('click', function () { state.history = b.getAttribute('data-hist') === 'on'; scheduleUpdate(); });
+  });
+  const histLabels = HIST_KEYS.map(featLabel).join(' and ');
+  $('hist-hint').textContent = HIST_KEYS.length
+    ? 'Recorded uses each place\'s counts of earlier floods (' + histLabels.toLowerCase() + '). Ignore sets them to the statewide average, so only rain, season, place and people remain.'
+    : 'This model has no local flood-history inputs.';
+  $('meaning').textContent = meaningText();
+
+  // layers
+  const lm = $('layers-map');
+  const avail = { risk: true, hrain: HAS_HELENE, svi: gridCol('svi_rpl_themes') !== null, hand: gridCol('hand_m') !== null };
+  lm.querySelectorAll('[data-layer]').forEach(function (b) {
+    const l = b.getAttribute('data-layer');
+    if (!avail[l]) { b.hidden = true; return; }
+    b.addEventListener('click', function () { state.layer = l; setPressed(lm, 'data-layer', l); refreshMapCells(); });
+  });
+  lm.querySelector('[data-toggle="events"]').addEventListener('click', function (e) {
+    state.events = !state.events; e.currentTarget.setAttribute('aria-pressed', String(state.events)); refreshMapCells(); MAP.request();
+  });
+  if (!EVENTS.length) lm.querySelector('[data-toggle="events"]').hidden = true;
+  $('legend-map').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-scale]'); if (!b) return;
+    state.relative = b.getAttribute('data-scale') === 'rel'; refreshMapCells();
+    const nb = $('mscale-' + (state.relative ? 'rel' : 'abs')); if (nb) nb.focus();
+  });
+}
+
+// tabs
+let countiesDirty = true;
+const TAB_IDS = ['map', 'counties', 'helene', 'about'];
+function activateTab(id, focus) {
+  state.tab = id;
+  TAB_IDS.forEach(function (t) {
+    const b = $('tabbtn-' + t), on = t === id;
+    b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1;
+    $('tab-' + t).hidden = !on;
+  });
+  if (focus) $('tabbtn-' + id).focus();
+  if (id === 'counties' && countiesDirty) renderCounties();
+  if (id === 'map' && MAP) MAP.resize();
+  if (id === 'helene' && HMAP) HMAP.resize();
+  updateStats();
+}
+function initTabs() {
+  TAB_IDS.forEach(function (t, i) {
+    const b = $('tabbtn-' + t);
+    b.addEventListener('click', function () { activateTab(t); });
+    b.addEventListener('keydown', function (e) {
+      let j = null;
+      if (e.key === 'ArrowRight') j = (i + 1) % TAB_IDS.length; else if (e.key === 'ArrowLeft') j = (i - 1 + TAB_IDS.length) % TAB_IDS.length;
+      else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = TAB_IDS.length - 1;
+      if (j === null) return;
+      e.preventDefault();
+      let tries = 0; while ($('tabbtn-' + TAB_IDS[j]).hidden && tries++ < 4) j = (j + (e.key === 'ArrowLeft' ? -1 + TAB_IDS.length : 1)) % TAB_IDS.length;
+      activateTab(TAB_IDS[j], true);
+    });
+  });
+  if (!HAS_HELENE) $('tabbtn-helene').hidden = true;
+}
+
+// ---------------------------------------------------------------- counties tab
+const CTY_COLS = [
+  { key: 'name', label: 'County', type: 's' },
+  { key: 'region', label: 'Region', type: 's' },
+  { key: 'mean', label: 'Modeled mean risk', type: 'n', fmt: function (v) { return fmtPct(v); }, bar: true },
+  { key: 'share10', label: 'Cells above 10%', type: 'n', fmt: function (v) { return fmtPct(v, 0); } },
+  { key: 'hc_events', label: 'High-consequence events', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'events', label: 'All events', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'deaths', label: 'Deaths', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'damage', label: 'Damage', type: 'n', fmt: fmtMoney },
+  { key: 'SOVI_SCORE', label: 'County SOVI', type: 'n', fmt: function (v) { return fmtNum(v, 2); } },
+  { key: 'population_density', label: 'People per sq. mi', type: 'n', fmt: function (v) { return fmtNum(v, 0); } }
+];
+const ctySort = { key: 'mean', dir: -1 };
+let ctyRows = [];
+function cmp(a, b, key, dir) {
+  const x = a[key], y = b[key];
+  const mx = x === null || x === undefined || (typeof x === 'number' && isNaN(x)), my = y === null || y === undefined || (typeof y === 'number' && isNaN(y));
+  if (mx && my) return 0; if (mx) return 1; if (my) return -1;   // missing always last
+  if (typeof x === 'string') return dir * x.localeCompare(y);
+  return dir * (x - y);
+}
+function headerHtml(cols, sort) {
+  return '<tr>' + cols.map(function (c) {
+    const on = sort.key === c.key;
+    return '<th class="' + (c.type === 'n' ? 'num' : '') + '" aria-sort="' + (on ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none') + '"><button data-sort="' + c.key + '">' + esc(c.label) +
+      '<span class="arr" aria-hidden="true">' + (on ? (sort.dir > 0 ? ' &#9650;' : ' &#9660;') : '') + '</span></button></th>';
+  }).join('') + '</tr>';
+}
+function renderCounties() {
+  countiesDirty = false;
+  if (!STATS_SCEN) return;
+  const agg = STATS_SCEN.agg;
+  const q = $('cty-search').value.trim().toLowerCase();
+  const studyOnly = $('cty-study').checked;
+  ctyRows = COUNTY_STATS.map(function (c) {
+    const a = agg[c.idx] || {};
+    return Object.assign({}, c, { mean: num(a.mean) ? a.mean : null, share10: num(a.share10) ? a.share10 : null, cells: a.n || 0 });
+  }).filter(function (r) { return (!studyOnly || r.study) && (!q || String(r.name).toLowerCase().indexOf(q) >= 0); });
+  ctyRows.sort(function (a, b) { return cmp(a, b, ctySort.key, ctySort.dir) || String(a.name).localeCompare(String(b.name)); });
+  const t = $('cty-table');
+  t.tHead.innerHTML = headerHtml(CTY_COLS, ctySort);
+  t.tBodies[0].innerHTML = ctyRows.map(function (r) {
+    return '<tr class="click' + (r.study ? ' study' : '') + '" tabindex="0" data-idx="' + r.idx + '" aria-label="' + esc(r.name) + ' County: show on map">' + CTY_COLS.map(function (c) {
+      const v = r[c.key];
+      if (c.type === 's') return '<td>' + esc(v === null || v === undefined ? '' : v) + (c.key === 'name' && r.study ? ' <span class="badge study">study</span>' : '') + '</td>';
+      let cell = (v === null || v === undefined) ? 'n/a' : c.fmt(v);
+      if (c.bar && num(v)) cell += '<span class="ibar" aria-hidden="true"><span style="width:' + Math.min(100, v / RISK_ABS_MAX * 100) + '%;background:' + lutCss('risk', Math.min(1, v / RISK_ABS_MAX)) + '"></span></span>';
+      return '<td class="num">' + cell + '</td>';
+    }).join('') + '</tr>';
+  }).join('') || '<tr><td colspan="' + CTY_COLS.length + '" class="empty">No counties match.</td></tr>';
+  $('cty-count').textContent = ctyRows.length + ' of ' + COUNTY_STATS.length + ' counties';
+  $('counties-meaning').textContent = meaningText() + ' Scenario: ' + scenarioSummary(state.sc, state.history) + '.';
+}
+function csvCell(v) { if (v === null || v === undefined) return ''; const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function downloadCsv() {
+  const head = ['county', 'fips3', 'region', 'study_county', 'modeled_mean_risk', 'share_cells_above_10pct', 'hc_events', 'events', 'deaths', 'damage_usd', 'county_sovi', 'population_density', 'scenario'];
+  const scen = scenarioSummary(state.sc, state.history);
+  const lines = [head.join(',')].concat(ctyRows.map(function (r) {
+    return [r.name, r.fips3, r.region, r.study ? 1 : 0, num(r.mean) ? r.mean.toFixed(4) : '', num(r.share10) ? r.share10.toFixed(4) : '',
+      r.hc_events, r.events, r.deaths, r.damage, r.SOVI_SCORE, r.population_density, scen].map(csvCell).join(',');
+  }));
+  const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'highground_counties.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+}
+function gotoCounty(idx) {
+  activateTab('map');
+  const g = COUNTY_GEO[idx];
+  if (g && MAP) {
+    const b = g.bbox, padLon = (b.east - b.west) * 0.6 + 0.1, padLat = (b.north - b.south) * 0.6 + 0.08;
+    MAP.fit({ west: b.west - padLon, east: b.east + padLon, south: b.south - padLat, north: b.north + padLat });
+    MAP.highlight = idx;
+  }
+  const k = COUNTY_LABEL_CELL[idx];
+  if (k !== undefined && k !== null && MAP) MAP.select(k);
+  if (MAP) MAP.canvas.focus({ preventScroll: true });
+  const m = document.getElementById('map-main'); if (m && m.scrollIntoView) m.scrollIntoView({ block: 'nearest' });
+}
+function initCounties() {
+  $('cty-search').addEventListener('input', renderCounties);
+  $('cty-study').addEventListener('change', renderCounties);
+  $('cty-csv').addEventListener('click', downloadCsv);
+  const t = $('cty-table');
+  t.tHead.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-sort]'); if (!b) return;
+    const k = b.getAttribute('data-sort');
+    if (ctySort.key === k) ctySort.dir = -ctySort.dir; else { ctySort.key = k; ctySort.dir = (k === 'name' || k === 'region') ? 1 : -1; }
+    renderCounties();
+    const nb = t.tHead.querySelector('[data-sort="' + k + '"]'); if (nb) nb.focus();
+  });
+  t.tBodies[0].addEventListener('click', function (e) { const tr = e.target.closest('tr[data-idx]'); if (tr) gotoCounty(+tr.getAttribute('data-idx')); });
+  t.tBodies[0].addEventListener('keydown', function (e) { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('tr[data-idx]'); if (tr) { e.preventDefault(); gotoCounty(+tr.getAttribute('data-idx')); } });
+}
+
+// ---------------------------------------------------------------- helene tab
+const HEL = (HAS_DATA && DATA.meta && DATA.meta.helene) || {};
+const HEL_LABEL = HEL.label || 'Helene';
+const HEL_COLS = [
+  { key: 'name', label: 'County', type: 's' },
+  { key: 'mean', label: 'Modeled mean risk', type: 'n', fmt: function (v) { return fmtPct(v); }, bar: true },
+  { key: 'rank_model', label: 'Model rank', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'helene_deaths', label: 'NOAA deaths', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'helene_damage', label: 'NOAA damage', type: 'n', fmt: fmtMoney },
+  { key: 'helene_hc_events', label: 'High-consequence events', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'helene_events', label: 'All events', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'rank_noaa', label: 'NOAA rank', type: 'n', fmt: function (v) { return fmtNum(v); } }
+];
+const helSort = { key: 'rank_model', dir: 1 };
+function competitionRank(rows, key, tieKey) {     // 1 = largest; ties share the lowest rank
+  const s = rows.slice().sort(function (a, b) { return (b[key] - a[key]) || (tieKey ? (b[tieKey] - a[tieKey]) : 0); });
+  const out = {};
+  s.forEach(function (r, i) { out[r.idx] = (i > 0 && s[i - 1][key] === r[key] && (!tieKey || s[i - 1][tieKey] === r[tieKey])) ? out[s[i - 1].idx] : i + 1; });
+  return out;
+}
+function heleneRows(studyOnly) {
+  const agg = STATS_HEL ? STATS_HEL.agg : {};
+  return COUNTY_STATS.filter(function (c) { return agg[c.idx] && (!studyOnly || c.study); }).map(function (c) {
+    return Object.assign({}, c, { mean: agg[c.idx].mean,
+      helene_deaths: c.helene_deaths || 0, helene_damage: c.helene_damage || 0, helene_hc_events: c.helene_hc_events || 0, helene_events: c.helene_events || 0 });
+  });
+}
+function rankByLabel(k) { return { helene_deaths: 'deaths', helene_damage: 'damage', helene_hc_events: 'high-consequence events' }[k]; }
+function renderHeleneTable() {
+  const rows = heleneRows($('hel-study').checked);
+  const by = $('hel-rankby').value;
+  const rm = competitionRank(rows, 'mean'), rn = competitionRank(rows, by, by === 'helene_deaths' ? 'helene_damage' : null);
+  rows.forEach(function (r) { r.rank_model = rm[r.idx]; r.rank_noaa = rn[r.idx]; });
+  rows.sort(function (a, b) { return cmp(a, b, helSort.key, helSort.dir) || String(a.name).localeCompare(String(b.name)); });
+  const cols = HEL_COLS.map(function (c) { return c.key === 'rank_noaa' ? Object.assign({}, c, { label: 'NOAA rank (' + rankByLabel(by) + ')' }) : c; });
+  const t = $('hel-table');
+  t.tHead.innerHTML = headerHtml(cols, helSort);
+  t.tBodies[0].innerHTML = rows.map(function (r) {
+    return '<tr class="click' + (r.study ? ' study' : '') + '" tabindex="0" data-idx="' + r.idx + '" aria-label="' + esc(r.name) + ' County: show on the Helene map">' + cols.map(function (c) {
+      const v = r[c.key];
+      if (c.type === 's') return '<td>' + esc(v) + (r.study ? ' <span class="badge study">study</span>' : '') + '</td>';
+      let cell = c.fmt(v);
+      if (c.bar && num(v)) cell += '<span class="ibar" aria-hidden="true"><span style="width:' + Math.min(100, v / RISK_ABS_MAX * 100) + '%;background:' + lutCss('risk', Math.min(1, v / RISK_ABS_MAX)) + '"></span></span>';
+      return '<td class="num">' + cell + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+}
+function heleneCompare() {
+  const studyOnly = $('hel-study').checked;
+  const rows = heleneRows(studyOnly);
+  const res = { n: rows.length, rho: {}, zeroDeaths: rows.filter(function (r) { return !r.helene_deaths; }).length };
+  ['helene_deaths', 'helene_damage', 'helene_hc_events'].forEach(function (k) {
+    res.rho[k] = spearman(rows.map(function (r) { return r.mean; }), rows.map(function (r) { return r[k]; }));
+  });
+  // top-10 overlap is always statewide (a top 10 of 11 study counties says little)
+  const all = heleneRows(false);
+  const topModel = all.slice().sort(function (a, b) { return b.mean - a.mean; }).slice(0, 10).map(function (r) { return r.idx; });
+  const withDeaths = all.filter(function (r) { return r.helene_deaths > 0; }).sort(function (a, b) { return (b.helene_deaths - a.helene_deaths) || (b.helene_damage - a.helene_damage); });
+  const topDeaths = withDeaths.slice(0, 10).map(function (r) { return r.idx; });
+  res.overlap = topModel.filter(function (i) { return topDeaths.indexOf(i) >= 0; }).length;
+  res.nDeathCounties = withDeaths.length;
+  res.topDeathsN = topDeaths.length;
+  res.allN = all.length;
+  return res;
+}
+function describeRho(r) {
+  if (!num(r)) return 'not defined';
+  const a = Math.abs(r);
+  return (a < 0.1 ? 'essentially none' : a < 0.3 ? 'weak' : a < 0.5 ? 'moderate' : 'strong') + (a >= 0.1 ? (r > 0 ? ', same direction' : ', opposite direction') : '');
+}
+function renderHeleneSide() {
+  const mm = (DATA.meta && DATA.meta.model) || {};
+  let h = '<h2>' + esc(HEL_LABEL) + ' as NOAA recorded it</h2><dl class="kv">';
+  if (HEL.start) h += '<dt>Event window</dt><dd>' + esc(HEL.start) + (HEL.end ? ' to ' + esc(HEL.end) : '') + '</dd>';
+  if (num(HEL.n_events)) h += '<dt>Flood-related events</dt><dd>' + fmtNum(HEL.n_events) + '</dd>';
+  if (num(HEL.n_deaths)) h += '<dt>Deaths</dt><dd>' + fmtNum(HEL.n_deaths) + '</dd>';
+  if (num(HEL.damage)) h += '<dt>Reported damage</dt><dd>' + fmtMoney(HEL.damage) + '</dd>';
+  h += '</dl>';
+  if (HEL.rain_window_note) h += '<p class="hint">Rain window: ' + esc(HEL.rain_window_note) + '</p>';
+  $('hel-summary').innerHTML = h;
+
+  const c = heleneCompare();
+  let g = '<h2>Does the model\'s ranking match?</h2>';
+  g += '<p style="font-size:.84rem;margin:0 0 6px">Spearman rank correlation between modeled mean risk and NOAA\'s ' + esc(HEL_LABEL) + ' record, across ' + c.n + ' ' + ($('hel-study').checked ? 'study ' : '') + 'counties:</p><div class="rho">';
+  [['helene_deaths', 'Deaths'], ['helene_damage', 'Damage'], ['helene_hc_events', 'High-consequence events']].forEach(function (x) {
+    const r = c.rho[x[0]];
+    g += '<span>' + x[1] + ' <small style="color:var(--muted)">(' + describeRho(r) + ')</small></span><span class="v">' + (num(r) ? r.toFixed(2) : 'n/a') + '</span>';
+  });
+  g += '</div>';
+  if (c.topDeathsN) {
+    g += '<p style="font-size:.84rem;margin:10px 0 0"><b>' + c.overlap + ' of the top 10</b> modeled counties (statewide) are also among the ' + (c.topDeathsN < 10 ? c.topDeathsN + ' counties with any reported deaths' : 'top 10 by NOAA deaths') + '.' +
+      (c.nDeathCounties < 10 ? ' Only ' + c.nDeathCounties + ' counties had reported ' + esc(HEL_LABEL) + ' deaths.' : '') + '</p>';
+  } else g += '<p class="hint">No county has reported ' + esc(HEL_LABEL) + ' deaths in this data, so the top-10 comparison is not shown.</p>';
+  g += '<p class="hint">' + (c.n < 25 ? 'With only ' + c.n + ' counties a rank correlation is noisy and needs to be large to mean much.' : (c.zeroDeaths ? c.zeroDeaths + ' of these counties had no recorded ' + esc(HEL_LABEL) + ' deaths, so many ranks are ties at zero; read these as a rough check.' : 'Read these as a rough check, not a test.')) + '</p>';
+  $('hel-compare').innerHTML = g;
+
+  $('hel-caveat').innerHTML = heleneCaveat(mm);
+  $('hel-meaning').textContent = 'Each grid cell is scored with the rain it actually received in the ' + HEL_LABEL + ' week, in September. ' + meaningText() +
+    ' The map then sits next to what NOAA recorded, as a check on the model.';
+}
+function heleneCaveat(mm) {
+  const parts = [];
+  parts.push('The model was fit on events from ' + esc(TRAIN_YEARS || 'the training years') + ' and never saw ' + esc(HEL_LABEL) + '.');
+  if (num(mm.holdout_pr_auc)) {
+    parts.push('On the ' + (num(mm.holdout_n) ? fmtNum(mm.holdout_n) + ' ' : '') + 'held-out events' + (TEST_YEARS ? ' from ' + esc(TEST_YEARS) : '') +
+      (num(mm.holdout_positives) ? ' (' + fmtNum(mm.holdout_positives) + ' high-consequence)' : '') + ', its PR-AUC was ' + fmt3(mm.holdout_pr_auc) +
+      (num(mm.holdout_pr_lo) && num(mm.holdout_pr_hi) ? ' (bootstrap interval ' + fmt3(mm.holdout_pr_lo) + ' to ' + fmt3(mm.holdout_pr_hi) + ')' : '') +
+      (num(DATA.meta.base_rate_test) ? ', against ' + fmt3(DATA.meta.base_rate_test) + ' for guessing' : '') + '.');
+  }
+  if (num(mm.helene_share_of_test_positives)) {
+    parts.push(fmtPct(mm.helene_share_of_test_positives, 0) + ' of the high-consequence test events come from the ' + esc(HEL_LABEL) + ' week, so the holdout mostly measures one storm' +
+      (num(mm.holdout_excl_helene_pr_auc) ? '; without that week the holdout PR-AUC is ' + fmt3(mm.holdout_excl_helene_pr_auc) + (num(mm.holdout_excl_helene_positives) ? ' (' + mm.holdout_excl_helene_positives + ' high-consequence events)' : '') : '') + '.');
+  }
+  parts.push('A good match here shows the model ranks places sensibly for this storm. It does not show it would do as well for the next one.');
+  return '<b>Read this first.</b> ' + parts.join(' ');
+}
+function initHelene() {
+  if (!HAS_HELENE) return;
+  const lh = $('layers-hel');
+  lh.querySelectorAll('[data-layer]').forEach(function (b) {
+    b.addEventListener('click', function () { state.helLayer = b.getAttribute('data-layer'); setPressed(lh, 'data-layer', state.helLayer); refreshHelCells(); });
+  });
+  const tg = lh.querySelector('[data-toggle="events"]');
+  tg.addEventListener('click', function () { state.helEvents = !state.helEvents; tg.setAttribute('aria-pressed', String(state.helEvents)); refreshHelCells(); HMAP.request(); });
+  if (!EVENTS.some(function (e) { return e.helene; })) tg.hidden = true;
+  $('legend-hel').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-scale]'); if (!b) return;
+    state.helRelative = b.getAttribute('data-scale') === 'rel'; refreshHelCells();
+    const nb = $('hscale-' + (state.helRelative ? 'rel' : 'abs')); if (nb) nb.focus();
+  });
+  document.querySelectorAll('[data-hhist]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.helHistory = b.getAttribute('data-hhist') === 'on';
+      setPressed(b.parentNode, 'data-hhist', state.helHistory ? 'on' : 'off');
+      updateHelene();
+    });
+  });
+  const dEnd = DATA.meta && DATA.meta.data_end, hEnd = HEL.end || HEL.start;
+  let hh = 'Recorded uses the flood-history counts stored for each cell. ';
+  if (PRE_HEL) {
+    hh += 'In this replay the counts only include events in the 3 years before ' + esc(HEL_LABEL) + ' began, so the storm\'s own events are not used.';
+  } else if (dEnd && hEnd && String(dEnd) > String(hEnd)) {
+    hh += 'Those counts were taken at the end of the data (' + esc(dEnd) + '), after ' + esc(HEL_LABEL) + ', so they can include ' + esc(HEL_LABEL) + '\'s own events. Choose Ignore history for a cleaner test of rain, season, place and people alone.';
+  } else hh += 'Ignore history sets them to the statewide average.';
+  $('hel-hist-hint').textContent = hh;
+  $('hel-study').addEventListener('change', function () { renderHeleneSide(); renderHeleneTable(); });
+  $('hel-rankby').addEventListener('change', renderHeleneTable);
+  const t = $('hel-table');
+  t.tHead.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-sort]'); if (!b) return;
+    const k = b.getAttribute('data-sort');
+    if (helSort.key === k) helSort.dir = -helSort.dir; else { helSort.key = k; helSort.dir = (k === 'name' || k.indexOf('rank') === 0) ? 1 : -1; }
+    renderHeleneTable();
+    const nb = t.tHead.querySelector('[data-sort="' + k + '"]'); if (nb) nb.focus();
+  });
+  function go(idx) {
+    const g = COUNTY_GEO[idx];
+    if (g) { const b = g.bbox, pl = (b.east - b.west) * 0.6 + 0.1, pa = (b.north - b.south) * 0.6 + 0.08; HMAP.fit({ west: b.west - pl, east: b.east + pl, south: b.south - pa, north: b.north + pa }); HMAP.highlight = idx; }
+    const k = COUNTY_LABEL_CELL[idx]; if (k !== undefined) HMAP.select(k);
+    $('map-hel').scrollIntoView({ block: 'nearest' });
+  }
+  t.tBodies[0].addEventListener('click', function (e) { const tr = e.target.closest('tr[data-idx]'); if (tr) go(+tr.getAttribute('data-idx')); });
+  t.tBodies[0].addEventListener('keydown', function (e) { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('tr[data-idx]'); if (tr) { e.preventDefault(); go(+tr.getAttribute('data-idx')); } });
+}
+
+// ---------------------------------------------------------------- about tab
+function renderAbout() {
+  const meta = DATA.meta || {}, mm = meta.model || {}, val = DATA.validation || null;
+  let h = '';
+  // model
+  h += '<div class="card navy wide"><h2>What the model is</h2>';
+  const mname = mm.name || 'Logistic regression';
+  h += '<p style="font-size:.9rem;margin:0 0 6px">' + esc(mname) + (/feature|input/i.test(mname) ? '' : ', ' + FEAT_KEYS.length + ' inputs') + '. The inputs fall in ' + GROUP_ORDER.length + ' groups (' +
+    GROUP_ORDER.map(function (g) { return esc(GROUP_LABEL[g]); }).join(', ') + '). It was fit on NOAA flood-related events' + (TRAIN_YEARS ? ' from ' + esc(TRAIN_YEARS) : '') +
+    (num(meta.n_dev) ? ' (' + fmtNum(meta.n_dev) + ' events' + (num(meta.n_dev_positives) ? ', ' + fmtNum(meta.n_dev_positives) + ' high-consequence' : '') + ')' : '') +
+    '. The outcome: ' + esc(meta.hc_definition || 'a high-consequence event') + '. The probabilities are calibrated, so 20% means about 1 in 5 such events.</p>';
+  if (mm.note) h += '<p class="hint">' + esc(mm.note) + '</p>';
+  h += '<h3>Standardized coefficients</h3><p class="hint" style="margin-bottom:6px">Change in log-odds for a one-standard-deviation increase in each input, holding the others fixed. Red: higher values go with more severe events; teal: with less severe ones. Inputs within a group are correlated, so read groups more than single bars.</p>';
+  const maxC = Math.max(0.05, FEAT_KEYS.reduce(function (m, k) { return Math.max(m, Math.abs(M.coef[k] || 0)); }, 0));
+  h += '<div class="coef">';
+  const groups = GROUP_ORDER.length ? GROUP_ORDER : [null];
+  groups.forEach(function (g) {
+    const keys = FEAT_KEYS.filter(function (k) { return g === null || groupOf(k) === g; });
+    if (!keys.length) return;
+    if (g !== null) h += '<div class="grp">' + esc(GROUP_LABEL[g]) + '</div>';
+    keys.forEach(function (k) {
+      const c = M.coef[k] || 0, w = Math.abs(c) / maxC * 50;
+      const f = FEAT_META[k] || {};
+      const flag = f.unit === 'flag' || k === 'peak_hurricane_season';
+      const dir = Math.abs(c) < 0.01 ? 'little effect' : (flag ? (c > 0 ? 'more severe when yes' : 'less severe when yes') : (c > 0 ? 'higher, more severe' : 'higher, less severe'));
+      h += '<div title="' + esc(f.description || '') + '">' + esc(featLabel(k)) + '</div><div class="trk"><span class="bar ' + (c >= 0 ? 'up' : 'dn') + '" style="width:' + w.toFixed(1) + '%"></span></div>' +
+        '<div class="dir">' + (c >= 0 ? '+' : '') + c.toFixed(2) + ' (odds x' + Math.exp(c).toFixed(2) + '), ' + dir + '</div>';
+    });
+  });
+  h += '</div></div>';
+
+  // validation
+  h += '<div class="card"><h2>How well it does</h2>';
+  if (num(mm.cv_pr_auc)) {
+    const rows = [];
+    if (num(mm.cv_base_rate)) rows.push(['No skill (base rate)', mm.cv_base_rate, null, '#9fb0bb']);
+    if (num(mm.season_only_pr_auc)) rows.push(['Season only', mm.season_only_pr_auc, null, '#4a9cc9']);
+    rows.push(['This model', mm.cv_pr_auc, mm.cv_pr_auc_sd, '#1b7a8c']);
+    const mx = Math.max.apply(null, rows.map(function (r) { return r[1] + (r[2] || 0); })) * 1.1;
+    h += '<p style="font-size:.86rem;margin:0 0 6px">Cross-validated PR-AUC' + (TRAIN_YEARS ? ' on ' + esc(TRAIN_YEARS) : '') + ' (events grouped by storm episode). Higher is better; the base rate is what guessing scores.</p><div class="hbar">';
+    rows.forEach(function (r) {
+      h += '<span>' + r[0] + '</span><span class="trk"><span style="width:' + (r[1] / mx * 100) + '%;background:' + r[3] + '"></span>' +
+        (r[2] ? '<i style="left:' + ((r[1] - r[2]) / mx * 100) + '%;width:' + (2 * r[2] / mx * 100) + '%"></i>' : '') + '</span><span class="v">' + fmt3(r[1]) + (r[2] ? ' &plusmn; ' + fmt3(r[2]) : '') + '</span>';
+    });
+    h += '</div><p class="hint">Whisker: plus or minus one standard deviation across folds.</p>';
+  }
+  if (num(mm.holdout_pr_auc)) {
+    h += '<h3>Held-out years' + (TEST_YEARS ? ' (' + esc(TEST_YEARS) + ')' : '') + '</h3><dl class="kv">';
+    h += '<dt>PR-AUC</dt><dd>' + fmt3(mm.holdout_pr_auc) + (num(mm.holdout_pr_lo) ? ' (' + fmt3(mm.holdout_pr_lo) + ' to ' + fmt3(mm.holdout_pr_hi) + ')' : '') + '</dd>';
+    if (num(meta.base_rate_test)) h += '<dt>Base rate</dt><dd>' + fmt3(meta.base_rate_test) + '</dd>';
+    if (num(mm.holdout_top10_capture)) h += '<dt>Share of positives in top 10%</dt><dd>' + fmtPct(mm.holdout_top10_capture, 0) + (num(mm.holdout_top10_lo) ? ' (' + fmtPct(mm.holdout_top10_lo, 0) + ' to ' + fmtPct(mm.holdout_top10_hi, 0) + ')' : '') + '</dd>';
+    if (num(mm.holdout_n)) h += '<dt>Events</dt><dd>' + fmtNum(mm.holdout_n) + (num(mm.holdout_positives) ? ' (' + fmtNum(mm.holdout_positives) + ' high-consequence)' : '') + '</dd>';
+    if (num(mm.holdout_excl_helene_pr_auc)) h += '<dt>PR-AUC without ' + esc(HEL_LABEL) + ' week</dt><dd>' + fmt3(mm.holdout_excl_helene_pr_auc) + (num(mm.holdout_excl_helene_positives) ? ' (' + mm.holdout_excl_helene_positives + ' positives)' : '') + '</dd>';
+    h += '</dl>';
+    if (num(mm.helene_share_of_test_positives)) h += '<div class="note warn">' + fmtPct(mm.helene_share_of_test_positives, 0) + ' of the held-out high-consequence events come from the ' + esc(HEL_LABEL) + ' week. The holdout score mostly says how the model ranked places in one storm' + (num(mm.holdout_excl_helene_pr_auc) ? '; without that week it is ' + fmt3(mm.holdout_excl_helene_pr_auc) : '') + '.</div>';
+  }
+  if (!num(mm.cv_pr_auc) && !num(mm.holdout_pr_auc)) h += '<p class="empty">Validation numbers are not included in this build.</p>';
+  if (val && val.permutation && num(val.permutation.observed)) {
+    const pm = val.permutation;
+    h += '<h3>Permutation test</h3><p style="font-size:.86rem;margin:0">Observed PR-AUC ' + fmt3(pm.observed) + ' vs. ' + fmt3(pm.null_mean) + ' on average when outcomes are shuffled' +
+      (num(pm.null_p95) ? ' (95th percentile ' + fmt3(pm.null_p95) + ')' : '') + (num(pm.n_perm) ? ', ' + fmtNum(pm.n_perm) + ' shuffles' : '') + (num(pm.p_value) ? '; p = ' + (pm.p_value < 0.001 ? '<0.001' : pm.p_value.toFixed(3)) : '') + '.</p>';
+  }
+  h += '</div>';
+
+  // ladder
+  h += '<div class="card"><h2>What each group adds</h2>';
+  if (val && val.ladder && val.ladder.length) {
+    const L = val.ladder.filter(function (r) { return num(r.gain); });
+    const multi = new Set(L.map(function (r) { return r.model; })).size > 1;
+    const ext = Math.max(0.02, L.reduce(function (m, r) { return Math.max(m, Math.abs(r.gain), Math.abs(r.lo || 0), Math.abs(r.hi || 0)); }, 0)) * 1.1;
+    h += '<p style="font-size:.86rem;margin:0 0 6px">Gain in cross-validated PR-AUC from adding each group to the ones above it, with its interval. An interval that crosses zero means no clear gain.</p><div class="hbar ci" style="--zero:50%">';
+    L.forEach(function (r) {
+      const x = function (v) { return (50 + v / ext * 50).toFixed(1) + '%'; };
+      h += '<span>' + esc(r.group) + (multi ? ' <small style="color:var(--muted)">' + esc(r.model) + '</small>' : '') + '</span><span class="trk">' +
+        (num(r.lo) && num(r.hi) ? '<i style="left:' + x(r.lo) + ';width:calc(' + x(r.hi) + ' - ' + x(r.lo) + ')"></i>' : '') + '<b style="left:' + x(r.gain) + '"></b></span>' +
+        '<span class="v">' + (r.gain >= 0 ? '+' : '') + fmt3(r.gain) + (num(r.lo) ? ' <small style="color:var(--muted);font-weight:400">(' + fmt3(r.lo) + ' to ' + fmt3(r.hi) + ')</small>' : '') + '</span>';
+    });
+    h += '</div>';
+  } else h += '<p class="empty">Feature-group gains are not included in this build.</p>';
+  if (val && val.spatial && val.spatial.length) {
+    const spm = new Set(val.spatial.map(function (r) { return r.model; })).size > 1;
+    h += '<h3>Other ways of splitting the data</h3><div class="tablewrap"><table class="data"><thead><tr><th style="padding:6px 8px">Scheme</th>' + (spm ? '<th style="padding:6px 8px">Model</th>' : '') + '<th class="num" style="padding:6px 8px">PR-AUC</th><th class="num" style="padding:6px 8px">ROC-AUC</th></tr></thead><tbody>' +
+      val.spatial.map(function (r) { return '<tr><td style="white-space:normal">' + esc(r.scheme) + '</td>' + (spm ? '<td>' + esc(r.model) + '</td>' : '') + '<td class="num">' + fmt3(r.pr_auc) + (num(r.pr_sd) ? ' &plusmn; ' + fmt3(r.pr_sd) : '') + '</td><td class="num">' + fmt3(r.roc_auc) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  h += '</div>';
+  if (val && val.temporal && val.temporal.length) {
+    const tmm = new Set(val.temporal.map(function (r) { return r.model; })).size > 1;
+    h += '<div class="card wide"><h2>Year by year</h2><p style="font-size:.86rem;margin:0 0 6px">Scores for each year\'s events on their own. Years with few high-consequence events swing a lot.</p><div class="tablewrap"><table class="data"><thead><tr>' +
+      ['Year', 'Model', 'Events', 'High-consequence', 'Base rate', 'PR-AUC', 'ROC-AUC'].filter(function (x) { return tmm || x !== 'Model'; }).map(function (x, i) { return '<th class="' + (i > (tmm ? 1 : 0) ? 'num' : '') + '" style="padding:6px 8px">' + x + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      val.temporal.map(function (r) {
+        return '<tr><td>' + esc(r.year) + '</td>' + (tmm ? '<td>' + esc(r.model) + '</td>' : '') + '<td class="num">' + fmtNum(r.n) + '</td><td class="num">' + fmtNum(r.positives) + '</td><td class="num">' + fmt3(r.base_rate) + '</td><td class="num">' + fmt3(r.pr_auc) +
+          (num(r.pr_auc) && num(r.base_rate) ? '<span class="ibar" aria-hidden="true"><span style="width:' + Math.min(100, r.pr_auc * 100) + '%;background:#1b7a8c"></span></span>' : '') + '</td><td class="num">' + fmt3(r.roc_auc) + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // responsible use, limitations, sources
+  h += '<div class="card alert"><h2>How to use this responsibly</h2><ul class="plain">' +
+    '<li>It is not a warning system. It explains patterns in past records; it does not forecast storms or floods.</li>' +
+    '<li>It estimates severity given that a flood-related event happens and is reported, not whether one will happen.</li>' +
+    '<li>Grid cells are about ' + Math.round(DLAT * 111) + ' km across and use conditions at the cell center, so local conditions (a single road, culvert or creek) can differ.</li>' +
+    '<li>The outcome is NOAA\'s reported record. Places where damage is reported less often can look safer than they are.</li>' +
+    '<li>Use it to ask better questions about where to look, alongside local knowledge, FEMA flood maps and engineering review.</li></ul></div>';
+  const lim = meta.limitations || [];
+  h += '<div class="card"><h2>Limitations</h2>' + (lim.length ? '<ul class="plain">' + lim.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : '<p class="empty">Not listed in this build.</p>') + '</div>';
+  const src = meta.sources || [];
+  h += '<div class="card wide river"><h2>Data sources</h2>' + (src.length ? '<ul class="plain">' + src.map(function (s) { return '<li><b>' + esc(s.name) + '.</b> ' + esc(s.note || '') + '</li>'; }).join('') + '</ul>' : '<p class="empty">Not listed in this build.</p>') + '</div>';
+  $('about').innerHTML = h;
+}
+
+// ---------------------------------------------------------------- init
+function initHeader() {
+  const meta = DATA.meta || {};
+  if (meta.title) { $('title').textContent = meta.title; document.title = meta.title; }
+  $('subtitle').textContent = meta.subtitle || '';
+  const thr = thresholdText();
+  $('lead').innerHTML = '<strong>What the map shows:</strong> for each square about ' + Math.round(DLAT * 111) + ' km across, the estimated chance that a flood-related storm event reported there would be high-consequence (' +
+    (thr ? 'a death or damage above ' + esc(thr) : esc(meta.hc_definition || 'a death or major damage')) + '), under the storm you choose. <strong>It is explanatory, not a forecast:</strong> it describes patterns in past NOAA records and does not predict whether or where a flood will happen.';
+  const study = COUNTY_STATS.filter(function (c) { return c.study; }).length;
+  $('st-study-lab').textContent = 'Study-area mean (' + (study ? study + ' Western NC counties' : 'no study counties') + ')';
+  $('foot').textContent = 'Carolina HighGround explorer' + (meta.generated ? '. Data built ' + meta.generated : '') + (meta.data_end ? ', records through ' + meta.data_end : '') +
+    '. Single self-contained page; nothing is loaded from the network.';
+}
+function init() {
+  if (!HAS_DATA) {
+    document.getElementById('app').innerHTML = '<div class="note warn" style="margin-top:20px">No data was injected into this page. Build it with src/python/export_explorer.py.</div>';
+    return;
+  }
+  buildGeo();
+  initHeader();
+  initTabs();
+  initControls();
+  initCounties();
+  initHelene();
+  renderAbout();
+  renderPlace($('place'), -1, 'scenario');
+  MAP = new MapView($('map-main'), {
+    initial: function () { return STATE_BOUNDS; },
+    showEvents: function () { return state.events; },
+    eventFilter: null,
+    tipHtml: function (k) { return tipHtmlFor(k, 'scenario'); },
+    onSelect: function (k) {
+      state.selected = k; const c = CELL_COUNTY[k];
+      if (MAP.highlight !== c) MAP.highlight = -1;
+      renderPlace($('place'), k, 'scenario');
+    }
+  });
+  if (HAS_HELENE) {
+    renderPlace($('hel-place'), -1, 'helene');
+    HMAP = new MapView($('map-hel'), {
+      initial: function () { return STUDY_BOUNDS || STATE_BOUNDS; },
+      showEvents: function () { return state.helEvents; },
+      eventFilter: function (e) { return !!e.helene; },
+      tipHtml: function (k) { return tipHtmlFor(k, 'helene'); },
+      onSelect: function (k) { state.helSelected = k; if (HMAP.highlight !== CELL_COUNTY[k]) HMAP.highlight = -1; renderPlace($('hel-place'), k, 'helene'); }
+    });
+  }
+  if (DATA.hillshade && DATA.hillshade.uri) {
+    const img = new Image();
+    img.onload = function () { HILL_IMG = img; if (MAP) MAP.request(); if (HMAP) HMAP.request(); };
+    img.src = DATA.hillshade.uri;
+  }
+  updateScenario();
+  updateHelene();
+  activateTab('map');
+}
+if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+}
+</script>
+</body>
+</html>

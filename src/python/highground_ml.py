@@ -588,6 +588,451 @@ def shap_values(rf, X, features):
     return sv, X_shap, importance
 
 
+# ---- Generalization checks ---------------------------------------------------------
+# Named feature groups for the ablation (same columns as the ladder).
+ABLATION_GROUPS = [("Season", SEASON), ("Place", PLACE), ("People", PEOPLE), ("History", HISTORY),
+                   ("Rainfall", RAINFALL), ("Hydrology", HYDROLOGY), ("Tract SVI", TRACT_SVI)]
+VALIDATION_MODELS = ("Logistic regression", "Random forest")
+
+
+def _fit_predict(model_name, X_tr, y_tr, X_te):
+    """Median imputation (and scaling when the model needs it) fit on the
+    training rows only, then the model's predicted probability for X_te."""
+    imp = SimpleImputer(strategy="median", keep_empty_features=True).fit(X_tr)
+    A, B = imp.transform(X_tr), imp.transform(X_te)
+    if needs_scaling(model_name):
+        sc = StandardScaler().fit(A)
+        A, B = sc.transform(A), sc.transform(B)
+    return make_model(model_name).fit(A, np.asarray(y_tr)).predict_proba(B)[:, 1]
+
+
+def _safe_scores(y, p):
+    """(PR-AUC, ROC-AUC); NaN when the rows have no positives (PR-AUC) or
+    only one class (ROC-AUC), instead of an error or a misleading 0."""
+    y = np.asarray(y)
+    pr = float(average_precision_score(y, p)) if y.sum() > 0 else np.nan
+    roc = float(roc_auc_score(y, p)) if 0 < y.sum() < len(y) else np.nan
+    return pr, roc
+
+
+def ablation_sets(features):
+    """Reduced feature sets for the order-sensitivity check.
+
+    Returns a list of (set name, kind, columns): "Full model", "Rainfall
+    only" and "Season + Rainfall" (kind "subset"; only when the rainfall
+    columns are in `features`), and "Full minus <group>" for every group in
+    `ABLATION_GROUPS` that has columns in `features` (kind "drop one").
+    Column order follows `features`, so "Full minus Tract SVI" reuses the
+    "+ Hydrology" ladder scores from the cache.
+    """
+    feats = list(features)
+    present = [(g, [c for c in cols if c in feats]) for g, cols in ABLATION_GROUPS]
+    present = [(g, cols) for g, cols in present if cols]
+    have = dict(present)
+    out = [("Full model", "full", feats)]
+    if "Rainfall" in have:
+        out.append(("Rainfall only", "subset", have["Rainfall"]))
+        if "Season" in have:
+            keep = set(have["Season"]) | set(have["Rainfall"])
+            out.append(("Season + Rainfall", "subset", [c for c in feats if c in keep]))
+    for g, cols in present:
+        rest = [c for c in feats if c not in cols]
+        if rest:
+            out.append((f"Full minus {g}", "drop one", rest))
+    return out
+
+
+def ablation_study(devel, fold_list, features, models=VALIDATION_MODELS, cache=None):
+    """Order-sensitivity check for the feature ladder.
+
+    The ladder adds groups in a fixed order, so a group added early can take
+    credit that a later group would also have earned. Here each reduced set
+    from `ablation_sets` is scored on the same folds as the ladder, and the
+    full model is compared with it fold by fold: gain = PR-AUC(full) -
+    PR-AUC(reduced) on the same fold. The interval is mean +/- 1.96 * sd /
+    sqrt(n_folds); folds from repeated CV share training rows and events, so
+    they are not independent and the interval is approximate (probably too
+    narrow). A "Full minus X" gain whose interval is above zero means the
+    full model needs group X even with every other group present.
+
+    Returns one row per set x model: set, kind, model, n_features,
+    features, pr_auc, pr_auc_sd, roc_auc, full_pr_auc, gain_full_vs_set,
+    gain_lo, gain_hi, share_folds_full_better, n_folds.
+    """
+    sets = ablation_sets(features)
+    rows = []
+    for m in models:
+        full = _cv_cached(cache, m, devel, list(features), fold_list)
+        for name, kind, cols in sets:
+            f = _cv_cached(cache, m, devel, cols, fold_list)
+            row = {"set": name, "kind": kind, "model": m, "n_features": len(cols), "features": ", ".join(cols),
+                   "pr_auc": f["pr_auc"].mean(), "pr_auc_sd": f["pr_auc"].std(ddof=0),
+                   "roc_auc": f["roc_auc"].mean(), "full_pr_auc": full["pr_auc"].mean(), "n_folds": len(f),
+                   "gain_full_vs_set": np.nan, "gain_lo": np.nan, "gain_hi": np.nan,
+                   "share_folds_full_better": np.nan}
+            if kind != "full":
+                g, lo, hi, share = _paired(full["pr_auc"].to_numpy() - f["pr_auc"].to_numpy())
+                row.update({"gain_full_vs_set": g, "gain_lo": lo, "gain_hi": hi, "share_folds_full_better": share})
+            rows.append(row)
+    cols = ["set", "kind", "model", "n_features", "features", "pr_auc", "pr_auc_sd", "roc_auc", "full_pr_auc",
+            "gain_full_vs_set", "gain_lo", "gain_hi", "share_folds_full_better", "n_folds"]
+    return pd.DataFrame(rows)[cols]
+
+
+def county_blocked_cv(devel, features, models=VALIDATION_MODELS, repeats=5, folds=10, seed_base=100,
+                      group_col="county_fips3", purge_episodes=False):
+    """Cross-validation that holds out whole counties.
+
+    StratifiedGroupKFold with groups = county code, `folds` folds, repeated
+    with seeds seed_base + rep (the project's cv_repeats seeds). Every event
+    in a held-out county is scored by a model that never saw that county.
+    Events without a county code share one group (-1). Storm episodes can
+    span counties, so one storm can still sit on both sides of a split
+    (in this data most high-consequence events belong to multi-county
+    episodes). With purge_episodes=True, training rows whose episode_id
+    also appears in the held-out counties are dropped, so neither the place
+    nor the storm has been seen in training.
+
+    Returns fold-level scores: model, rep, fold, n_train, n_valid,
+    n_valid_pos, pr_auc, roc_auc (NaN for a fold with no positives).
+    """
+    y = devel[TARGET].to_numpy()
+    groups = pd.to_numeric(devel[group_col], errors="coerce").fillna(-1).to_numpy()
+    episodes = devel[GROUP].to_numpy()
+    X = devel[list(features)].reset_index(drop=True)
+    dummy = np.zeros((len(y), 1))
+    splits = []
+    for rep in range(int(repeats)):
+        skf = StratifiedGroupKFold(n_splits=int(folds), shuffle=True, random_state=seed_base + rep)
+        splits += [(rep, k, tr, va) for k, (tr, va) in enumerate(skf.split(dummy, y, groups))]
+    rows = []
+    for m in models:
+        for rep, k, tr, va in splits:
+            if purge_episodes:
+                tr = tr[~np.isin(episodes[tr], episodes[va])]
+            p = _fit_predict(m, X.iloc[tr], y[tr], X.iloc[va])
+            pr, roc = _safe_scores(y[va], p)
+            rows.append({"model": m, "rep": rep, "fold": k, "n_train": len(tr), "n_valid": len(va),
+                         "n_valid_pos": int(y[va].sum()), "pr_auc": pr, "roc_auc": roc})
+    return pd.DataFrame(rows)
+
+
+def region_holdout(devel, features, models=VALIDATION_MODELS, region_col="region", purge_episodes=False):
+    """Train on two regions (mountains, central, coastal) and test on the third.
+
+    Uses only the rows passed in (the development years). Each region's
+    PR-AUC should be read against that region's own base rate, which differs
+    between regions. With purge_episodes=True, training rows from storm
+    episodes that also reach the held-out region are dropped.
+
+    Returns one row per held-out region x model: model, held_out, n_train,
+    n, positives, base_rate, pr_auc, roc_auc (NaN if the region has no
+    positives).
+    """
+    y = devel[TARGET].to_numpy()
+    X = devel[list(features)].reset_index(drop=True)
+    reg = devel[region_col].to_numpy()
+    episodes = devel[GROUP].to_numpy()
+    rows = []
+    for m in models:
+        for r in sorted(pd.unique(devel[region_col].dropna())):
+            te = reg == r
+            tr = ~te
+            if purge_episodes:
+                tr = tr & ~np.isin(episodes, episodes[te])
+            p = _fit_predict(m, X[tr], y[tr], X[te])
+            pr, roc = _safe_scores(y[te], p)
+            rows.append({"model": m, "held_out": r, "n_train": int(tr.sum()), "n": int(te.sum()),
+                         "positives": int(y[te].sum()),
+                         "base_rate": float(y[te].mean()), "pr_auc": pr, "roc_auc": roc})
+    return pd.DataFrame(rows)
+
+
+def spatial_validation(devel, features, episode_folds, models=VALIDATION_MODELS, repeats=5, county_folds=10,
+                       seed_base=100, cache=None):
+    """Episode-grouped CV vs county-blocked CV vs region held out, side by side.
+
+    The episode-grouped rows reuse the ladder's folds (and `cache`), so they
+    match the scores reported elsewhere. County-blocked rows average the
+    fold scores from `county_blocked_cv` over folds that have positives
+    (n_folds_no_pos counts the folds recorded as NaN). Region rows come from
+    `region_holdout`; a "Mean of regions" row averages the three regions
+    (pr_sd is then the SD across regions). A model that scores much lower
+    when whole counties or regions are held out is leaning on
+    place-specific patterns rather than rules that transfer to new places.
+
+    County and region schemes are run twice: as specified (only the place
+    is held out) and "storm-purged" (training rows from any episode that
+    reaches the held-out place are dropped too). Without the purge a storm
+    that crossed county lines is partly in training, which can make the
+    place-blocked score look better than the episode-grouped one.
+
+    Returns a DataFrame: scheme, model, held_out, n, positives, base_rate,
+    pr_auc, pr_sd, roc_auc, n_folds, n_folds_no_pos. Also returns the
+    county fold scores (with a `purged` column) as the second element.
+    """
+    y = devel[TARGET]
+    n, pos, base = len(devel), int(y.sum()), float(y.mean())
+    n_ep_folds = len({k for _, k, _, _ in episode_folds})
+    n_ep_reps = len({r for r, _, _, _ in episode_folds})
+    county = pd.concat([
+        county_blocked_cv(devel, features, models, repeats, county_folds, seed_base).assign(purged=False),
+        county_blocked_cv(devel, features, models, repeats, county_folds, seed_base,
+                          purge_episodes=True).assign(purged=True)], ignore_index=True)
+    region = pd.concat([region_holdout(devel, features, models).assign(purged=False),
+                        region_holdout(devel, features, models, purge_episodes=True).assign(purged=True)],
+                       ignore_index=True)
+    suffix = {False: "", True: ", storm-purged"}
+    rows = []
+    for m in models:
+        e = _cv_cached(cache, m, devel, list(features), episode_folds)
+        rows.append({"scheme": "Episode-grouped CV", "model": m,
+                     "held_out": f"{n_ep_folds} folds of storm episodes x {n_ep_reps} repeats",
+                     "n": n, "positives": pos, "base_rate": base, "pr_auc": e["pr_auc"].mean(),
+                     "pr_sd": e["pr_auc"].std(ddof=0), "roc_auc": e["roc_auc"].mean(),
+                     "n_folds": len(e), "n_folds_no_pos": int((e["n_valid_pos"] == 0).sum())})
+        for purged in (False, True):
+            c = county[(county["model"] == m) & (county["purged"] == purged)]
+            rows.append({"scheme": "County-blocked CV" + suffix[purged], "model": m,
+                         "held_out": f"{int(county_folds)} folds of counties x {int(repeats)} repeats",
+                         "n": n, "positives": pos, "base_rate": base, "pr_auc": float(np.nanmean(c["pr_auc"])),
+                         "pr_sd": float(np.nanstd(c["pr_auc"])), "roc_auc": float(np.nanmean(c["roc_auc"])),
+                         "n_folds": len(c), "n_folds_no_pos": int(c["pr_auc"].isna().sum())})
+        for purged in (False, True):
+            g = region[(region["model"] == m) & (region["purged"] == purged)]
+            sch = "Region held out" + suffix[purged]
+            for _, r in g.iterrows():
+                rows.append({"scheme": sch, "model": m, "held_out": r["held_out"], "n": r["n"],
+                             "positives": r["positives"], "base_rate": r["base_rate"], "pr_auc": r["pr_auc"],
+                             "pr_sd": np.nan, "roc_auc": r["roc_auc"], "n_folds": 1,
+                             "n_folds_no_pos": int(r["positives"] == 0)})
+            rows.append({"scheme": sch, "model": m, "held_out": "Mean of regions", "n": int(g["n"].sum()),
+                         "positives": int(g["positives"].sum()), "base_rate": float(g["base_rate"].mean()),
+                         "pr_auc": float(np.nanmean(g["pr_auc"])), "pr_sd": float(np.nanstd(g["pr_auc"])),
+                         "roc_auc": float(np.nanmean(g["roc_auc"])), "n_folds": len(g),
+                         "n_folds_no_pos": int(g["pr_auc"].isna().sum())})
+    out = pd.DataFrame(rows)
+    out["n"] = out["n"].astype(int)
+    out["positives"] = out["positives"].astype(int)
+    return out, county
+
+
+def storm_span_summary(devel, county_fold_scores=None):
+    """How much storms cross place boundaries in the development rows.
+
+    Returns a dict: share_pos_multi_county and share_pos_multi_region
+    (share of high-consequence events whose episode spans more than one
+    county / region), and, if county fold scores from `spatial_validation`
+    are given, mean_train_unpurged and mean_train_purged (average training
+    rows per county-blocked fold without and with the storm purge).
+    """
+    pos = devel[TARGET] == 1
+    span_c = devel.groupby(GROUP)["county_fips3"].transform("nunique")
+    span_r = devel.groupby(GROUP)["region"].transform("nunique")
+    out = {"share_pos_multi_county": float((span_c[pos] > 1).mean()) if pos.any() else np.nan,
+           "share_pos_multi_region": float((span_r[pos] > 1).mean()) if pos.any() else np.nan}
+    if county_fold_scores is not None and "purged" in county_fold_scores:
+        cf = county_fold_scores
+        out["mean_train_unpurged"] = float(cf.loc[~cf["purged"], "n_train"].mean())
+        out["mean_train_purged"] = float(cf.loc[cf["purged"], "n_train"].mean())
+    return out
+
+
+def rolling_origin(frame, features, models=VALIDATION_MODELS, first_year=2019, last_year=2025, min_pos=5,
+                   year_col="event_year"):
+    """Temporal validation: for each year Y, fit on all events with
+    year < Y and score the events of year Y.
+
+    Imputation and scaling are fit on the training years inside each fit.
+    The target is used as exported: its damage threshold was set once from
+    the training-split years and is not recomputed per origin, so early
+    origins use a label definition informed by a few later years. Years with
+    fewer than `min_pos` positives are flagged (few_positives) because their
+    PR-AUC rests on a handful of events. The pooled row scores the
+    concatenated predictions of all test years together; each year comes
+    from a different fit, so it mixes score scales and is a rough summary.
+
+    Returns: label, year (NaN on the pooled row), model, n_train,
+    train_positives, n, positives, base_rate, pr_auc, roc_auc,
+    few_positives, min_pos.
+    """
+    yr = pd.to_numeric(frame[year_col], errors="coerce").to_numpy()
+    y = frame[TARGET].to_numpy().astype(int)
+    X = frame[list(features)].reset_index(drop=True)
+    rows = []
+    for m in models:
+        ys, ps = [], []
+        for Y in range(int(first_year), int(last_year) + 1):
+            tr, te = yr < Y, yr == Y
+            if te.sum() == 0 or y[tr].sum() == 0:
+                continue
+            p = _fit_predict(m, X[tr], y[tr], X[te])
+            pr, roc = _safe_scores(y[te], p)
+            ys.append(y[te]); ps.append(p)
+            rows.append({"label": str(Y), "year": float(Y), "model": m, "n_train": int(tr.sum()),
+                         "train_positives": int(y[tr].sum()), "n": int(te.sum()), "positives": int(y[te].sum()),
+                         "base_rate": float(y[te].mean()), "pr_auc": pr, "roc_auc": roc,
+                         "few_positives": bool(y[te].sum() < min_pos), "min_pos": int(min_pos)})
+        if ys:
+            yy, pp = np.concatenate(ys), np.concatenate(ps)
+            pr, roc = _safe_scores(yy, pp)
+            rows.append({"label": f"Pooled {first_year}-{last_year}", "year": np.nan, "model": m, "n_train": np.nan,
+                         "train_positives": np.nan, "n": len(yy), "positives": int(yy.sum()),
+                         "base_rate": float(yy.mean()), "pr_auc": pr, "roc_auc": roc,
+                         "few_positives": bool(yy.sum() < min_pos), "min_pos": int(min_pos)})
+    return pd.DataFrame(rows)
+
+
+def permutation_test(devel, features, model="Logistic regression", n_perm=500, folds=5, seed=2026, fold_seed=100,
+                     return_null=False):
+    """Label-permutation test of the cross-validated PR-AUC.
+
+    The observed score is the mean PR-AUC over one repeat of 5-fold
+    episode-grouped CV (seed `fold_seed`). The null distribution shuffles
+    the development labels `n_perm` times (fixed seed) and rescores each
+    shuffle on the same folds. The shuffle is over single events, so it
+    ignores episode structure (events from one storm share outcomes); a
+    shuffle between whole episodes would give a somewhat wider null.
+    Imputation and scaling do not depend on the labels, so they are fit
+    once per fold. p-value = (1 + #null >= observed) / (1 + n_perm).
+
+    Returns a one-row DataFrame: model, observed, null_mean, null_sd,
+    null_p95, null_max, n_null_ge_observed, p_value, n_perm, n_folds. With
+    return_null=True, returns (summary, array of null scores).
+    """
+    y = devel[TARGET].to_numpy().astype(int)
+    X = devel[list(features)].reset_index(drop=True)
+    fl = make_group_folds(y, devel[GROUP], repeats=1, folds=folds, seed_base=fold_seed)
+    prepped = []
+    for _, _, tr, va in fl:
+        imp = SimpleImputer(strategy="median", keep_empty_features=True).fit(X.iloc[tr])
+        A, B = imp.transform(X.iloc[tr]), imp.transform(X.iloc[va])
+        if needs_scaling(model):
+            sc = StandardScaler().fit(A)
+            A, B = sc.transform(A), sc.transform(B)
+        prepped.append((tr, va, A, B))
+
+    def score(labels):
+        s = []
+        for tr, va, A, B in prepped:
+            p = make_model(model).fit(A, labels[tr]).predict_proba(B)[:, 1]
+            s.append(_safe_scores(labels[va], p)[0])
+        return float(np.nanmean(s))
+
+    observed = score(y)
+    rng = np.random.default_rng(seed)
+    null = np.array([score(rng.permutation(y)) for _ in range(int(n_perm))])
+    out = pd.DataFrame([{"model": model, "observed": observed, "null_mean": float(null.mean()),
+                         "null_sd": float(null.std(ddof=1)), "null_p95": float(np.percentile(null, 95)),
+                         "null_max": float(null.max()), "n_null_ge_observed": int(np.sum(null >= observed)),
+                         "p_value": float((1 + np.sum(null >= observed)) / (1 + len(null))),
+                         "n_perm": int(n_perm), "n_folds": len(fl)}])
+    return (out, null) if return_null else out
+
+
+def calibration_deciles(devel, features, fold_list, model="Logistic regression", n_bins=10):
+    """Reliability table from out-of-fold predictions, by risk decile.
+
+    Uses the first repeat of `fold_list` (episode-grouped folds), so each
+    development event gets exactly one out-of-fold prediction. Raw scores
+    from a class-weighted model run high by design, so they are Platt-scaled
+    by cross-fitting: the scaling applied to fold k is fit on the
+    out-of-fold predictions of the other folds only. Events are then cut
+    into `n_bins` equal-size groups by calibrated risk.
+
+    Returns one row per decile (1 = lowest risk): decile, n, positives,
+    mean_predicted, observed_rate, mean_raw, min_predicted, max_predicted.
+    """
+    y = devel[TARGET].to_numpy().astype(int)
+    X = devel[list(features)].reset_index(drop=True)
+    first = min(r for r, _, _, _ in fold_list)
+    fl = [(tr, va) for r, _, tr, va in fold_list if r == first]
+    raw = np.full(len(y), np.nan)
+    fold_id = np.full(len(y), -1)
+    for k, (tr, va) in enumerate(fl):
+        raw[va] = _fit_predict(model, X.iloc[tr], y[tr], X.iloc[va])
+        fold_id[va] = k
+    cal = np.full(len(y), np.nan)
+    for k in range(len(fl)):
+        other = (fold_id != k) & (fold_id >= 0)
+        s, b = platt(raw[other], y[other])
+        cal[fold_id == k] = calibrate(raw[fold_id == k], s, b)
+    ok = ~np.isnan(cal)
+    d = pd.DataFrame({"y": y[ok], "raw": raw[ok], "cal": cal[ok]})
+    d["decile"] = pd.qcut(d["cal"].rank(method="first"), int(n_bins), labels=False) + 1
+    out = (d.groupby("decile").agg(n=("y", "size"), positives=("y", "sum"), mean_predicted=("cal", "mean"),
+                                   observed_rate=("y", "mean"), mean_raw=("raw", "mean"),
+                                   min_predicted=("cal", "min"), max_predicted=("cal", "max"))
+           .reset_index())
+    out["decile"] = out["decile"].astype(int)
+    out["positives"] = out["positives"].astype(int)
+    return out
+
+
+def _json_clean(v):
+    """Plain Python value for JSON: numpy scalars -> int/float/bool, NaN -> None."""
+    if isinstance(v, (np.bool_, bool)):
+        return bool(v)
+    if isinstance(v, (np.integer,)):
+        return int(v)
+    if isinstance(v, (float, np.floating)):
+        return None if not np.isfinite(v) else float(v)
+    return v
+
+
+def _records(df, cols):
+    return [{c: _json_clean(r[c]) for c in cols} for r in df[cols].to_dict("records")]
+
+
+def validation_summary(ladder, spatial, temporal, permutation, models=VALIDATION_MODELS):
+    """Compact, JSON-friendly summary of the validation results (for the
+    interactive explorer).
+
+    Keys: ladder (group, model, gain, lo, hi: paired PR-AUC gain of each
+    ladder rung over the rung before it), spatial (scheme, model, held_out,
+    pr_auc, pr_sd, roc_auc), temporal (year, model, n, positives,
+    base_rate, pr_auc, roc_auc, few_positives; year is null on the pooled
+    row), permutation (observed, null_mean, null_p95, p_value, n_perm).
+    Values are plain Python numbers, NaN as None.
+    """
+    lad = ladder[ladder["model"].isin(models) & ladder["pr_gain_vs_previous"].notna()].copy()
+    lad["group"] = lad["rung"].str.replace(r"^\+\s*", "", regex=True)
+    lad = lad.rename(columns={"pr_gain_vs_previous": "gain", "pr_gain_vs_previous_lo": "lo",
+                              "pr_gain_vs_previous_hi": "hi"})
+    sp = spatial[spatial["model"].isin(models)]
+    tm = temporal[temporal["model"].isin(models)]
+    pm = permutation.iloc[0]
+    return {
+        "ladder": _records(lad, ["group", "model", "gain", "lo", "hi"]),
+        "spatial": _records(sp, ["scheme", "model", "held_out", "pr_auc", "pr_sd", "roc_auc"]),
+        "temporal": _records(tm, ["year", "model", "n", "positives", "base_rate", "pr_auc", "roc_auc",
+                                  "few_positives"]),
+        "permutation": {k: _json_clean(pm[k]) for k in ["observed", "null_mean", "null_p95", "p_value", "n_perm"]},
+    }
+
+
+def run_validation(df, devel, features, fold_list, cache=None, cv_repeats=5, n_perm=500, county_folds=10,
+                   first_year=2019, last_year=2025):
+    """Run all generalization checks; returns (dict of tables, dict of
+    seconds per analysis). Keys: ablation, spatial_cv, spatial_cv_folds,
+    temporal, permutation, calib_deciles."""
+    import time
+    out, secs = {}, {}
+    t = time.time(); out["ablation"] = ablation_study(devel, fold_list, features, cache=cache)
+    secs["ablation"] = time.time() - t
+    t = time.time()
+    out["spatial_cv"], out["spatial_cv_folds"] = spatial_validation(devel, features, fold_list, repeats=cv_repeats,
+                                                                    county_folds=county_folds, cache=cache)
+    secs["spatial_cv"] = time.time() - t
+    t = time.time(); out["temporal"] = rolling_origin(df, features, first_year=first_year, last_year=last_year)
+    secs["temporal"] = time.time() - t
+    t = time.time(); out["permutation"] = permutation_test(devel, features, n_perm=n_perm)
+    secs["permutation"] = time.time() - t
+    t = time.time(); out["calib_deciles"] = calibration_deciles(devel, features, fold_list)
+    secs["calib_deciles"] = time.time() - t
+    return out, secs
+
+
 # ---- CLI ---------------------------------------------------------------------------
 def load_flood_table(project_dir):
     """Rebuild the report's `flood_ml` table from the exported files.
@@ -608,8 +1053,14 @@ def load_flood_table(project_dir):
 
 
 def run_all(flood_df, nri_path, highlight_start, highlight_end, cv_repeats=5, cv_folds=5,
-            history_radius_km=25, history_window_years=3, n_boot=2000):
-    """Run the whole analysis and return a dict of result tables."""
+            history_radius_km=25, history_window_years=3, n_boot=2000, validate=True, n_perm=500):
+    """Run the whole analysis and return a dict of result tables.
+
+    With validate=True it also runs the generalization checks
+    (`run_validation`): keys ablation, spatial_cv, spatial_cv_folds,
+    temporal, permutation, calib_deciles, validation_summary (JSON-ready
+    dict) and timings (seconds per analysis).
+    """
     df = build_model_frame(flood_df, nri_path, history_radius_km, history_window_years)
     devel, test = split_frame(df)
     rungs = resolve_ladder(devel)
@@ -619,7 +1070,14 @@ def run_all(flood_df, nri_path, highlight_start, highlight_end, cv_repeats=5, cv
     ladder, _ = feature_ladder(devel, folds, rungs, cache=cache)
     cv_results, _ = compare_models(devel, features, folds, cache=cache)
     fit = fit_holdout(devel, test, features)
+    extra = {}
+    if validate:
+        val, secs = run_validation(df, devel, features, folds, cache=cache, cv_repeats=cv_repeats, n_perm=n_perm)
+        extra = dict(val, timings=secs,
+                     validation_summary=validation_summary(ladder, val["spatial_cv"], val["temporal"],
+                                                           val["permutation"]))
     return {
+        **extra,
         "features": features, "primary_rung": primary_rung, "ladder": ladder, "cv_results": cv_results,
         "holdout": fit["holdout"], "holdout_ci": holdout_bootstrap(fit, test, n_boot=n_boot),
         "helene_sensitivity": helene_sensitivity(fit, test, highlight_start, highlight_end),
@@ -642,12 +1100,14 @@ def main(argv=None):
     ap.add_argument("--cv-folds", type=int, default=5)
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--out-dir", default="outs/tables")
+    ap.add_argument("--n-perm", type=int, default=500, help="label permutations for the permutation test")
+    ap.add_argument("--skip-validation", action="store_true", help="skip the generalization checks")
     a = ap.parse_args(argv)
 
     root = Path(a.project_dir).resolve()
     nri = Path(a.nri_path) if Path(a.nri_path).is_absolute() else root / a.nri_path
     res = run_all(load_flood_table(root), nri, a.highlight_start, a.highlight_end,
-                  a.cv_repeats, a.cv_folds, n_boot=a.n_boot)
+                  a.cv_repeats, a.cv_folds, n_boot=a.n_boot, validate=not a.skip_validation, n_perm=a.n_perm)
 
     pd.set_option("display.width", 200, "display.max_columns", 30, "display.precision", 3)
     print(f"Data: {res['summary']}")
@@ -666,6 +1126,24 @@ def main(argv=None):
         res[name].to_csv(out / f"model_{name}.csv", index=False)
     print(f"\nWrote model_ladder.csv, model_holdout_ci.csv, model_helene_sensitivity.csv, "
           f"model_inversion.csv, model_tropical_check.csv to {out}")
+
+    if "ablation" in res:
+        import json
+        print("\n== Ablation: full model minus each group, and small subsets ==")
+        print(res["ablation"].drop(columns=["features"]).to_string(index=False))
+        print("\n== Spatial validation ==\n" + res["spatial_cv"].to_string(index=False))
+        print("\n== Rolling-origin temporal validation ==\n" + res["temporal"].to_string(index=False))
+        print("\n== Label-permutation test ==\n" + res["permutation"].to_string(index=False))
+        print("\n== Reliability by risk decile (out-of-fold) ==\n" + res["calib_deciles"].to_string(index=False))
+        print("\nSeconds: " + ", ".join(f"{k} {v:.1f}" for k, v in res["timings"].items()))
+        files = {"ablation": "model_ablation.csv", "spatial_cv": "model_spatial_cv.csv",
+                 "temporal": "model_temporal.csv", "permutation": "model_permutation.csv",
+                 "calib_deciles": "model_calibration_deciles.csv"}
+        for k, fn in files.items():
+            res[k].to_csv(out / fn, index=False)
+        with open(out / "model_validation_summary.json", "w") as fh:
+            json.dump(res["validation_summary"], fh, indent=1, allow_nan=False)
+        print(f"Wrote {', '.join(files.values())}, model_validation_summary.json to {out}")
 
 
 if __name__ == "__main__":

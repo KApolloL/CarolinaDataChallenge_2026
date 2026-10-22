@@ -454,6 +454,292 @@ plt.show()
 fig_link("19_model_pr_curve")
 ```
 
+## Does it generalize?
+
+The scores above come from folds that hold out whole storms, and from one holdout dominated by one storm. That is not enough to say the model works on places and years it has not seen. This section runs five harder checks. All of them use the same features and the same model settings as above; the code is in `src/python/highground_ml.py`.
+
+```{python}
+#| label: py-generalize
+# 1. Ablation: the full model minus each feature group, and two small subsets,
+#    scored on the same 5 x 5 episode-grouped folds as the ladder.
+ablation = hg.ablation_study(devel, folds, FEATURES, cache=cv_cache)
+# 2. Spatial: hold out whole counties (10 folds, same repeat seeds) or a whole
+#    region, development years only. "Storm-purged" also drops training events
+#    from any storm that reached the held-out place.
+spatial_cv, spatial_cv_folds = hg.spatial_validation(devel, FEATURES, folds, repeats=int(cfg["cv_repeats"]),
+                                                     county_folds=10, cache=cv_cache)
+storm_span = hg.storm_span_summary(devel, spatial_cv_folds)
+# 3. Temporal: for each year Y, fit on every earlier year and score year Y.
+temporal = hg.rolling_origin(df, FEATURES, first_year=int(cfg["start_year"]) + 3,
+                             last_year=int(cfg["end_year"]) - 1, min_pos=5)
+# 4. Label-permutation test (500 shuffles of the development labels, one
+#    repeat of 5-fold episode-grouped CV). Shuffles single events, which
+#    ignores storm structure.
+permutation = hg.permutation_test(devel, FEATURES, model="Logistic regression", n_perm=500)
+# 5. Reliability by risk decile from out-of-fold predictions (first CV repeat).
+calib_deciles = hg.calibration_deciles(devel, FEATURES, folds, model="Logistic regression")
+```
+
+```{r}
+#| label: generalize-numbers
+#| include: false
+# Every number quoted in this subsection comes from these lookups.
+gen_model <- if (py$best_cv$model %in% py$spatial_cv$model) py$best_cv$model else "Logistic regression"
+other_model <- setdiff(unique(py$spatial_cv$model), gen_model)[1]
+p_text <- function(x) if (x < 0.001) "p < 0.001" else sprintf("p = %.3f", x)
+and_list <- function(x) if (length(x) <= 1) paste(x) else paste(paste(head(x, -1), collapse = ", "), "and", tail(x, 1))
+
+# Ablation
+abl <- py$ablation
+abl_row <- function(set, model = gen_model) abl[abl$set == set & abl$model == model, ]
+abl_gain <- function(set, model = gen_model) {
+  r <- abl_row(set, model)
+  if (nrow(r) == 0) return("not available in this run")
+  sprintf("%+.3f (approximate 95%% interval %+.3f to %+.3f)", r$gain_full_vs_set, r$gain_lo, r$gain_hi)
+}
+abl_drop <- abl[abl$model == gen_model & abl$kind == "drop one", ]
+abl_drop$group <- sub("^Full minus ", "", abl_drop$set)
+abl_needed <- abl_drop$group[abl_drop$gain_lo > 0]
+abl_spare <- abl_drop$group[abl_drop$gain_lo <= 0]
+abl_top <- abl_drop[which.max(abl_drop$gain_full_vs_set), ]
+ladder_clear <- sub("^\\+ ", "", lad$rung[lad$model == gen_model & lad$status == "evaluated" &
+                                          !is.na(lad$pr_gain_vs_previous_lo) & lad$pr_gain_vs_previous_lo > 0])
+ladder_clear <- intersect(ladder_clear, abl_drop$group)
+only_ablation <- setdiff(abl_needed, c(ladder_clear, "Season"))   # Season is the ladder's base, never "added"
+only_ladder <- setdiff(ladder_clear, abl_needed)
+list_or_none <- function(x) if (length(x) == 0) "none" else and_list(x)
+abl_reading <- if (length(only_ablation) == 0 && length(only_ladder) == 0) {
+  "The ablation agrees with the ladder, so the order in which groups were added does not change the story."
+} else {
+  one_a <- length(only_ablation) == 1; one_l <- length(only_ladder) == 1
+  paste0("The order of the ladder matters. ",
+         if (length(only_ablation) > 0) sprintf("%s did not clearly add when entering the ladder, but removing %s from the full model costs PR-AUC: %s only in combination with other groups. ",
+                                                and_list(only_ablation), if (one_a) "it" else "them", if (one_a) "it helps" else "they help") else "",
+         if (length(only_ladder) > 0) sprintf("%s clearly added in the ladder, but the full model does not reliably need %s once every other group is in: what %s overlaps with other groups. ",
+                                              and_list(only_ladder), if (one_l) "it" else "them", if (one_l) "it carries" else "they carry") else "")
+}
+
+# Spatial
+sp <- py$spatial_cv
+sp_val <- function(scheme, held = NULL, model = gen_model, col = "pr_auc") {
+  r <- sp[sp$scheme == scheme & sp$model == model, ]
+  if (!is.null(held)) r <- r[r$held_out == held, ]
+  if (nrow(r) == 0) NA_real_ else r[[col]][1]
+}
+ep_pr   <- sp_val("Episode-grouped CV")
+cb_pr   <- sp_val("County-blocked CV")
+cbp_pr  <- sp_val("County-blocked CV, storm-purged")
+rg_pr   <- sp_val("Region held out", "Mean of regions")
+rgp_pr  <- sp_val("Region held out, storm-purged", "Mean of regions")
+place_cmp <- function(x) {
+  ratio <- x / ep_pr
+  if (is.na(ratio)) "could not be scored, so it cannot be compared with" else if (ratio < 0.8) "well below" else
+    if (ratio < 0.95) "somewhat below" else if (ratio <= 1.05) "close to" else "above"
+}
+regions <- sp[sp$scheme == "Region held out" & sp$model == gen_model & sp$held_out != "Mean of regions", ]
+region_list <- paste(sprintf("%s %s (base rate %s)", regions$held_out,
+                             ifelse(is.na(regions$pr_auc), "not scored: no positives", fmt3(regions$pr_auc)),
+                             fmt3(regions$base_rate)), collapse = "; ")
+regions_nan <- regions$held_out[is.na(regions$pr_auc)]
+county_nan <- sp$n_folds_no_pos[sp$scheme == "County-blocked CV" & sp$model == gen_model]
+county_k <- sp_val("County-blocked CV", col = "n_folds") / p$cv_repeats
+mtn <- regions[regions$held_out == "mountains", ]
+mtn_other <- sp[sp$scheme == "Region held out" & sp$model == other_model & sp$held_out == "mountains", ]
+place_leans <- any(c(cbp_pr, rg_pr) / ep_pr < 0.8, na.rm = TRUE)
+place_reading <- if (place_leans) {
+  "The model leans on place-specific patterns: it ranks events noticeably less well in places it has never seen, so the episode-grouped score overstates how it would do in a new county or region."
+} else if (any(c(cbp_pr, rg_pr) / ep_pr < 0.95, na.rm = TRUE)) {
+  "Part of the score depends on having seen the place before, but most of it carries over to unseen counties and regions."
+} else {
+  "The score carries over to unseen counties and regions about as well as to unseen storms."
+}
+
+# Temporal
+tm <- py$temporal
+tm_years <- tm[tm$model == gen_model & !is.na(tm$year), ]
+tm_pool <- tm[tm$model == gen_model & is.na(tm$year), ]
+tm_ok <- tm_years[!tm_years$few_positives & !is.na(tm_years$pr_auc), ]
+tm_few <- tm_years$year[tm_years$few_positives]
+tm_near <- tm_years$year[!is.na(tm_years$pr_auc) & tm_years$pr_auc < 2 * tm_years$base_rate]
+tm_lo <- tm_ok[which.min(tm_ok$pr_auc), ]
+tm_hi <- tm_ok[which.max(tm_ok$pr_auc), ]
+hl_year <- as.integer(substr(p$highlight_start_date, 1, 4))
+tm_reading <- paste0(
+  if (nrow(tm_ok) >= 2 && tm_hi$pr_auc - tm_lo$pr_auc > 0.15) "Skill is uneven from year to year. " else
+    if (nrow(tm_ok) >= 2) "Skill is fairly steady from year to year. " else "",
+  if (nrow(tm_ok) >= 2 && tm_hi$positives == max(tm_ok$positives)) "The best year is also the year with the most high-consequence events." else "")
+
+# Permutation
+pm <- py$permutation
+perm_reading <- if (pm$p_value <= 0.01) {
+  sprintf("%s of the %s shuffles reached the observed score (%s%s), so the signal is very unlikely to be chance.",
+          if (pm$n_null_ge_observed == 0) "None" else comma(pm$n_null_ge_observed), comma(pm$n_perm), p_text(pm$p_value),
+          if (pm$n_null_ge_observed == 0) ", the smallest value this many shuffles can give" else "")
+} else if (pm$p_value <= 0.05) {
+  sprintf("%s of the %s shuffles reached the observed score (%s). That is small, but not overwhelming.",
+          comma(pm$n_null_ge_observed), comma(pm$n_perm), p_text(pm$p_value))
+} else {
+  sprintf("%s of the %s shuffles reached the observed score (%s). That p-value is not small: the cross-validated score cannot be told apart from what shuffled labels produce.",
+          comma(pm$n_null_ge_observed), comma(pm$n_perm), p_text(pm$p_value))
+}
+
+# Reliability deciles
+cd <- py$calib_deciles
+cd_gap <- max(abs(cd$observed_rate - cd$mean_predicted))
+cd_worst <- cd[which.max(abs(cd$observed_rate - cd$mean_predicted)), ]
+cd_top <- cd[cd$decile == max(cd$decile), ]
+cd_bot <- cd[cd$decile == min(cd$decile), ]
+cd_worst_text <- sprintf("decile %s: %s predicted, %s observed", cd_worst$decile,
+                         scales::percent(cd_worst$mean_predicted, accuracy = 0.1), scales::percent(cd_worst$observed_rate, accuracy = 0.1))
+cd_reading <- if (cd_gap < 0.02) {
+  sprintf("Predicted and observed rates stay within %.1f percentage points in every decile (largest gap in %s), so within the development years the calibrated probabilities can be read as chances.", 100 * cd_gap, cd_worst_text)
+} else if (cd_gap < 0.05) {
+  cd_se2 <- 2 * sqrt(cd_worst$mean_predicted * (1 - cd_worst$mean_predicted) / cd_worst$n)   # 2 binomial SEs
+  sprintf("Predicted and observed rates roughly match; the largest gap is %.1f percentage points (%s), %s two binomial standard errors (%.1f points) for a decile of %s events. Read the probabilities as approximate.",
+          100 * cd_gap, cd_worst_text, if (cd_gap <= cd_se2) "within" else "beyond", 100 * cd_se2, comma(cd_worst$n))
+} else {
+  sprintf("Predicted and observed rates differ by up to %.1f percentage points (%s), so the probabilities should not be read as exact chances.", 100 * cd_gap, cd_worst_text)
+}
+```
+
+### Is the ladder order flattering a group?
+
+The ladder adds feature groups in one fixed order, so a group that enters early can take credit that a later group would also have earned, and a group that only helps in combination can look useless. Here we instead remove one group at a time from the full model, and also fit two small models (rainfall only, and season plus rainfall). Each row is scored on the same folds as the ladder; the gain is the full model's PR-AUC minus the reduced model's, fold by fold. A gain whose interval is above zero means the full model needs that group even with every other group present.
+
+```{r}
+#| label: ablation-table
+#| echo: false
+abl_show <- abl |>
+  dplyr::mutate(dplyr::across(c(pr_auc, pr_auc_sd, roc_auc, full_pr_auc, gain_full_vs_set, gain_lo, gain_hi,
+                                share_folds_full_better), \(x) round(x, 3))) |>
+  dplyr::select(set, kind, model, n_features, pr_auc, pr_auc_sd, roc_auc, full_pr_auc, gain_full_vs_set,
+                gain_lo, gain_hi, share_folds_full_better, n_folds, features)
+dt(abl_show, name = "model_ablation", page_length = nrow(abl_show),
+   caption = sprintf("PR-AUC mean and SD over the same %s x %s episode-grouped folds as the ladder. gain_full_vs_set = full model minus this set, paired by fold; gain_lo/gain_hi = mean +/- 1.96 SD / sqrt(folds), approximate because folds share data.",
+                     p$cv_repeats, p$cv_folds))
+```
+
+For the `r tolower(gen_model)`, rainfall alone reaches **`r fmt3(abl_row("Rainfall only")$pr_auc)`**, and the full model beats it by `r abl_gain("Rainfall only")`. Season plus rainfall reaches `r fmt3(abl_row("Season + Rainfall")$pr_auc)`. Removing one group at a time, the groups the full model clearly needs are: **`r list_or_none(abl_needed)`**. Removing `r list_or_none(abl_spare)` does not reliably change the score. Removing `r tolower(abl_top$group)` costs the most: `r abl_gain(abl_top$set)`. `r abl_reading`
+
+### Does it work in places it has not seen?
+
+Episode-grouped folds keep each storm on one side of the split, but the same counties appear in training and validation. Two stricter checks hold out **place** instead. *County-blocked* cross-validation holds out whole counties (`r county_k` folds of counties, repeated `r p$cv_repeats` times). *Region held out* trains on two of the three regions (mountains, central, coastal) and tests on the third. Both use only `r p$start_year`-`r p$validation_end_year`. Storms cross county lines: `r fmt_pct(py$storm_span$share_pos_multi_county)` of the development high-consequence events belong to a storm episode that reached more than one county, and `r fmt_pct(py$storm_span$share_pos_multi_region)` to one that reached more than one region. So we run each check twice: as is, and *storm-purged*, where training also drops every event from a storm that reached the held-out place.
+
+```{r}
+#| label: spatial-table
+#| echo: false
+sp_show <- sp |>
+  dplyr::mutate(dplyr::across(c(base_rate, pr_auc, pr_sd, roc_auc), \(x) round(x, 3))) |>
+  dplyr::select(scheme, model, held_out, n, positives, base_rate, pr_auc, pr_sd, roc_auc, n_folds, n_folds_no_pos)
+dt(sp_show, name = "model_spatial_cv", page_length = nrow(sp_show),
+   caption = "Development years only. CV rows: mean and SD of PR-AUC across folds. Region rows: one score per held-out region; read each against that region's base rate. n_folds_no_pos = folds or regions with no high-consequence events, recorded as missing.")
+```
+
+For the `r tolower(gen_model)`, episode-grouped cross-validation scores **`r fmt3(ep_pr)`**. Holding out whole counties and purging their storms from training, it scores **`r fmt3(cbp_pr)`**, `r place_cmp(cbp_pr)` the episode-grouped score. Without the purge the county-blocked score is `r fmt3(cb_pr)``r if (!is.na(cb_pr) && cb_pr > ep_pr) ", higher than episode-grouped, because a storm that crossed county lines then sits partly in training; that version flatters the model and we do not rely on it" else ""`. The purge also shrinks training, from about `r comma(round(py$storm_span$mean_train_unpurged))` to `r comma(round(py$storm_span$mean_train_purged))` events per fold, so part of any drop is less data. Holding out a whole region gives a mean of **`r fmt3(rg_pr)`** across the `r nrow(regions)` regions (`r fmt3(rgp_pr)` storm-purged), `r place_cmp(rg_pr)` the episode-grouped score: `r region_list`. `r if (nrow(mtn) == 1 && !is.na(mtn$pr_auc)) sprintf("For the mountains, the region this project is about, a model that never saw a mountain event scores %s against a base rate of %s (%.1fx); the %s scores %s.", fmt3(mtn$pr_auc), fmt3(mtn$base_rate), mtn$pr_auc / mtn$base_rate, tolower(other_model), fmt3(mtn_other$pr_auc)) else ""` `r if (length(regions_nan) > 0) sprintf("No score is possible for %s: the held-out region has no high-consequence events.", and_list(regions_nan)) else ""``r if (isTRUE(county_nan > 0)) sprintf(" %s county folds had no high-consequence events and are left out of the county-blocked mean.", county_nan) else ""` `r place_reading`
+
+### Does it work in years it has not seen?
+
+The holdout is one block of years. A *rolling-origin* check asks the same question year by year: for each year from `r min(tm_years$year)` to `r max(tm_years$year)`, fit on every earlier year (`r p$start_year` onward) and score that year only. The target is used exactly as exported; its damage threshold is not recomputed.
+
+```{r}
+#| label: temporal-table
+#| echo: false
+tm_show <- tm |>
+  dplyr::mutate(dplyr::across(c(base_rate, pr_auc, roc_auc), \(x) round(x, 3))) |>
+  dplyr::select(label, year, model, n_train, train_positives, n, positives, base_rate, pr_auc, roc_auc, few_positives)
+dt(tm_show, name = "model_temporal", page_length = nrow(tm_show),
+   caption = sprintf("Each year is scored by a model fit on all earlier years. few_positives = TRUE when the year has fewer than %s high-consequence events, so its score rests on a handful of events. The pooled row scores all test years together.", tm_years$min_pos[1]))
+```
+
+Across the years with at least `r tm_years$min_pos[1]` high-consequence events, the `r tolower(gen_model)`'s PR-AUC ranges from **`r fmt3(tm_lo$pr_auc)` (`r tm_lo$year`, base rate `r fmt3(tm_lo$base_rate)`)** to **`r fmt3(tm_hi$pr_auc)` (`r tm_hi$year`, base rate `r fmt3(tm_hi$base_rate)`)**`r if (identical(as.integer(tm_hi$year), hl_year)) sprintf(", the %s year", p$highlight_event_name) else ""`. Pooled over all years it scores `r fmt3(tm_pool$pr_auc)` against a base rate of `r fmt3(tm_pool$base_rate)` (a rough summary: each year's predictions come from a different fit). `r if (length(tm_near) == 0) "No year scores below twice its base rate." else sprintf("Years where it scores less than twice that year's base rate, close to guessing: %s.", and_list(tm_near))` `r if (length(tm_few) > 0) sprintf("%s had fewer than %s high-consequence events, so %s say%s little either way.", and_list(tm_few), tm_years$min_pos[1], if (length(tm_few) == 1) "its score" else "their scores", if (length(tm_few) == 1) "s" else "") else ""` `r tm_reading`
+
+### Could a score this high happen by chance?
+
+We shuffled the development labels `r comma(pm$n_perm)` times, refit the `r tolower(pm$model)` on each shuffle, and scored it with one repeat of `r pm$n_folds`-fold episode-grouped cross-validation. On the real labels that same single repeat scores **`r fmt3(pm$observed)`** (one repeat, so it differs from the `r p$cv_repeats`-repeat mean above). The shuffled labels average `r fmt3(pm$null_mean)` and their 95th percentile is `r fmt3(pm$null_p95)`. `r perm_reading` The shuffle moves single events, not whole storms, so the shuffled scores are probably somewhat too tightly bunched. `r if (pm$observed > pm$null_max) sprintf("The real score is above even the highest shuffled score (%s), so a wider null is unlikely to change the conclusion.", fmt3(pm$null_max)) else "Treat the p-value as a lower bound."`
+
+```{r}
+#| label: permutation-table
+#| echo: false
+pm_show <- pm |> dplyr::mutate(dplyr::across(c(observed, null_mean, null_sd, null_p95, null_max, p_value), \(x) round(x, 4)))
+dt(pm_show, name = "model_permutation", page_length = 1)
+```
+
+### Do predicted risks match observed rates?
+
+Using the out-of-fold predictions of the `r tolower(gen_model)` (each development event scored by a model that did not see its storm), we split events into `r nrow(cd)` equal groups by predicted risk and compare the mean prediction with the observed share of high-consequence events. Platt scaling is cross-fit: the scaling used on each fold is learned from the other folds.
+
+```{r}
+#| label: calib-deciles-table
+#| echo: false
+cd_show <- cd |> dplyr::mutate(dplyr::across(c(mean_predicted, observed_rate, mean_raw, min_predicted, max_predicted), \(x) round(x, 4)))
+dt(cd_show, name = "model_calibration_deciles", page_length = nrow(cd_show))
+```
+
+The highest-risk group predicts `r scales::percent(cd_top$mean_predicted, accuracy = 0.1)` and observes `r scales::percent(cd_top$observed_rate, accuracy = 0.1)`, and holds `r fmt_pct(cd_top$positives / sum(cd$positives))` of all development high-consequence events. The lowest-risk group predicts `r scales::percent(cd_bot$mean_predicted, accuracy = 0.1)` and observes `r scales::percent(cd_bot$observed_rate, accuracy = 0.1)`. `r cd_reading`
+
+```{python}
+#| label: py-generalize-plot
+#| results: hide
+#| fig-width: 12
+#| fig-height: 5
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), gridspec_kw={"width_ratios": [1.1, 1]})
+# Left: PR-AUC by test year against that year's base rate
+yrs = temporal[temporal["year"].notna()]
+base = yrs.drop_duplicates("year")
+ax1.bar(base["year"], base["base_rate"], width=0.6, color="#d9d9d9", label="Base rate of that year")
+for k, (name, g) in enumerate(yrs.groupby("model", sort=False)):
+    ax1.plot(g["year"], g["pr_auc"], "-", color=colors[name], linewidth=1.6)
+    few = g["few_positives"].astype(bool)
+    ax1.scatter(g.loc[~few, "year"], g.loc[~few, "pr_auc"], color=colors[name], s=40, zorder=3, label=name)
+    ax1.scatter(g.loc[few, "year"], g.loc[few, "pr_auc"], facecolors="white", edgecolors=colors[name], s=40,
+                zorder=3)
+ax1.scatter([], [], facecolors="white", edgecolors="gray", s=40, label="Fewer than 5 positives that year")
+ax1.set_xticks(base["year"], [str(int(v)) for v in base["year"]])
+ax1.set_xlabel("Test year (model fit on all earlier years)")
+ax1.set_ylabel("PR-AUC")
+ax1.set_ylim(0, None)
+ax1.set_title("Year by year (rolling origin)", loc="left", fontweight="bold", color="#12344d")
+ax1.legend(frameon=False, fontsize=8.5, loc="upper left")
+ax1.grid(alpha=0.25, axis="y")
+# Right: episode-grouped vs county-blocked vs region held out
+schemes = [("Episode-grouped CV", "Episode-\ngrouped"), ("County-blocked CV", "County-\nblocked"),
+           ("County-blocked CV, storm-purged", "County-blocked,\nstorm-purged"),
+           ("Region held out", "Region\nheld out"), ("Region held out, storm-purged", "Region held out,\nstorm-purged")]
+models_sp = list(dict.fromkeys(spatial_cv["model"]))
+for k, name in enumerate(models_sp):
+    s = spatial_cv[spatial_cv["model"] == name]
+    off = (k - (len(models_sp) - 1) / 2) * 0.22
+    for i, (sch, _) in enumerate(schemes):
+        rows = s[s["scheme"] == sch]
+        main = rows[rows["held_out"] == "Mean of regions"] if sch.startswith("Region") else rows
+        if main.empty:
+            continue
+        sd = None if sch.startswith("Region") else main["pr_sd"].iloc[0]   # regions: ticks show the spread
+        ax2.errorbar(i + off, main["pr_auc"].iloc[0], yerr=sd, fmt="o", color=colors[name],
+                     capsize=3, markersize=7, label=name if i == 0 else None)
+        if sch.startswith("Region"):
+            reg = rows[rows["held_out"] != "Mean of regions"]
+            ax2.scatter(np.full(len(reg), i + off), reg["pr_auc"], marker="_", s=120, color=colors[name], alpha=0.8)
+dev_base = float(spatial_cv["base_rate"].iloc[0])
+ax2.axhline(dev_base, color="gray", linestyle="--", linewidth=1.2, label=f"Development base rate ({dev_base:.3f})")
+ax2.scatter([], [], marker="_", s=120, color="gray", label="Single held-out region")
+ax2.set_xticks(range(len(schemes)), [lab for _, lab in schemes], fontsize=8.5)
+ax2.set_ylabel("PR-AUC (CV: mean +/- SD; regions: mean and each region)")
+ax2.set_ylim(0, None)
+ax2.set_title("Unseen storms vs unseen places", loc="left", fontweight="bold", color="#12344d")
+ax2.legend(frameon=False, fontsize=8.5, loc="upper right")
+ax2.grid(alpha=0.25, axis="y")
+fig.tight_layout()
+fig.savefig(f"{r.paths['figures_dir']}/23_model_generalization.png", dpi=int(cfg["figure_dpi"]), bbox_inches="tight")
+plt.show()
+```
+
+```{r}
+#| label: generalize-link
+#| echo: false
+fig_link("23_model_generalization")
+```
+
 ## Are the probabilities trustworthy? Calibration
 
 A model that says "10% risk" should be right about 10% of the time. Tree models are often poorly calibrated, so we rescale their scores with Platt scaling. **Where** that rescaling is fit matters. During development the team first fit it on the forest's own training predictions ("in-bag"). Those predictions are overconfident because the trees have already seen those rows, so the rescaling learned the wrong curve and pulled the average predicted risk below the observed rate. Fitting it on out-of-fold predictions corrects this:
@@ -594,23 +880,30 @@ lr_inv <- inv_val("Logistic regression", "share_hurricane_lower")
 
 ## Interactive risk explorer
 
-The team also built a browser-based explorer. It maps historical flood events, shows a structural risk surface, and has a scenario calculator where you set terrain, community, and storm inputs and see the estimated probability change.
+The explorer is a browser tool for county planners, NCDOT staff, and researchers. It is rebuilt from this run's logistic regression (the same 14 inputs and calibration as the tables above). You can set a rainfall scenario and see the estimated chance that a flood-related event is high-consequence at each 5 km square, replay Hurricane Helene with its actual rainfall next to what NOAA recorded, click any place for a report card, and rank counties. Its validation tab repeats the checks in this section.
 
 ```{r}
 #| label: explorer
 #| echo: false
 #| results: asis
-# Refresh the explorer from this run's ML-ready data (src/python/export_explorer.py
-# rebuilds its MODEL, POINTS and REAL_GRID blocks from the original template).
+# Rebuild the explorer from this run: R builds the map grid (cached), then
+# src/python/export_explorer.py fits the model and writes the single-file page.
 explorer_script <- file.path(project_dir, "src", "python", "export_explorer.py")
+explorer_r <- file.path(project_dir, "src", "R", "explorer_data.R")
 if (isTRUE(p$embed_explorer) && file.exists(explorer_script)) {
-  py_bin <- reticulate::py_config()$python
-  status <- system2(py_bin, c(shQuote(explorer_script), "--project-dir", shQuote(project_dir)), stdout = FALSE, stderr = FALSE)
-  if (!identical(status, 0L)) fw_log("warning", "Explorer export", "export_explorer.py failed; the previous explorer file is embedded.", "explorer")
+  grid_ok <- tryCatch({ source(explorer_r); build_explorer_data(project_dir); TRUE },
+                      error = function(e) { fw_log("warning", "Explorer map data", conditionMessage(e), "explorer"); FALSE })
+  if (grid_ok) {
+    py_bin <- reticulate::py_config()$python
+    status <- system2(py_bin, c(shQuote(explorer_script), "--project-dir", shQuote(project_dir),
+                                "--docs-copy", shQuote(file.path(project_dir, "docs", "explorer.html"))),
+                      stdout = FALSE, stderr = FALSE)
+    if (!identical(status, 0L)) fw_log("warning", "Explorer export", "export_explorer.py failed; the previous explorer file is embedded.", "explorer")
+  }
 }
 if (isTRUE(p$embed_explorer) && !is.na(paths$explorer) && file.exists(paths$explorer)) {
   callout("note", "About the explorer",
-          "It runs entirely in your browser. Its models were exported from an earlier training run, so its numbers can differ slightly from the tables above. It is a teaching and exploration tool, **not an operational flood warning**.")
+          "It runs entirely in your browser, with no data sent anywhere. It uses the same model as this report, so its numbers match the tables above. It explains patterns in past NOAA records; it is **not a flood forecast or warning**.")
   uri <- base64enc::dataURI(file = paths$explorer, mime = "text/html")
   cat(sprintf('<iframe src="%s" title="Carolina HighGround risk explorer" style="width:100%%; height:900px; border:1px solid #d7e0e6; border-radius:10px;" loading="lazy"></iframe>\n\n', uri))
   cat(download_link(paths$explorer, "Download the explorer (HTML) to open full-screen"))

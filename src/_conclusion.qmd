@@ -17,6 +17,19 @@ best_unclear <- dplyr::filter(best_steps, pr_gain_vs_previous_lo <= 0)
 group_gain <- function(row) sprintf("%s (%+.3f, interval %+.3f to %+.3f)", lc1(unname(group_label[row$rung])),
                                     row$pr_gain_vs_previous, row$pr_gain_vs_previous_lo, row$pr_gain_vs_previous_hi)
 list_words <- function(x) if (length(x) <= 1) x else paste(paste(head(x, -1), collapse = ", "), "and", tail(x, 1))
+# Generalization headline (numbers come from the generalize-numbers chunk in _modeling.qmd)
+gen_headline <- if (place_leans) "Less well in new places than in new storms." else
+  "About as well in new places as in new storms."
+gen_uneven <- nrow(tm_ok) >= 2 && tm_hi$pr_auc - tm_lo$pr_auc > 0.15
+gen_closing <- if (place_leans && gen_uneven) {
+  "It is weaker in new places and uneven across years, so it points to where to look; it is not a dependable score for a county it has not seen."
+} else if (place_leans) {
+  "It is weaker in new places, so it points to where to look; it is not a dependable score for a county it has not seen."
+} else if (gen_uneven) {
+  "It holds up in new places but is uneven across years."
+} else {
+  "It holds up in new places and across years."
+}
 headline_2 <- if (nrow(best_clear) == 0) "No feature group adds a reliable gain beyond season." else
   sprintf("%s adds the most beyond season.", unname(group_label[best_clear$rung[1]]))
 ```
@@ -30,7 +43,8 @@ Helene showed that in the mountains, one storm can outweigh a decade of ordinary
 1. **Rare events dominate the toll.** In our `r length(p$study_counties)` study counties, a single week of `r p$highlight_event_name` accounts for `r scales::percent(story$hl_death_share, accuracy = 1)` of the storm deaths and `r scales::percent(story$hl_damage_share, accuracy = 1)` of the reported damage recorded from `r p$start_year` to `r p$end_year`. Planning around "typical" storms misses the ones that matter most.
 2. **`r headline_2`** Our best cross-validated model (`r tolower(best$model)`, `r py$summary$n_features` features) reaches a PR-AUC of **`r fmt3(cv_best$pr_auc)` ± `r fmt3(cv_best$pr_auc_sd)`** (mean ± SD across folds), against a no-skill base rate of `r fmt3(cv_base)` and `r fmt3(season_row$pr_auc)` for a model that knows only the season. Groups whose added value is clear: `r if (nrow(best_clear) == 0) "none" else list_words(vapply(seq_len(nrow(best_clear)), function(k) group_gain(best_clear[k, ]), character(1)))`. On the `r p$validation_end_year + 1`-`r p$end_year` holdout, its top 10% of predicted risk holds `r ci_text(best$model, "top10_capture", fmt_pct)` of the high-consequence events, but `r fmt_pct(hs$share_test_positives_in_window[1])` of those events come from the `r p$highlight_event_name` week, so that number mostly reflects one storm.
 3. **Developed places are not where the model puts the most risk.** In the logistic model, more paved surface `r dir_lr[["impervious_mean_250m"]]` predicted risk and steeper slopes `r plural(dir_lr[["slope_degrees"]])` it. One explanation is that urban flood reports are often minor while the worst events hit rural, steep places, but NOAA's reporting differs between urban and rural areas, so this pattern may partly reflect how events are recorded. We have not separated the two.
-4. **Some groups we expected to matter add nothing measurable.** `r if (nrow(best_unclear) == 0) "Every group added a clear gain." else sprintf("For the %s, %s did not reliably improve predictions once the earlier groups were in the model. With only %s severe events in the development years, the data cannot detect small effects, so this means \"not shown\", not \"irrelevant\".", tolower(best$model), list_words(lc1(unname(group_label[best_unclear$rung]))), py$summary$devel_pos)`
+4. **Some groups we expected to matter add nothing measurable.** `r if (nrow(best_unclear) == 0) "Every group added a clear gain." else sprintf("For the %s, %s did not reliably improve predictions once the earlier groups were in the model. With only %s severe events in the development years, the data cannot detect small effects, so this means \"not shown\", not \"irrelevant\".", tolower(best$model), list_words(lc1(unname(group_label[best_unclear$rung]))), py$summary$devel_pos)` `r if (best$model == gen_model && length(only_ablation) > 0) sprintf("The ablation adds a caveat: removing %s from the full model does lower its score, so %s in combination with other groups even though %s little when entering the ladder.", list_words(tolower(only_ablation)), if (length(only_ablation) == 1) "it matters" else "they matter", if (length(only_ablation) == 1) "it added" else "they added") else ""`
+5. **How well does it generalize?** `r gen_headline` For the `r tolower(gen_model)`, holding out whole counties (and the storms that reached them) gives a PR-AUC of `r fmt3(cbp_pr)` and holding out a whole region gives `r fmt3(rg_pr)` on average, against `r fmt3(ep_pr)` when only storms are held out. Fit on earlier years and scored one year at a time, its PR-AUC ranges from `r fmt3(tm_lo$pr_auc)` (`r tm_lo$year`) to `r fmt3(tm_hi$pr_auc)` (`r tm_hi$year`) across years with at least `r tm_years$min_pos[1]` high-consequence events`r if (length(tm_near) > 0) sprintf(", and it is close to guessing in %s", list_words(tm_near)) else ""`. A label-permutation test gives `r p_text(pm$p_value)` (`r comma(pm$n_perm)` shuffles), so `r if (pm$p_value <= 0.05) "the score is very unlikely to be chance" else "the score cannot be told apart from chance"`. `r gen_closing`
 
 ## Who could use this
 

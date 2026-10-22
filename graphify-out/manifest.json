@@ -1,16 +1,4 @@
 {
-  "data/ml_ready/run_manifest.json": {
-    "mtime": 1792593905.5969753,
-    "seen": 1792594530.681185,
-    "ast_hash": "18b3f0eba894da7a00c3ad710414e792",
-    "semantic_hash": "18b3f0eba894da7a00c3ad710414e792"
-  },
-  "data/ml_ready/target_config.json": {
-    "mtime": 1792593905.2522259,
-    "seen": 1792594530.681186,
-    "ast_hash": "3ee57e7de4db2ad72e92b68700f5b18a",
-    "semantic_hash": "3ee57e7de4db2ad72e92b68700f5b18a"
-  },
   "src/R/create_spatial_features.R": {
     "mtime": 1792591004.1394386,
     "seen": 1792594530.6811872,
@@ -42,10 +30,10 @@
     "semantic_hash": "b079a97d21bf2b2ea5517132964afeca"
   },
   "README.md": {
-    "mtime": 1792592203.202044,
-    "seen": 1792594530.681196,
-    "ast_hash": "a526cd31bcbf134b130e244da6e89896",
-    "semantic_hash": "a526cd31bcbf134b130e244da6e89896"
+    "mtime": 1792673588.1901445,
+    "seen": 1792675208.190285,
+    "ast_hash": "99f6f4ee51ad04591c070712492d3da5",
+    "semantic_hash": ""
   },
   "outs/presentation/carolina_highground_project_brief.md": {
     "mtime": 1792594266.356526,
@@ -66,10 +54,10 @@
     "semantic_hash": "90d29f6489060088b5ad6e932e91fae1"
   },
   "src/_conclusion.qmd": {
-    "mtime": 1792593367.4891062,
-    "seen": 1792594530.6812,
-    "ast_hash": "51a5b03901e1ab2ba062066470deb077",
-    "semantic_hash": "51a5b03901e1ab2ba062066470deb077"
+    "mtime": 1792672846.1766896,
+    "seen": 1792675208.1902878,
+    "ast_hash": "7eb0442e43c127368a752648f38ba948",
+    "semantic_hash": ""
   },
   "src/_model_placeholder.qmd": {
     "mtime": 1790519374.0126238,
@@ -78,10 +66,10 @@
     "semantic_hash": "b2ba92d51f37995dc436fcc29127ddc9"
   },
   "src/_modeling.qmd": {
-    "mtime": 1792593367.489799,
-    "seen": 1792594530.681202,
-    "ast_hash": "90eb4975a556711c487c9d96adc818be",
-    "semantic_hash": "90eb4975a556711c487c9d96adc818be"
+    "mtime": 1792673127.4273214,
+    "seen": 1792675208.19029,
+    "ast_hash": "790daf88a7f565f29d3beb22c9fb0b6d",
+    "semantic_hash": ""
   },
   "src/_quarto.yml": {
     "mtime": 1790519374.0129569,
@@ -107,18 +95,6 @@
     "ast_hash": "17e785c86134da6fd23d1a15696283b3",
     "semantic_hash": "17e785c86134da6fd23d1a15696283b3"
   },
-  "data/ml_ready/quick/run_manifest.json": {
-    "mtime": 1792592163.9279888,
-    "seen": 1792594530.6811788,
-    "ast_hash": "6ae00104e28eeee22e6decce3417bf07",
-    "semantic_hash": "6ae00104e28eeee22e6decce3417bf07"
-  },
-  "data/ml_ready/quick/target_config.json": {
-    "mtime": 1792592163.896357,
-    "seen": 1792594530.681182,
-    "ast_hash": "b524f9a4f9da683844c71f13163fb301",
-    "semantic_hash": "b524f9a4f9da683844c71f13163fb301"
-  },
   "src/R/explorer_grid.R": {
     "mtime": 1792591839.853409,
     "seen": 1792594530.681188,
@@ -138,15 +114,33 @@
     "semantic_hash": "4969ee0ec1ba5aeadd2e2d4940631e17"
   },
   "src/python/export_explorer.py": {
-    "mtime": 1792594202.5906596,
-    "seen": 1792594530.681195,
-    "ast_hash": "94f66eb4d643826d93962f30650d13e4",
-    "semantic_hash": "94f66eb4d643826d93962f30650d13e4"
+    "mtime": 1792673043.3255036,
+    "seen": 1792675208.190283,
+    "ast_hash": "badd3fbfdda38bace1f3b926b9582eee",
+    "semantic_hash": ""
   },
   "src/python/highground_ml.py": {
-    "mtime": 1792591421.020365,
-    "seen": 1792594530.681196,
-    "ast_hash": "6618809439af808c1dc052b0881503c4",
-    "semantic_hash": "6618809439af808c1dc052b0881503c4"
+    "mtime": 1792672410.0355318,
+    "seen": 1792675208.190284,
+    "ast_hash": "8aca7f809d90c764f35abd3dae64b253",
+    "semantic_hash": ""
+  },
+  "outs/tables/model_validation_summary.json": {
+    "mtime": 1792672949.281966,
+    "seen": 1792675208.190262,
+    "ast_hash": "3015cd4705b1f52d2aea0c3b93bf203b",
+    "semantic_hash": ""
+  },
+  "src/R/explorer_data.R": {
+    "mtime": 1792672007.1176014,
+    "seen": 1792675208.190272,
+    "ast_hash": "72fc574a42b9b911c07d3c8c059054f9",
+    "semantic_hash": ""
+  },
+  "src/content/explorer_data_contract.md": {
+    "mtime": 1792671692.5891116,
+    "seen": 1792675208.190293,
+    "ast_hash": "d920360c643165f2d322dbbfcddc3a60",
+    "semantic_hash": ""
   }
 }

@@ -1,0 +1,23 @@
+scheme,model,held_out,n,positives,base_rate,pr_auc,pr_sd,roc_auc,n_folds,n_folds_no_pos
+Episode-grouped CV,Logistic regression,5 folds of storm episodes x 5 repeats,1957,153,0.078,0.299,0.126,0.769,25,0
+County-blocked CV,Logistic regression,10 folds of counties x 5 repeats,1957,153,0.078,0.351,0.099,0.797,50,0
+"County-blocked CV, storm-purged",Logistic regression,10 folds of counties x 5 repeats,1957,153,0.078,0.266,0.1,0.735,50,0
+Region held out,Logistic regression,central,708,51,0.072,0.113,,0.66,1,0
+Region held out,Logistic regression,coastal,825,78,0.095,0.337,,0.811,1,0
+Region held out,Logistic regression,mountains,424,24,0.057,0.157,,0.708,1,0
+Region held out,Logistic regression,Mean of regions,1957,153,0.074,0.202,0.097,0.726,3,0
+"Region held out, storm-purged",Logistic regression,central,708,51,0.072,0.121,,0.685,1,0
+"Region held out, storm-purged",Logistic regression,coastal,825,78,0.095,0.293,,0.751,1,0
+"Region held out, storm-purged",Logistic regression,mountains,424,24,0.057,0.136,,0.692,1,0
+"Region held out, storm-purged",Logistic regression,Mean of regions,1957,153,0.074,0.183,0.078,0.709,3,0
+Episode-grouped CV,Random forest,5 folds of storm episodes x 5 repeats,1957,153,0.078,0.243,0.113,0.749,25,0
+County-blocked CV,Random forest,10 folds of counties x 5 repeats,1957,153,0.078,0.366,0.123,0.801,50,0
+"County-blocked CV, storm-purged",Random forest,10 folds of counties x 5 repeats,1957,153,0.078,0.244,0.108,0.713,50,0
+Region held out,Random forest,central,708,51,0.072,0.324,,0.755,1,0
+Region held out,Random forest,coastal,825,78,0.095,0.27,,0.759,1,0
+Region held out,Random forest,mountains,424,24,0.057,0.066,,0.575,1,0
+Region held out,Random forest,Mean of regions,1957,153,0.074,0.22,0.111,0.696,3,0
+"Region held out, storm-purged",Random forest,central,708,51,0.072,0.246,,0.76,1,0
+"Region held out, storm-purged",Random forest,coastal,825,78,0.095,0.183,,0.617,1,0
+"Region held out, storm-purged",Random forest,mountains,424,24,0.057,0.068,,0.56,1,0
+"Region held out, storm-purged",Random forest,Mean of regions,1957,153,0.074,0.166,0.074,0.646,3,0
