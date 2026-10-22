@@ -1,5 +1,5 @@
 {
-  "created": "2026-10-22 08:48:29 EDT",
+  "created": "2026-10-22 10:04:08 EDT",
   "params": {
     "figures_dir": "outs/figures",
     "tables_dir": "outs/tables",
@@ -134,7 +134,13 @@
     {
       "level": "info",
       "input": "spatial feature cache",
-      "message": "Reusing cached features from data/derived/event_spatial_features.parquet",
+      "message": "Cached features exist but configuration or inputs changed; recomputing.",
+      "affects": null
+    },
+    {
+      "level": "info",
+      "input": "spatial features",
+      "message": "Computed features for 11610 events in 3.1 minutes.",
       "affects": null
     }
   ],

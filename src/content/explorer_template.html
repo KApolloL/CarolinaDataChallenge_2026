@@ -243,7 +243,8 @@ footer.foot { color: var(--muted); font-size: .78rem; margin: 22px 0 26px; }
   <div class="tabs" role="tablist" aria-label="Explorer sections">
     <button class="tab" role="tab" id="tabbtn-map" aria-controls="tab-map" aria-selected="true">Map</button>
     <button class="tab" role="tab" id="tabbtn-counties" aria-controls="tab-counties" aria-selected="false" tabindex="-1">Counties</button>
-    <button class="tab" role="tab" id="tabbtn-helene" aria-controls="tab-helene" aria-selected="false" tabindex="-1">Helene replay</button>
+    <button class="tab" role="tab" id="tabbtn-roads" aria-controls="tab-roads" aria-selected="false" tabindex="-1">Road crossings</button>
+    <button class="tab" role="tab" id="tabbtn-helene" aria-controls="tab-helene" aria-selected="false" tabindex="-1">Storm replay</button>
     <button class="tab" role="tab" id="tabbtn-about" aria-controls="tab-about" aria-selected="false" tabindex="-1">About the model</button>
   </div>
 
@@ -254,7 +255,7 @@ footer.foot { color: var(--muted); font-size: .78rem; margin: 22px 0 26px; }
         <div class="pillrow" role="group" aria-label="Map layers" id="layers-map">
           <span class="lbl">Color by:</span>
           <button class="pill" data-layer="risk" aria-pressed="true">Modeled risk</button>
-          <button class="pill" data-layer="hrain" aria-pressed="false">Helene rainfall</button>
+          <button class="pill" id="map-pill-rain" data-layer="hrain" aria-pressed="false">Helene rainfall</button>
           <button class="pill" data-layer="svi" aria-pressed="false">Social vulnerability (SVI)</button>
           <button class="pill" data-layer="hand" aria-pressed="false">Height above stream (HAND)</button>
           <span class="pillrow"><span class="lbl" style="margin-left:6px">Show:</span>
@@ -330,17 +331,32 @@ footer.foot { color: var(--muted); font-size: .78rem; margin: 22px 0 26px; }
     <p class="hint">Modeled values use the scenario set on the Map tab. Event counts, deaths and damage are NOAA flood-related records for the whole data period. Click a row to see the county on the map.</p>
   </section>
 
+  <!-- ROAD CROSSINGS -->
+  <section id="tab-roads" role="tabpanel" aria-labelledby="tabbtn-roads" hidden>
+    <p class="meaning" id="roads-meaning"></p>
+    <div class="toolbar">
+      <label>Search <input type="search" id="rd-search" placeholder="Stream, road or county" aria-label="Search road crossings"></label>
+      <label>Type <select id="rd-kind" aria-label="Crossing type"><option value="all">Bridges and culverts</option><option value="0">Bridges</option><option value="1">Culverts</option></select></label>
+      <label><input type="checkbox" id="rd-study"> Study area only</label>
+      <button class="pill" id="rd-csv">Download CSV</button>
+      <span class="hint" id="rd-count"></span>
+    </div>
+    <div class="tablewrap scroll-y"><table class="data" id="rd-table"><thead></thead><tbody></tbody></table></div>
+    <p class="hint" id="roads-note"></p>
+  </section>
+
   <!-- HELENE -->
   <section id="tab-helene" role="tabpanel" aria-labelledby="tabbtn-helene" hidden>
+    <div class="pillrow" id="hel-storm-row" hidden><span class="lbl">Storm:</span><select id="hel-storm" aria-label="Choose a storm to replay"></select></div>
     <p class="meaning" id="hel-meaning"></p>
     <div class="hel-layout">
       <div style="min-width:0">
         <div class="pillrow" role="group" aria-label="Helene map layers" id="layers-hel">
           <span class="lbl">Color by:</span>
-          <button class="pill" data-layer="risk" aria-pressed="true">Modeled risk with Helene's rain</button>
-          <button class="pill" data-layer="hrain" aria-pressed="false">Helene rainfall</button>
+          <button class="pill" id="hel-pill-risk" data-layer="risk" aria-pressed="true">Modeled risk with Helene's rain</button>
+          <button class="pill" id="hel-pill-rain" data-layer="hrain" aria-pressed="false">Helene rainfall</button>
           <span class="pillrow"><span class="lbl" style="margin-left:6px">Show:</span>
-          <button class="pill" data-toggle="events" aria-pressed="true"><span class="chk" aria-hidden="true"></span>Helene-week events</button></span>
+          <button class="pill" data-toggle="events" aria-pressed="true"><span class="chk" aria-hidden="true"></span><span id="hel-pill-ev">Helene-week events</span></button></span>
         </div>
         <div class="map-wrap" id="map-hel">
           <canvas tabindex="0" role="img" aria-label="Map of the Helene replay. Drag or use arrow keys to pan, mouse wheel or plus and minus keys to zoom, click or press Enter to inspect a place."></canvas>
@@ -545,7 +561,7 @@ function scenarioRisk(out, sc, historyOn) {
 // Helene: each cell gets its own Helene-week rain, month 9.
 const HEL_KEYS = ['helene_rain_total_mm', 'helene_rain_max_1day_mm', 'helene_rain_antecedent_7d_mm'];
 const HAS_HELENE = HEL_KEYS.every(function (k) { return gridCol(k) !== null; });
-const HELENE_MONTH = 9;
+let HELENE_MONTH = 9;
 function heleneScenario(k) {
   return { total: gridVal('helene_rain_total_mm', k), max1: gridVal('helene_rain_max_1day_mm', k),
            ante: gridVal('helene_rain_antecedent_7d_mm', k), month: HELENE_MONTH };
@@ -1096,12 +1112,13 @@ MapView.prototype.bind = function () {
 // ---------------------------------------------------------------- layer coloring + legends
 function rangeOf(P) { let lo = Infinity, hi = -Infinity; for (let k = 0; k < N; k++) { const p = P[k]; if (isNaN(p)) continue; if (p < lo) lo = p; if (p > hi) hi = p; } return [lo, hi]; }
 function niceMax(v) { if (!(v > 0)) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))); const m = v / e; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * e; }
-const HEL_RAIN_MAX_IN = (function () {
+function calcHelMax() {
   if (!HAS_HELENE) return 1;
   const c = gridCol('helene_rain_total_mm'); let mx = 0;
   for (let k = 0; k < N; k++) if (!isNaN(c[k]) && c[k] > mx) mx = c[k];
   const inch = mmToIn(mx); return inch > 10 ? Math.ceil(inch / 5) * 5 : niceMax(inch);
-})();
+}
+let HEL_RAIN_MAX_IN = calcHelMax();
 const HAND_MAX = 30;   // display cap for the HAND color ramp (meters); values above are drawn as the lightest color
 function riskDomain(P, relative) {
   if (!relative) return [0, RISK_ABS_MAX];
@@ -1140,7 +1157,7 @@ function legendHtml(layer, P, relative, toggleId, eventsOn, eventsLabel) {
       '<button class="pill" role="radio" data-scale="rel" id="' + toggleId + '-rel" aria-checked="' + relative + '">Relative to this map</button></div></div>';
   } else if (layer === 'hrain') {
     const mx = HEL_RAIN_MAX_IN;
-    h += '<div class="lg"><div class="lg-title">Helene-week rainfall (storm total, inches)</div><div class="ramp" style="background:' + rampCss('rain') + '"></div>' +
+    h += '<div class="lg"><div class="lg-title">' + HEL_LABEL + '-week rainfall (storm total, inches)</div><div class="ramp" style="background:' + rampCss('rain') + '"></div>' +
       '<div class="ticks"><span>0</span><span>' + fmtNum(mx / 4, mx < 4 ? 1 : 0) + '</span><span>' + fmtNum(mx / 2, mx < 4 ? 1 : 0) + '</span><span>' + fmtNum(3 * mx / 4, mx < 4 ? 1 : 0) + '</span><span>' + fmtNum(mx, mx < 4 ? 1 : 0) + ' in</span></div></div>';
   } else if (layer === 'svi') {
     h += '<div class="lg"><div class="lg-title">Tract social vulnerability (CDC SVI percentile, context only)</div><div class="ramp" style="background:' + rampCss('svi') + '"></div>' +
@@ -1209,7 +1226,7 @@ function nearbyBig(k, mode) {
 function renderPlace(el, k, mode) {
   if (k < 0) {
     el.innerHTML = '<h2>Place details</h2><p class="empty">' + (mode === 'helene'
-      ? 'Click a place on the Helene map to see its rainfall, the modeled risk with that rain, and the events recorded nearby that week.'
+      ? 'Click a place on the ' + HEL_LABEL + ' map to see its rainfall, the modeled risk with that rain, and the events recorded nearby that week.'
       : 'Click any place on the map (or focus the map and press Enter) to see its modeled risk, what drives it, local conditions, and the largest recorded events nearby.') + '</p>';
     return;
   }
@@ -1222,19 +1239,19 @@ function renderPlace(el, k, mode) {
     '<div class="place-sub">' + esc(region || '') + (region ? ' &middot; ' : '') + G.lat[k].toFixed(3) + '&deg;N, ' + Math.abs(G.lon[k]).toFixed(3) + '&deg;W' +
     (study ? ' &middot; <span class="badge study">Study county</span>' : '') + '</div></div></div>';
   if (!pm) {
-    h += '<p class="empty">No Helene rainfall value for this cell, so it is not scored in the replay.</p>';
+    h += '<p class="empty">No ' + HEL_LABEL + ' rainfall value for this cell, so it is not scored in the replay.</p>';
     el.innerHTML = h; return;
   }
   const p = pm.p;
   const col = lutCss('risk', Math.min(1, p / RISK_ABS_MAX));
   h += '<div class="place-grid"><div>';
-  h += '<h3>Modeled risk ' + (mode === 'helene' ? 'with Helene\'s rain here' : 'under this scenario') + '</h3>';
+  h += '<h3>Modeled risk ' + (mode === 'helene' ? 'with ' + HEL_LABEL + '\'s rain here' : 'under this scenario') + '</h3>';
   h += '<div class="risk-big" style="color:' + (p > 0.25 ? '#b2182b' : '#12344d') + '">' + fmtPct(p) + '</div>';
   h += '<div class="riskbar" role="img" aria-label="Risk ' + fmtPct(p) + ' on a 0 to 50 percent scale"><span style="width:' + Math.min(100, p / RISK_ABS_MAX * 100) + '%;background:' + col + '"></span>' +
     (num(base) ? '<i class="base" style="left:' + Math.min(100, base / RISK_ABS_MAX * 100) + '%" title="Training-years average"></i>' : '') + '</div>';
   h += '<div class="riskbar-scale"><span>0%</span><span>50%+</span></div>';
   h += '<p style="font-size:.86rem;margin:6px 0 0">If a flood-related event is reported here, ' + oneIn(p) + ' such events would be high-consequence' +
-    (mode === 'helene' ? ' given Helene\'s rainfall at this spot' : ' under this scenario') + '.' +
+    (mode === 'helene' ? ' given ' + HEL_LABEL + '\'s rainfall at this spot' : ' under this scenario') + '.' +
     (num(base) ? ' Across all events in ' + esc(TRAIN_YEARS || 'the training years') + ', the share was ' + fmtPct(base) + ' (dark tick).' : '') + '</p>';
 
   // drivers
@@ -1250,6 +1267,16 @@ function renderPlace(el, k, mode) {
   h += '</div><p class="hint">Red raises the estimate, teal lowers it, compared with an average event in the training data (log-odds scale).</p>';
   h += '</div><div>';
 
+  // who and what is here (USACE National Structure Inventory)
+  if (HAS_NSI) {
+    h += '<h3>People and buildings here</h3><table class="facts"><tbody>' +
+      '<tr><td>Buildings in this square</td><td>' + fmtNum(gridVal('buildings', k)) + '</td></tr>' +
+      '<tr><td>Homes (residential units)</td><td>' + fmtNum(gridVal('res_units', k)) + '</td></tr>' +
+      '<tr><td>People at night (estimate)</td><td>' + fmtNum(gridVal('pop_night', k)) + '</td></tr>' +
+      '<tr><td>Structure value</td><td>$' + fmtNum(Math.round(gridVal('struct_value_musd', k))) + ' million</td></tr></tbody></table>' +
+      '<p class="hint">USACE National Structure Inventory, summed over this square. Counts show who is exposed here, not who will be harmed.</p>';
+  }
+
   // context facts
   h += '<h3>Local conditions</h3><table class="facts"><tbody>';
   CONTEXT_FACTS.forEach(function (f) {
@@ -1263,8 +1290,8 @@ function renderPlace(el, k, mode) {
 
   // nearby events
   const nb = nearbyBig(k, mode);
-  h += '<h3>' + (mode === 'helene' ? 'Largest Helene-week events within 25 km' : 'Largest recorded events within 25 km') + '</h3>';
-  if (!nb.top.length) h += '<p class="empty">No ' + (mode === 'helene' ? 'Helene-week ' : '') + 'flood-related events recorded within 25 km.</p>';
+  h += '<h3>' + (mode === 'helene' ? 'Largest ' + HEL_LABEL + '-week events within 25 km' : 'Largest recorded events within 25 km') + '</h3>';
+  if (!nb.top.length) h += '<p class="empty">No ' + (mode === 'helene' ? '' + HEL_LABEL + '-week ' : '') + 'flood-related events recorded within 25 km.</p>';
   else {
     h += '<p class="hint" style="margin-bottom:4px">' + nb.all.length + ' events within 25 km, ' + nb.hc + ' high-consequence. Ranked by deaths, then damage.</p><ul class="evlist">';
     nb.top.forEach(function (e) {
@@ -1277,9 +1304,9 @@ function renderPlace(el, k, mode) {
   if (HAS_HELENE && heleneOk(k)) {
     const hv = cellValues(k, heleneScenario(k), mode === 'helene' ? state.helHistory : state.history);
     const hp = scoreRisk(hv);
-    helText = 'Helene rainfall here: ' + fmtIn(gridVal('helene_rain_total_mm', k)) + ' (wettest day ' + fmtIn(gridVal('helene_rain_max_1day_mm', k)) + ', ' + fmtIn(gridVal('helene_rain_antecedent_7d_mm', k)) + ' in the prior week)';
-    h += '<h3>Helene</h3><p style="font-size:.86rem;margin:0"><b>' + esc(helText) + '</b><br>Model estimate with that rain in September: ' + fmtPct(hp) + '.</p>';
-    helText += '. Model estimate with that rain in September: ' + fmtPct(hp) + '.';
+    helText = '' + HEL_LABEL + ' rainfall here: ' + fmtIn(gridVal('helene_rain_total_mm', k)) + ' (wettest day ' + fmtIn(gridVal('helene_rain_max_1day_mm', k)) + ', ' + fmtIn(gridVal('helene_rain_antecedent_7d_mm', k)) + ' in the prior week)';
+    h += '<h3>' + HEL_LABEL + '</h3><p style="font-size:.86rem;margin:0"><b>' + esc(helText) + '</b><br>Model estimate with that rain' + ' in ' + MONTHS[HELENE_MONTH - 1] + ': ' + fmtPct(hp) + '.</p>';
+    helText += '. Model estimate with that rain' + ' in ' + MONTHS[HELENE_MONTH - 1] + ': ' + fmtPct(hp) + '.';
   }
   h += '</div></div>';
   h += '<div class="copyrow"><button class="pill" data-copy>Copy summary</button><span class="status" role="status"></span></div>';
@@ -1287,7 +1314,7 @@ function renderPlace(el, k, mode) {
 
   const summary = [
     (c >= 0 ? countyName(c) + ' County' : 'Location') + (region ? ' (' + region + ')' : '') + ', ' + G.lat[k].toFixed(3) + ' N, ' + Math.abs(G.lon[k]).toFixed(3) + ' W',
-    'Scenario: ' + (mode === 'helene' ? 'Helene replay (each cell\'s Helene-week rain, September, ' + (state.helHistory ? 'recorded local flood history' : 'local flood history ignored') + ')' : scenarioSummary(state.sc, state.history)),
+    'Scenario: ' + (mode === 'helene' ? '' + HEL_LABEL + ' replay (each cell\'s ' + HEL_LABEL + '-week rain, ' + MONTHS[HELENE_MONTH - 1] + ', ' + (state.helHistory ? 'recorded local flood history' : 'local flood history ignored') + ')' : scenarioSummary(state.sc, state.history)),
     'Modeled risk: ' + fmtPct(p) + ' chance that a flood-related event here is high-consequence, if one occurs' + (num(base) ? ' (training-years average ' + fmtPct(base) + ')' : '') + '.',
     'Main drivers: ' + drv.map(function (d) { return featLabel(d.key) + ' (' + (d.c >= 0 ? 'raises' : 'lowers') + ')'; }).join('; ') + '.',
     nb.all.length ? 'Recorded events within 25 km: ' + nb.all.length + ' (' + nb.hc + ' high-consequence).' : 'No recorded events within 25 km.',
@@ -1305,7 +1332,7 @@ function tipHtmlFor(k, mode) {
   const P = mode === 'helene' ? P_HEL : P_SCEN;
   const layer = mode === 'helene' ? state.helLayer : state.layer;
   h += '<br>Modeled risk: ' + (isNaN(P[k]) ? 'not scored' : fmtPct(P[k]));
-  if (layer === 'hrain' || mode === 'helene') { const v = gridVal('helene_rain_total_mm', k); if (!isNaN(v)) h += '<br>Helene rain: ' + fmtIn(v); }
+  if (layer === 'hrain' || mode === 'helene') { const v = gridVal('helene_rain_total_mm', k); if (!isNaN(v)) h += '<br>' + HEL_LABEL + ' rain: ' + fmtIn(v); }
   if (layer === 'svi') { const v = gridVal('svi_rpl_themes', k); h += '<br>Tract SVI: ' + (isNaN(v) ? 'n/a' : Math.round(v * 100) + 'th pct'); }
   if (layer === 'hand') { const v = gridVal('hand_m', k); h += '<br>HAND: ' + (isNaN(v) ? 'n/a' : fmtNum(v, 1) + ' m'); }
   return h;
@@ -1320,7 +1347,7 @@ function updateStats() {
   $('st-top').textContent = st.top === null ? 'n/a' : countyName(st.top);
   $('st-top-lab').textContent = 'Highest-risk county' + (st.top === null ? '' : ' (mean ' + fmtPct(st.topMean) + ')');
   $('stat-caption').textContent = helene
-    ? 'Helene replay: each cell scored with its own Helene-week rainfall, September, ' + (state.helHistory ? 'recorded local flood history.' : 'local flood history ignored.')
+    ? '' + HEL_LABEL + ' replay: each cell scored with its own ' + HEL_LABEL + '-week rainfall, ' + MONTHS[HELENE_MONTH - 1] + ', ' + (state.helHistory ? 'recorded local flood history.' : 'local flood history ignored.')
     : 'Current scenario: ' + scenarioSummary(state.sc, state.history) + '.';
 }
 function refreshMapCells() {
@@ -1332,7 +1359,7 @@ function refreshMapCells() {
 function refreshHelCells() {
   if (!HMAP) return;
   HMAP.setCells(colorizer(state.helLayer, P_HEL, state.helRelative));
-  $('legend-hel').innerHTML = legendHtml(state.helLayer, P_HEL, state.helRelative, 'hscale', state.helEvents, 'NOAA events in the Helene week');
+  $('legend-hel').innerHTML = legendHtml(state.helLayer, P_HEL, state.helRelative, 'hscale', state.helEvents, 'NOAA events in the ' + HEL_LABEL + ' week');
 }
 let updRaf = 0;
 function scheduleUpdate() {
@@ -1347,6 +1374,7 @@ function updateScenario() {
   syncControls();
   if (state.selected >= 0) renderPlace($('place'), state.selected, 'scenario');
   if (state.tab === 'counties') renderCounties(); else countiesDirty = true;
+  if (state.tab === 'roads') renderRoads(); else roadsDirty = true;
 }
 function updateHelene() {
   if (!HAS_HELENE) return;
@@ -1438,8 +1466,8 @@ function initControls() {
 }
 
 // tabs
-let countiesDirty = true;
-const TAB_IDS = ['map', 'counties', 'helene', 'about'];
+let countiesDirty = true, roadsDirty = true;
+const TAB_IDS = ['map', 'counties', 'roads', 'helene', 'about'];
 function activateTab(id, focus) {
   state.tab = id;
   TAB_IDS.forEach(function (t) {
@@ -1449,6 +1477,7 @@ function activateTab(id, focus) {
   });
   if (focus) $('tabbtn-' + id).focus();
   if (id === 'counties' && countiesDirty) renderCounties();
+  if (id === 'roads' && roadsDirty) renderRoads();
   if (id === 'map' && MAP) MAP.resize();
   if (id === 'helene' && HMAP) HMAP.resize();
   updateStats();
@@ -1468,6 +1497,7 @@ function initTabs() {
     });
   });
   if (!HAS_HELENE) $('tabbtn-helene').hidden = true;
+  if (!HAS_ROADS) $('tabbtn-roads').hidden = true;
 }
 
 // ---------------------------------------------------------------- counties tab
@@ -1567,9 +1597,89 @@ function initCounties() {
   t.tBodies[0].addEventListener('keydown', function (e) { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('tr[data-idx]'); if (tr) { e.preventDefault(); gotoCounty(+tr.getAttribute('data-idx')); } });
 }
 
+
+// ---------------------------------------------------------------- road crossings tab
+const XR = (HAS_DATA && DATA.crossings) || null;
+const HAS_ROADS = !!(XR && XR.cell && XR.cell.length);
+const HAS_NSI = !!(HAS_DATA && DATA.grid && gridCol('buildings'));
+const rdSort = { key: 'p', dir: -1 };
+let rdRows = [];
+const RD_COLS = [
+  { key: 'crosses', label: 'Crosses', type: 's' },
+  { key: 'road', label: 'Road', type: 's' },
+  { key: 'county', label: 'County', type: 's' },
+  { key: 'kindName', label: 'Type', type: 's' },
+  { key: 'p', label: 'Modeled risk here', type: 'n', fmt: function (v) { return fmtPct(v); }, bar: true },
+  { key: 'aadt', label: 'Daily traffic (AADT)', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'detour', label: 'Detour length', type: 'n', fmt: function (v) { return fmtNum(v); } },
+  { key: 'expo', label: 'Risk x daily traffic', type: 'n', fmt: function (v) { return fmtNum(Math.round(v)); } },
+  { key: 'hand', label: 'Height above stream (m)', type: 'n', fmt: function (v) { return v.toFixed(1); } }
+];
+function roadRows() {
+  const hand = gridCol('hand_m'), out = [];
+  const q = $('rd-search').value.trim().toLowerCase(), kind = $('rd-kind').value, studyOnly = $('rd-study').checked;
+  for (let i = 0; i < XR.cell.length; i++) {
+    const k = XR.cell[i], cty = CELL_COUNTY[k], c = cty >= 0 ? COUNTY_STATS.filter(function (x) { return x.idx === cty; })[0] : null;
+    if (kind !== 'all' && String(XR.kind[i]) !== kind) continue;
+    if (studyOnly && !(c && c.study)) continue;
+    const name = XR.county_name[i];
+    if (q && ((XR.crosses[i] || '') + ' ' + (XR.road[i] || '') + ' ' + name).toLowerCase().indexOf(q) < 0) continue;
+    const p = P_SCEN[k], a = XR.aadt[i];
+    out.push({ i: i, k: k, crosses: XR.crosses[i] || '', road: XR.road[i] || '', county: name, kindName: XR.kind[i] ? 'Culvert' : 'Bridge',
+      p: isNaN(p) ? null : p, aadt: a, detour: XR.detour[i], expo: (isNaN(p) || a === null) ? null : p * a, hand: hand && !isNaN(hand[k]) ? hand[k] : null, no: XR.no[i], lat: XR.lat[i], lon: XR.lon[i], fc: XR.func_class[i] });
+  }
+  return out;
+}
+function renderRoads() {
+  roadsDirty = false;
+  if (!HAS_ROADS) return;
+  rdRows = roadRows();
+  rdRows.sort(function (a, b) { return cmp(a, b, rdSort.key, rdSort.dir); });
+  const SHOW = 200, t = $('rd-table');
+  t.tHead.innerHTML = headerHtml(RD_COLS, rdSort);
+  t.tBodies[0].innerHTML = rdRows.slice(0, SHOW).map(function (r) {
+    return '<tr class="click" tabindex="0" data-cell="' + r.k + '" aria-label="' + esc(r.crosses || r.road) + ': show on map">' + RD_COLS.map(function (c) {
+      const v = r[c.key];
+      if (c.type === 's') return '<td>' + esc(v) + '</td>';
+      let cell = (v === null || v === undefined) ? 'n/a' : c.fmt(v);
+      if (c.bar && num(v)) cell += '<span class="ibar" aria-hidden="true"><span style="width:' + Math.min(100, v / RISK_ABS_MAX * 100) + '%;background:' + lutCss('risk', Math.min(1, v / RISK_ABS_MAX)) + '"></span></span>';
+      return '<td class="num">' + cell + '</td>';
+    }).join('') + '</tr>';
+  }).join('') || '<tr><td colspan="' + RD_COLS.length + '" class="empty">No crossings match.</td></tr>';
+  $('rd-count').textContent = 'Showing ' + Math.min(SHOW, rdRows.length) + ' of ' + fmtNum(rdRows.length) + ' crossings';
+  $('roads-meaning').textContent = 'NCDOT bridges and culverts, each scored with the modeled risk in the grid square it sits in. ' + meaningText() + ' Scenario: ' + scenarioSummary(state.sc, state.history) + '.';
+  $('roads-note').textContent = 'Risk x daily traffic is the modeled chance times the AADT NCDOT reports, a simple way to put busy crossings in wet places first. Sorting by it favors big urban roads, so sort by modeled risk, as this list does by default, to see rural crossings too. It is a screening list, not a closure forecast: the model scores places, not structures, and this does not use a road network, so it cannot tell which crossings cut a community off. About 40% of crossings have no AADT and sort last. Detour length is NCDOT\'s DETOUR_LEN field as published [units not verified]. Click a row to see the place on the map. The CSV has every crossing that matches the filters.';
+}
+function downloadRoadsCsv() {
+  const scen = scenarioSummary(state.sc, state.history);
+  const head = ['structure_no', 'type', 'crosses', 'road', 'county', 'road_class', 'lat', 'lon', 'modeled_risk', 'aadt', 'detour_length', 'risk_x_aadt', 'height_above_stream_m', 'scenario'];
+  const lines = [head.join(',')].concat(rdRows.map(function (r) {
+    return [r.no, r.kindName, r.crosses, r.road, r.county, r.fc, r.lat, r.lon, num(r.p) ? r.p.toFixed(4) : '', r.aadt, r.detour, num(r.expo) ? r.expo.toFixed(1) : '', num(r.hand) ? r.hand.toFixed(1) : '', scen].map(csvCell).join(',');
+  }));
+  const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'highground_road_crossings.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+}
+function initRoads() {
+  if (!HAS_ROADS) return;
+  ['rd-search', 'rd-kind', 'rd-study'].forEach(function (id) { $(id).addEventListener(id === 'rd-search' ? 'input' : 'change', renderRoads); });
+  $('rd-csv').addEventListener('click', downloadRoadsCsv);
+  const t = $('rd-table');
+  t.tHead.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-sort]'); if (!b) return;
+    const k = b.getAttribute('data-sort');
+    if (rdSort.key === k) rdSort.dir = -rdSort.dir; else { rdSort.key = k; rdSort.dir = (k === 'crosses' || k === 'road' || k === 'county' || k === 'kindName') ? 1 : -1; }
+    renderRoads();
+    const nb = t.tHead.querySelector('[data-sort="' + k + '"]'); if (nb) nb.focus();
+  });
+  function go(tr) { const k = +tr.getAttribute('data-cell'); activateTab('map'); if (MAP) { MAP.select(k); } }
+  t.tBodies[0].addEventListener('click', function (e) { const tr = e.target.closest('tr[data-cell]'); if (tr) go(tr); });
+  t.tBodies[0].addEventListener('keydown', function (e) { if (e.key !== 'Enter' && e.key !== ' ') return; const tr = e.target.closest('tr[data-cell]'); if (tr) { e.preventDefault(); go(tr); } });
+}
+
 // ---------------------------------------------------------------- helene tab
-const HEL = (HAS_DATA && DATA.meta && DATA.meta.helene) || {};
-const HEL_LABEL = HEL.label || 'Helene';
+let HEL = (HAS_DATA && DATA.meta && DATA.meta.helene) || {};
+let HEL_LABEL = HEL.label || 'Helene';
 const HEL_COLS = [
   { key: 'name', label: 'County', type: 's' },
   { key: 'mean', label: 'Modeled mean risk', type: 'n', fmt: function (v) { return fmtPct(v); }, bar: true },
@@ -1605,7 +1715,7 @@ function renderHeleneTable() {
   const t = $('hel-table');
   t.tHead.innerHTML = headerHtml(cols, helSort);
   t.tBodies[0].innerHTML = rows.map(function (r) {
-    return '<tr class="click' + (r.study ? ' study' : '') + '" tabindex="0" data-idx="' + r.idx + '" aria-label="' + esc(r.name) + ' County: show on the Helene map">' + cols.map(function (c) {
+    return '<tr class="click' + (r.study ? ' study' : '') + '" tabindex="0" data-idx="' + r.idx + '" aria-label="' + esc(r.name) + ' County: show on the ' + HEL_LABEL + ' map">' + cols.map(function (c) {
       const v = r[c.key];
       if (c.type === 's') return '<td>' + esc(v) + (r.study ? ' <span class="badge study">study</span>' : '') + '</td>';
       let cell = c.fmt(v);
@@ -1664,10 +1774,56 @@ function renderHeleneSide() {
   $('hel-compare').innerHTML = g;
 
   $('hel-caveat').innerHTML = heleneCaveat(mm);
-  $('hel-meaning').textContent = 'Each grid cell is scored with the rain it actually received in the ' + HEL_LABEL + ' week, in September. ' + meaningText() +
+  $('hel-meaning').textContent = 'Each grid cell is scored with the rain it actually received in the ' + HEL_LABEL + ' week,' + ' in ' + MONTHS[HELENE_MONTH - 1] + '. ' + meaningText() +
     ' The map then sits next to what NOAA recorded, as a check on the model.';
 }
+
+// ---------------------------------------------------------------- storm replays
+// Helene is the default replay. Extra storms in DATA.replays swap their own rain, NOAA record and
+// event flags into the same Helene-tab machinery.
+const REPLAYS = (function () {
+  const h = Object.assign({ id: 'helene' }, HEL);
+  const list = [h].concat((HAS_DATA && DATA.replays) || []);
+  return list.filter(function (r) { return r.id === 'helene' || (r.grid && r.county); });
+})();
+const HEL_ORIG = { cols: {}, county: COUNTY_STATS.map(function (c) { return { events: c.helene_events, hc: c.helene_hc_events, deaths: c.helene_deaths, damage: c.helene_damage }; }),
+                   ev: EVENTS.map(function (e) { return e.helene; }), month: HELENE_MONTH };
+HEL_KEYS.forEach(function (k) { HEL_ORIG.cols[k] = G[k]; });
+function switchReplay(id) {
+  const r = REPLAYS.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+  const isH = r.id === 'helene';
+  HEL_KEYS.forEach(function (k) { G[k] = isH ? HEL_ORIG.cols[k] : r.grid[k]; delete COL[k]; });
+  COUNTY_STATS.forEach(function (c, i) {
+    const v = isH ? [HEL_ORIG.county[i].events, HEL_ORIG.county[i].hc, HEL_ORIG.county[i].deaths, HEL_ORIG.county[i].damage] : r.county[i];
+    c.helene_events = v[0]; c.helene_hc_events = v[1]; c.helene_deaths = v[2]; c.helene_damage = v[3];
+  });
+  const ids = isH ? null : new Set(r.event_ids);
+  EVENTS.forEach(function (e, i) { e.helene = isH ? HEL_ORIG.ev[i] : (ids.has(e.id) ? 1 : 0); });
+  HEL = r; HEL_LABEL = r.label.replace(/^Hurricane /, '');
+  HELENE_MONTH = isH ? HEL_ORIG.month : (+r.start.slice(5, 7));
+  HEL_RAIN_MAX_IN = calcHelMax();
+  state.helHistory = isH; state.helSelected = -1;
+  const fs = document.querySelector('[data-hhist]').closest('fieldset'); if (fs) fs.style.display = isH ? '' : 'none';
+  setPressed($('layers-hel'), 'data-layer', state.helLayer);
+  $('hel-pill-risk').textContent = 'Modeled risk with ' + HEL_LABEL + '\'s rain';
+  $('hel-pill-rain').textContent = HEL_LABEL + ' rainfall'; $('map-pill-rain').textContent = HEL_LABEL + ' rainfall';
+  $('hel-pill-ev').textContent = HEL_LABEL + '-week events';
+  if (!isH) document.querySelectorAll('[data-hhist]').forEach(function (b) { b.removeAttribute('aria-pressed'); });
+  setPressed(document.querySelector('[data-hhist]').parentNode, 'data-hhist', state.helHistory ? 'on' : 'off');
+  updateHelene();
+  if (HMAP) { HMAP.request(); if (HMAP.select) { try { HMAP.select(-1); } catch (e) {} } }
+}
+function initReplays() {
+  if (!HAS_HELENE || REPLAYS.length < 2) return;
+  $('hel-storm-row').hidden = false;
+  const sel = $('hel-storm');
+  sel.innerHTML = REPLAYS.map(function (r) {
+    return '<option value="' + esc(r.id) + '">' + esc(r.id === 'helene' ? 'Helene (2024), held-out test' : r.label + ' (' + r.start.slice(0, 4) + '), training years') + '</option>';
+  }).join('');
+  sel.addEventListener('change', function () { switchReplay(sel.value); });
+}
 function heleneCaveat(mm) {
+  if (HEL.in_training) return '<b>Read this first.</b> ' + esc(HEL_LABEL) + ' falls in the training years (' + esc(TRAIN_YEARS || 'the training years') + '), so the model saw events from this storm. This replay checks how well the model fits a storm it learned from, not how it would predict a new one. Choose Helene for the out-of-sample test. History is ignored here because local flood-history counts are only built for Helene.';
   const parts = [];
   parts.push('The model was fit on events from ' + esc(TRAIN_YEARS || 'the training years') + ' and never saw ' + esc(HEL_LABEL) + '.');
   if (num(mm.holdout_pr_auc)) {
@@ -1784,6 +1940,7 @@ function renderAbout() {
     if (num(meta.base_rate_test)) h += '<dt>Base rate</dt><dd>' + fmt3(meta.base_rate_test) + '</dd>';
     if (num(mm.holdout_top10_capture)) h += '<dt>Share of positives in top 10%</dt><dd>' + fmtPct(mm.holdout_top10_capture, 0) + (num(mm.holdout_top10_lo) ? ' (' + fmtPct(mm.holdout_top10_lo, 0) + ' to ' + fmtPct(mm.holdout_top10_hi, 0) + ')' : '') + '</dd>';
     if (num(mm.holdout_n)) h += '<dt>Events</dt><dd>' + fmtNum(mm.holdout_n) + (num(mm.holdout_positives) ? ' (' + fmtNum(mm.holdout_positives) + ' high-consequence)' : '') + '</dd>';
+    if (num(mm.holdout_excl_helene_top10)) h += '<dt>Share in top 10% without ' + esc(HEL_LABEL) + ' week</dt><dd>' + fmtPct(mm.holdout_excl_helene_top10, 0) + '</dd>';
     if (num(mm.holdout_excl_helene_pr_auc)) h += '<dt>PR-AUC without ' + esc(HEL_LABEL) + ' week</dt><dd>' + fmt3(mm.holdout_excl_helene_pr_auc) + (num(mm.holdout_excl_helene_positives) ? ' (' + mm.holdout_excl_helene_positives + ' positives)' : '') + '</dd>';
     h += '</dl>';
     if (num(mm.helene_share_of_test_positives)) h += '<div class="note warn">' + fmtPct(mm.helene_share_of_test_positives, 0) + ' of the held-out high-consequence events come from the ' + esc(HEL_LABEL) + ' week. The holdout score mostly says how the model ranked places in one storm' + (num(mm.holdout_excl_helene_pr_auc) ? '; without that week it is ' + fmt3(mm.holdout_excl_helene_pr_auc) : '') + '.</div>';
@@ -1864,7 +2021,9 @@ function init() {
   initTabs();
   initControls();
   initCounties();
+  initRoads();
   initHelene();
+  initReplays();
   renderAbout();
   renderPlace($('place'), -1, 'scenario');
   MAP = new MapView($('map-main'), {

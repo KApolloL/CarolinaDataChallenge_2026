@@ -275,3 +275,11 @@ Adapted from Minh's technical outline plus the interview. **[confirm] time limit
 - Which 1–2 interview clips, and do the interviewees approve being shown by name on a slide?
 - Minh's outline cites a "published Texas flash-flood benchmark (PR-AUC 0.127)". We have **no source for it**, so it is left out of the report. Include it only if we can cite the paper.
 - Should we show statewide results or keep the focus on the 11 WNC counties?
+
+
+## Update, Oct 22 2026: validation and explorer v2
+
+- Validation (logistic regression PR-AUC; base rate about 0.08): episode-grouped CV 0.30; county-blocked with storms purged 0.27; whole region held out 0.20 (mountains 0.16, random forest on mountains 0.07, about the base rate); by test year 0.07 (2020) to 0.53 (2024); label permutation p = 0.002 (500 shuffles); reliability deciles within about 3 points. The model leans on place and is uneven across years, and most of the held-out signal is Helene.
+- Top 10% of predicted risk catches 66% of held-out high-consequence events (interval 22% to 85%), but 31% without the Helene week.
+- Explorer: rainfall what-if map, storm replays (Helene held out; Florence 2018 and Matthew 2016 are in the training years and labeled as such), county ranking, NSI buildings and people per 5 km square, NCDOT bridge and culvert ranking by modeled risk and daily traffic. Live at https://kapollol.github.io/CarolinaDataChallenge_2026/explorer.html
+- Helene rank agreement with NOAA by county (Spearman): deaths 0.53, damage 0.72. For Florence: 0.26 deaths, 0.46 damage.

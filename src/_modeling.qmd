@@ -891,10 +891,13 @@ The explorer is a browser tool for county planners, NCDOT staff, and researchers
 explorer_script <- file.path(project_dir, "src", "python", "export_explorer.py")
 explorer_r <- file.path(project_dir, "src", "R", "explorer_data.R")
 if (isTRUE(p$embed_explorer) && file.exists(explorer_script)) {
-  grid_ok <- tryCatch({ source(explorer_r); build_explorer_data(project_dir); TRUE },
+  grid_ok <- tryCatch({ source(explorer_r); build_explorer_data(project_dir); source(file.path(project_dir, "src", "R", "explorer_replays.R")); build_explorer_replays(project_dir); source(file.path(project_dir, "src", "R", "explorer_crossings.R")); build_explorer_crossings(project_dir); TRUE },
                       error = function(e) { fw_log("warning", "Explorer map data", conditionMessage(e), "explorer"); FALSE })
   if (grid_ok) {
     py_bin <- reticulate::py_config()$python
+    nsi_script <- file.path(project_dir, "src", "python", "build_nsi_grid.py")
+    if (!file.exists(file.path(project_dir, "data", "derived", "explorer", "nsi_grid.csv")) && file.exists(nsi_script))
+      system2(py_bin, c(shQuote(nsi_script), "--project-dir", shQuote(project_dir)), stdout = FALSE, stderr = FALSE)   # one-time, about 15 min; needs internet
     status <- system2(py_bin, c(shQuote(explorer_script), "--project-dir", shQuote(project_dir),
                                 "--docs-copy", shQuote(file.path(project_dir, "docs", "explorer.html"))),
                       stdout = FALSE, stderr = FALSE)

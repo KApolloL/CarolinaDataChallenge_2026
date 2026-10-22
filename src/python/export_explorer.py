@@ -270,6 +270,13 @@ def build_grid(explorer_dir, df, stats, hist_radius_km=25, hist_years=3, hl_star
         "helene_rain_max_1day_mm": column(g["helene_rain_max_1day_mm"], 0),
         "helene_rain_antecedent_7d_mm": column(g["helene_rain_antecedent_7d_mm"], 0),
     }
+    nsi_f = explorer_dir / "nsi_grid.csv"
+    if nsi_f.exists():
+        n = pd.read_csv(nsi_f).set_index("cell_id").reindex(g["cell_id"]).fillna(0)
+        block["buildings"] = [int(x) for x in n["buildings"]]
+        block["res_units"] = [int(x) for x in n["res_units"]]
+        block["pop_night"] = [int(round(x)) for x in n["pop_night"]]
+        block["struct_value_musd"] = [round(float(x) / 1e6, 2) for x in n["value"]]
     if pre:
         block["pre_helene_minor_25km"] = column(pre["minor"], as_int=True)
         block["pre_helene_severe_25km"] = column(pre["severe"], as_int=True)
@@ -327,6 +334,67 @@ def build_events(df, fit, stats_by_fips, hl_start, hl_end):
             "helene": int(hl),
         })
     return out
+
+
+EXTRA_REPLAYS = [
+    {"id": "florence", "label": "Hurricane Florence", "start": "2018-09-13", "end": "2018-09-19",
+     "rain_total": ("2018-09-13", "2018-09-18"), "rain_ante": ("2018-09-06", "2018-09-12")},
+    {"id": "matthew", "label": "Hurricane Matthew", "start": "2016-10-08", "end": "2016-10-12",
+     "rain_total": ("2016-10-07", "2016-10-11"), "rain_ante": ("2016-09-30", "2016-10-06")},
+]
+
+
+def build_replays(explorer_dir, df, stats, grid_df, test_start_year):
+    """Extra storm replays. Each carries its own per-cell rain and NOAA record so the page can swap it in
+    for the Helene tab. Storms in the training years were seen by the model, so the page flags them."""
+    f = explorer_dir / "replays_grid.csv"
+    if not f.exists():
+        return []
+    rg = pd.read_csv(f).set_index("cell_id").reindex(grid_df["cell_id"])
+    d = pd.to_datetime(df["event_date"])
+    out = []
+    for r in EXTRA_REPLAYS:
+        mask = (d >= pd.Timestamp(r["start"])) & (d <= pd.Timestamp(r["end"]))
+        sub = df[mask]
+        agg = sub.groupby("county_fips3").agg(events=("event_id", "size"), hc=("high_consequence", "sum"),
+                                              deaths=("total_deaths", "sum"), damage=("total_damage", "sum"))
+        cty = [[int(agg.loc[s_["fips3"], "events"]), int(agg.loc[s_["fips3"], "hc"]),
+                int(agg.loc[s_["fips3"], "deaths"]), round(float(agg.loc[s_["fips3"], "damage"]))]
+               if s_["fips3"] in agg.index else [0, 0, 0, 0] for s_ in stats]
+        col = lambda k: [None if pd.isna(v) else round(float(v), 1) for v in rg[f"{r['id']}_{k}"]]
+        out.append({
+            "id": r["id"], "label": r["label"], "start": r["start"], "end": r["end"],
+            "rain_window_note": f"{r['rain_total'][0]} to {r['rain_total'][1]} (prior-week rain: "
+                                f"{r['rain_ante'][0]} to {r['rain_ante'][1]})",
+            "in_training": bool(pd.Timestamp(r["start"]).year < test_start_year),
+            "n_events": int(len(sub)), "n_deaths": int(sub["total_deaths"].sum()),
+            "damage": round(float(sub["total_damage"].sum())),
+            "grid": {"helene_rain_total_mm": col("rain_total_mm"), "helene_rain_max_1day_mm": col("rain_max_1day_mm"),
+                     "helene_rain_antecedent_7d_mm": col("rain_antecedent_7d_mm")},
+            "county": cty, "event_ids": [int(x) for x in sub["event_id"]],
+        })
+    return out
+
+
+def build_crossings(explorer_dir, grid_df):
+    """NCDOT bridges and culverts, each joined to its nearest grid cell (row index into the grid block)."""
+    f = explorer_dir / "crossings.csv"
+    if not f.exists():
+        return None
+    c = pd.read_csv(f)
+    tree = BallTree(np.radians(grid_df[["lat", "lon"]].to_numpy(dtype=float)), metric="haversine")
+    dist, idx = tree.query(np.radians(c[["lat", "lon"]].to_numpy(dtype=float)), k=1)
+    near_km = dist[:, 0] * 6371.0
+    keep = near_km <= 6.0          # drop structures that sit outside the grid (more than about one cell away)
+    c, idx = c[keep].reset_index(drop=True), idx[keep, 0]
+    nz = lambda v, nd=0: [None if pd.isna(x) else (int(x) if nd == 0 else round(float(x), nd)) for x in v]
+    return {
+        "kind": [0 if k == "Bridge" else 1 for k in c["kind"]], "no": [str(x) for x in c["structure_no"]],
+        "crosses": [None if pd.isna(x) else str(x) for x in c["crosses"]], "road": [None if pd.isna(x) else str(x) for x in c["road"]],
+        "county_name": [str(x) for x in c["county"]], "func_class": [None if pd.isna(x) else str(x) for x in c["func_class"]],
+        "aadt": nz(c["aadt"]), "detour": nz(c["detour"]), "lon": [round(float(x), 5) for x in c["lon"]],
+        "lat": [round(float(x), 5) for x in c["lat"]], "cell": [int(x) for x in idx],
+    }
 
 
 def build_cities(root):
@@ -451,7 +519,7 @@ def build_explorer(project_dir=".", template="src/content/explorer_template.html
                 "holdout_top10_capture": bt("top10_capture")["estimate"], "holdout_top10_lo": bt("top10_capture")["lo"],
                 "holdout_top10_hi": bt("top10_capture")["hi"],
                 "holdout_n": int(len(test)), "holdout_positives": int(test[hg.TARGET].sum()),
-                "holdout_excl_helene_pr_auc": hs_ex["pr_auc"], "holdout_excl_helene_positives": int(hs_ex["n_positive"]),
+                "holdout_excl_helene_pr_auc": hs_ex["pr_auc"], "holdout_excl_helene_top10": hs_ex["top10_capture"], "holdout_excl_helene_positives": int(hs_ex["n_positive"]),
                 "helene_share_of_test_positives": hs_ex["share_test_positives_in_window"],
                 "note": (f"This explorer uses the {len(features)}-feature model. The report's {int(pick(last_rung)['n_features'])}-feature model "
                          f"adds hydrology and tract vulnerability and scores {pick(last_rung)['pr_auc']:.3f} against "
@@ -492,6 +560,8 @@ def build_explorer(project_dir=".", template="src/content/explorer_template.html
         "counties": counties_gj,
         "countyStats": stats,
         "events": events,
+        "replays": build_replays(ex_dir, df, stats, grid_df, int(pd.to_datetime(test["event_date"]).dt.year.min())),
+        "crossings": build_crossings(ex_dir, grid_df),
         "cities": build_cities(root),
         "hillshade": {"uri": hill_uri, "west": hill_meta["west"], "east": hill_meta["east"],
                       "south": hill_meta["south"], "north": hill_meta["north"]},

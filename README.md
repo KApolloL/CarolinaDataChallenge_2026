@@ -2,6 +2,12 @@
 
 Carolina Data Challenge 2026. This project looks at storm and flood events in North Carolina that caused deaths or heavy damage, with a focus on Western North Carolina after Hurricane Helene. It combines NOAA Storm Events with hydrography, terrain, infrastructure, and imperviousness data, an interview with two Asheville students who lived through Helene, and a machine-learning handoff for the Python modeling workflow.
 
+**Try it:** [the full report](https://kapollol.github.io/CarolinaDataChallenge_2026/) and [the interactive explorer](https://kapollol.github.io/CarolinaDataChallenge_2026/explorer.html). The explorer lets you set a rainfall scenario and see the estimated chance that a flood-related event is a death or a $200,000+ loss at each 5 km square of North Carolina, replay Helene, Florence and Matthew against what NOAA recorded, look up the buildings and people in any square, rank counties, and rank NCDOT bridges and culverts by modeled risk times daily traffic.
+
+**What we found, in short.** Rainfall and local flood history are the only feature groups that clearly add predictive value for deaths and costly floods beyond the season. The model ranks events well within the years it was tested on, but it is weaker in places and years it has not seen (held-out region PR-AUC about 0.20 against 0.30 for new storms), and most of the held-out signal is one storm, Helene. We report those limits next to the headline numbers.
+
+**Team:** Kent Lee, Matthew Martin, Aaron Chen, Minh Nguyen.
+
 ## Render the reports
 
 From the project root:
